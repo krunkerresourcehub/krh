@@ -128,8 +128,6 @@ function renderAppeals() {
       <div class="meta">
         <span>Opened ${formatDate(a.created_at)}</span>
         ${a.krunker_username ? `<span>Krunker: ${escapeHtml(a.krunker_username)}</span>` : ""}
-        ${a.discord_username ? `<span>Discord: ${escapeHtml(a.discord_username)}</span>` : ""}
-        ${a.discord_id ? `<span>Discord ID: ${escapeHtml(a.discord_id)}</span>` : ""}
       </div>
       <div class="content"><strong>Ban reason (as stated by user):</strong> ${escapeHtml(a.ban_reason)}</div>
       <div class="content"><strong>Why they think it should be revoked:</strong> ${escapeHtml(a.message)}</div>
@@ -256,7 +254,6 @@ function render() {
       <div class="meta">
         ${roleBadge(u.role)}
         ${u.banned ? `<span class="role-badge" style="background:rgba(240,69,69,.15); color:var(--red);">Banned</span>` : ''}
-        ${u.profile_private?.discord_username ? `<span>Discord: ${escapeHtml(u.profile_private.discord_username)}</span>` : ""}
         ${u.krunker_username ? `<span>Krunker: ${escapeHtml(u.krunker_username)}</span>` : ""}
         <span>Joined ${formatDate(u.created_at)}</span>
       </div>

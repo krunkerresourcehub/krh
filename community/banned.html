@@ -102,14 +102,7 @@
           <label>Krunker Username / In-Game Name</label>
           <input type="text" id="fKrunker" placeholder="Your in-game name">
         </div>
-        <div>
-          <label>Discord ID</label>
-          <input type="text" id="fDiscordId" placeholder="e.g. 123456789012345678">
-        </div>
       </div>
-
-      <label>Discord Username</label>
-      <input type="text" id="fDiscordUsername" placeholder="e.g. yourname">
 
       <label>Proof</label>
       <div id="dropzone" tabindex="0">
@@ -160,8 +153,6 @@ async function boot() {
   document.getElementById("fUsername").value = myProfile.username || "";
   document.getElementById("fBanReason").value = reason;
   document.getElementById("fKrunker").value = myProfile.krunker_username || "";
-  document.getElementById("fDiscordId").value = myProfile.discord_id || "";
-  document.getElementById("fDiscordUsername").value = myProfile.discord_username || "";
 
   await checkExistingAppeal();
 }
@@ -278,8 +269,6 @@ document.getElementById("btnSubmit").addEventListener("click", async () => {
   const banReason = document.getElementById("fBanReason").value.trim();
   const message = document.getElementById("fMessage").value.trim();
   const krunker = document.getElementById("fKrunker").value.trim();
-  const discordId = document.getElementById("fDiscordId").value.trim();
-  const discordUsername = document.getElementById("fDiscordUsername").value.trim();
 
   if (!username || !banReason || !message) {
     msg.className = "msg error show";
@@ -314,8 +303,6 @@ document.getElementById("btnSubmit").addEventListener("click", async () => {
       ban_reason: banReason,
       message,
       krunker_username: krunker || null,
-      discord_id: discordId || null,
-      discord_username: discordUsername || null,
       proof_files: proofUrls,
       status: "pending",
     });

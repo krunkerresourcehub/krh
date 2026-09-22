@@ -59,7 +59,7 @@
       </div>
 
       <label>Username Krunker</label>
-      <input type="text" id="fKrunker" placeholder="Your Krunker username (optional)">
+      <input type="text" id="fKrunker" placeholder="Your Krunker username">
 
       <div id="turnstileWrap" style="margin:16px 0; display:none;">
         <div class="cf-turnstile" data-sitekey="0x0000000000000000000000" data-callback="onTurnstileSuccess" data-expired-callback="onTurnstileExpired" id="turnstileWidget"></div>
@@ -118,7 +118,7 @@ document.getElementById("btnSubmit").addEventListener("click", async () => {
   const gender = document.getElementById("fGender").value;
   const krunker = document.getElementById("fKrunker").value.trim();
 
-  if (!name || !username || !email || !password || !birthdate || !gender) {
+  if (!name || !username || !email || !password || !birthdate || !gender || !krunker) {
     msg.className = "msg error show"; msg.textContent = "Please fill in all required fields.";
     return;
   }
@@ -168,7 +168,7 @@ document.getElementById("btnSubmit").addEventListener("click", async () => {
     id: user.id,
     username,
     display_name: name,
-    krunker_username: krunker || null,
+    krunker_username: krunker,
   });
 
   if (profileError) {

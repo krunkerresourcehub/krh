@@ -104,6 +104,13 @@ input, select, textarea{
   transition:border-color .2s ease, background .2s ease;
 }
 input:focus, select:focus, textarea:focus{outline:none; border-color:var(--cyan); background:rgba(255,255,255,.07);}
+/* The closed <select> box above follows the site's dark theme, but the
+   dropdown list itself is rendered natively by the browser/OS once opened
+   — plain CSS can't fully restyle it. This at least keeps the option list
+   background/text dark instead of the browser's default white, in
+   browsers that respect option styling (Chromium, Firefox). */
+select option{background:#1e1642; color:var(--text-0);}
+select option:checked, select option:hover{background:var(--surface-2);}
 textarea{min-height:160px; resize:vertical; line-height:1.5;}
 .row2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
 @media(max-width:560px){.row2{grid-template-columns:1fr;}}

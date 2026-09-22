@@ -173,8 +173,7 @@ async function boot() {
   document.getElementById("fCurrentEmailDisplay").value = me.email || "";
 
   document.getElementById("accountInfo").innerHTML =
-    `Joined: ${formatDate(myProfile.created_at)}` +
-    (myProfile.discord_username ? `<br>Discord: ${escapeHtml(myProfile.discord_username)}` : "");
+    `Joined: ${formatDate(myProfile.created_at)}`;
   document.getElementById("viewProfileLink").href = `profile.html?user=${encodeURIComponent(myProfile.username)}`;
 }
 
