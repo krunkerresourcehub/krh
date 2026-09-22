@@ -66,7 +66,42 @@ reset email via Supabase. To make the link redirect back to your own site
 3. Done — users can just click "Forgot your password?" on the login page,
    enter their email, and follow the link sent to their inbox.
 
-## 7. Set the first Developer
+## 7. Send Emails From Your Own Address (Custom SMTP)
+By default, Supabase sends auth emails (password reset, signup
+confirmation) from its own address and limits you to a couple per hour.
+You can switch this to send from your own Gmail address instead — no code
+changes needed, `forgot-password.html` already calls
+`resetPasswordForEmail()`, which just uses whatever sender Supabase is
+configured with.
+
+1. On the Gmail account you want to send from, turn on **2-Step
+   Verification** if it isn't already (Google Account → **Security**) —
+   this is required for the next step.
+2. Still under **Security**, search for **App passwords** → create one
+   (pick "Mail" as the app) → Google gives you a 16-character password.
+   Copy it — you won't be able to see it again.
+3. In Supabase → **Project Settings** → **Authentication** → **SMTP
+   Settings** (older dashboards: **Authentication** → **Emails** → **SMTP
+   Settings**) → enable **Custom SMTP**.
+4. Fill in:
+   - **Sender email**: your Gmail address
+   - **Sender name**: `Krunker Resource Hub`
+   - **Host**: `smtp.gmail.com`
+   - **Port**: `587`
+   - **Username**: your full Gmail address
+   - **Password**: the 16-character App Password from step 2 (**not**
+     your normal Gmail password)
+5. Save, then test it — go to `community/forgot-password.html` on your
+   site and request a reset for your own account. The email should now
+   arrive from your Gmail address instead of Supabase's default one.
+
+Note: Gmail SMTP tops out around 500 emails/day and can occasionally get
+flagged as spam for bulk sending. That's plenty for a small/medium
+community site — if KRH grows a lot, a transactional provider (Resend,
+Brevo, SendGrid) is worth switching to later, but the steps above are the
+same either way, just with different host/port/credentials.
+
+## 8. Set the first Developer
 The Developer role (the highest role) **cannot** be granted from the web
 panel — this is intentional, so no one can escalate themselves to
 Developer through an exploit.
@@ -80,7 +115,7 @@ Developer through an exploit.
 3. Your account can now access `community/developer.html` to
    promote/demote Admins.
 
-## 8. Deploy
+## 9. Deploy
 Push all the files (including the `community/` and `sql/` folders) to
 GitHub Pages as usual. `sql/schema.sql` is fine to keep in the repo (it's
 just the database structure, not secret data) — but if you want to keep
