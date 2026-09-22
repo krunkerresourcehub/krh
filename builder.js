@@ -786,6 +786,7 @@ const DISCORD_SERVER_LISTS = {
       { name: "Doge", url: "https://discord.gg/9G9GQ9rf7F" },
       { name: "MAR2 Clan", url: "https://discord.gg/SfaufxzPuW" },
       { name: "Cute Clan", url: "https://discord.gg/Df3A89u7" },
+      { name: "Turf Clan", url: "https://discord.gg/3JRw8St7b4" },
     ],
   },
 };
