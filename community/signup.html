@@ -74,6 +74,11 @@
         <div class="cf-turnstile" data-sitekey="0x0000000000000000000000" data-callback="onTurnstileSuccess" data-expired-callback="onTurnstileExpired" id="turnstileWidget"></div>
       </div>
 
+      <label class="terms-check">
+        <input type="checkbox" id="fTerms">
+        <span>I have read and agree to the <a href="terms.html" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">Terms of Service</a>.</span>
+      </label>
+
       <button class="btn" id="btnSubmit">Create Account</button>
       <div class="msg" id="formMsg"></div>
     </div>
@@ -158,6 +163,10 @@ document.getElementById("btnSubmit").addEventListener("click", async () => {
   }
   if (password.length < 6) {
     msg.className = "msg error show"; msg.textContent = "Password must be at least 6 characters.";
+    return;
+  }
+  if (!document.getElementById("fTerms").checked) {
+    msg.className = "msg error show"; msg.textContent = "You must agree to the Terms of Service to create an account.";
     return;
   }
   if (TURNSTILE_SITE_KEY && !turnstileToken) {

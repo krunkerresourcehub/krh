@@ -143,6 +143,27 @@ textarea{min-height:160px; resize:vertical; line-height:1.5;}
 .msg.error{background:rgba(255,107,157,.14); color:#ffb3cd; border:1px solid rgba(255,107,157,.35);}
 .msg.ok{background:rgba(74,222,154,.14); color:#a7f5cd; border:1px solid rgba(74,222,154,.35);}
 
+.terms-check{
+  display:flex; align-items:flex-start; gap:10px; margin:18px 0 0;
+  font-size:13px; font-weight:400; text-transform:none; letter-spacing:normal; color:var(--text-1);
+  cursor:pointer;
+}
+.terms-check input[type="checkbox"]{
+  appearance:none; -webkit-appearance:none; flex:none;
+  width:19px; height:19px; margin-top:1px; border-radius:6px;
+  border:1px solid var(--border-strong); background:rgba(255,255,255,.04);
+  cursor:pointer; position:relative; transition:.2s ease;
+}
+.terms-check input[type="checkbox"]:hover{border-color:var(--cyan);}
+.terms-check input[type="checkbox"]:checked{background:var(--accent-gradient); border-color:transparent;}
+.terms-check input[type="checkbox"]:checked::after{
+  content:""; position:absolute; left:6px; top:2px; width:5px; height:10px;
+  border:solid #12081f; border-width:0 2px 2px 0; transform:rotate(45deg);
+}
+.terms-check input[type="checkbox"]:focus-visible{outline:2px solid var(--cyan); outline-offset:2px;}
+.terms-check a{color:var(--cyan); text-decoration:underline; text-underline-offset:2px;}
+.terms-check a:hover{color:var(--blue-glow);}
+
 .divider{display:flex; align-items:center; gap:12px; color:var(--text-2); font-size:12px; margin:18px 0; text-transform:uppercase; letter-spacing:1px;}
 .divider::before, .divider::after{content:""; flex:1; height:1px; background:var(--border);}
 
