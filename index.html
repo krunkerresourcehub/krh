@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Krunker Resource Hub</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+<link rel="shortcut icon" href="assets/favicon.ico">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#120c28">
+<meta name="description" content="Crosshairs, CSS, settings, maps, mods and scripts made by the community.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Krunker Resource Hub">
+<meta property="og:title" content="Krunker Resource Hub">
+<meta property="og:description" content="Crosshairs, CSS, settings, maps, mods and scripts made by the community.">
+<meta property="og:image" content="assets/logo.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Krunker Resource Hub">
+<meta name="twitter:description" content="Crosshairs, CSS, settings, maps, mods and scripts made by the community.">
+<meta name="twitter:image" content="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="assets/site-glow.css">
+<script>(function(){try{var v=localStorage.getItem("krh:reduceEffects");var r=v==="1"||(v!=="0"&&window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);if(r)document.documentElement.setAttribute("data-glow-effects","off");}catch(e){}})();</script>
+<script src="assets/site-glow.js" defer></script>
+</head>
+<body>
+<div class="shell">
+
+  <header>
+    <div class="logo-frame"><img src="assets/logo.png" alt="Krunker Resource Hub" class="logo-img"></div>
+    <div class="title-block">
+      <div class="brand-title">Krunker Resource Hub</div>
+      <div class="tagline">Made by <b>Aura Gangs Team</b></div>
+    </div>
+    <div style="margin-left:auto; display:flex; gap:10px; align-items:center;">
+      <div class="user-search-wrap">
+        <div class="user-search-form">
+          <input type="text" id="userSearchInput" class="user-search-input" placeholder="Search User" autocomplete="off">
+          <button type="button" id="btnUserSearch" class="btn-ghost user-search-btn">Search</button>
+        </div>
+        <div class="user-search-results" id="userSearchResults"></div>
+      </div>
+      <a href="community/login.html" id="navLogin" class="btn-ghost">Login</a>
+      <a href="community/signup.html" id="navSignup" class="btn-primary">Sign Up</a>
+      <span id="navDivider" style="display:none; width:1px; height:22px; background:var(--border); margin:0 2px;"></span>
+      <div id="navLinks" style="display:none; gap:10px; align-items:center;"></div>
+      <div class="nav-avatar-wrap" id="navAvatarWrap" style="display:none;">
+        <button type="button" class="nav-avatar-trigger" id="navAvatar" aria-haspopup="true" aria-expanded="false"></button>
+        <div class="nav-avatar-menu" id="navAvatarMenu" role="menu">
+          <a href="community/account-settings.html" role="menuitem">Account</a>
+          <a href="community/settings.html" role="menuitem">Settings</a>
+          <button type="button" id="navLogoutBtn" role="menuitem">Log Out</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="quick-links">
+    <a class="quick-link-btn" style="--c:var(--green)" href="https://krunker.io" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-play"></i>Play</a>
+    <a class="quick-link-btn" style="--c:var(--blue)" href="https://krunker.io/social.html" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-users"></i>Hub</a>
+    <a class="quick-link-btn" style="--c:var(--yellow)" href="https://krunker.io/games.html" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-gamepad"></i>Games</a>
+    <a class="quick-link-btn" style="--c:var(--purple)" href="https://krunker.io/editor.html" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-pen-ruler"></i>Editor</a>
+    <a class="quick-link-btn" style="--c:var(--orange)" href="https://docs.krunker.io" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-book"></i>Docs</a>
+    <a class="quick-link-btn" style="--c:var(--cyan)" href="https://krunker.io/viewer.html" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-cube"></i>Viewer</a>
+    <a class="quick-link-btn" style="--c:var(--red)" href="https://krunker.io/guides" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-graduation-cap"></i>Guides</a>
+  </nav>
+
+  <nav class="main-tabs" id="mainTabs"></nav>
+
+  <div class="grid">
+    <aside class="panel sidebar">
+      <div class="sidebar-label" id="sidebarLabel">Sections</div>
+      <ul class="tree" id="sidebarTree"></ul>
+    </aside>
+
+    <section class="panel content" id="content"></section>
+  </div>
+
+</div>
+
+<footer style="text-align:center; padding:20px 16px; opacity:0.55; font-size:12.5px;">
+  &copy; 2026 Krunker Resource Hub. All Rights Reserved.
+</footer>
+
+<div class="modal-overlay" id="resourceModal">
+  <div class="resource-modal">
+    <button class="modal-close" id="modalClose" aria-label="Close">&times;</button>
+    <div class="modal-header">
+      <div class="modal-icon" id="modalIcon"></div>
+      <div>
+        <h3 id="modalTitle"></h3>
+        <div class="modal-tags" id="modalTags"></div>
+      </div>
+    </div>
+    <p class="modal-desc" id="modalDesc"></p>
+    <div class="modal-media" id="modalMedia"></div>
+    <div class="modal-features">
+      <div class="modal-features-label"><i class="fas fa-star"></i> Main Features</div>
+      <ul id="modalFeatures"></ul>
+    </div>
+    <div class="modal-actions" id="modalActions"></div>
+  </div>
+</div>
+
+<script>
+// #resourceModal is position:fixed and needs to stay pinned to the
+// viewport. <body> carries a `filter` (for the account theme's UI
+// saturation/hue controls), and any element with a filter becomes the
+// containing block for its position:fixed descendants — so left as a
+// child of body, the modal would end up anchored to body's own
+// (page-length) box instead of the viewport. Moving it to be a
+// sibling of <body> (a direct child of <html>, which never gets that
+// filter) keeps it correctly fixed. Safe: nothing styles it via a
+// parent-relative selector, and script access is by ID only.
+(function(){ var m = document.getElementById("resourceModal"); if (m) document.documentElement.appendChild(m); })();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="community/supabase-client.js"></script>
+<script>
+// ---------------------------------------------------------------
+// Header user search — find a member's profile by username
+// ---------------------------------------------------------------
+(function () {
+  const input = document.getElementById("userSearchInput");
+  const btn = document.getElementById("btnUserSearch");
+  const results = document.getElementById("userSearchResults");
+  if (!input || !btn || !results) return;
+
+  async function runUserSearch() {
+    const q = input.value.trim();
+    if (!q) { results.classList.remove("show"); results.innerHTML = ""; return; }
+
+    // PostgREST's .or() filter treats "," and "(" / ")" as syntax, so
+    // escape any comma the user typed before it reaches the query string.
+    const safeQ = q.replace(/,/g, "\\,");
+
+    const { data, error } = await sb
+      .from("profiles")
+      .select("id,username,display_name,avatar_url")
+      .or(`username.ilike.%${safeQ}%,display_name.ilike.%${safeQ}%`)
+      .limit(8);
+
+    results.classList.add("show");
+    if (error || !data || !data.length) {
+      results.innerHTML = '<div class="user-search-empty">No users found.</div>';
+      return;
+    }
+
+    results.innerHTML = data.map(u =>
+      '<a class="user-search-row" href="community/profile.html?user=' + encodeURIComponent(u.username) + '">' +
+        avatarHtml(u, 32) +
+        '<span class="user-search-name">' + escapeHtml(u.display_name) + ' <em>@' + escapeHtml(u.username) + '</em></span>' +
+      '</a>'
+    ).join("");
+  }
+
+  btn.addEventListener("click", runUserSearch);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); runUserSearch(); }
+  });
+  document.addEventListener("click", (e) => {
+    if (!results.contains(e.target) && e.target !== input && e.target !== btn) {
+      results.classList.remove("show");
+      results.innerHTML = "";
+    }
+  });
+})();
+</script>
+<script>
+(async () => {
+  const user = await getSessionUser();
+  if (user) {
+    document.getElementById("navLogin").style.display = "none";
+    document.getElementById("navSignup").style.display = "none";
+
+    const profile = await getMyProfile();
+    if (profile) {
+      const [unreadCount, unreadMsgCount] = await Promise.all([
+        getUnreadNotificationCount(user.id),
+        getUnreadMessageCount(user.id),
+      ]);
+
+      let links = "";
+      if (profile.role === "developer") {
+        links += `<a href="community/developer.html" class="navlink-btn">Developer Panel</a>`;
+      }
+      if (profile.role === "admin" || profile.role === "developer") {
+        links += `<a href="community/admin.html" class="navlink-btn">Admin Panel</a>`;
+      }
+      links += `<a href="community/messages.html" class="navlink-btn">Messages${unreadBadgeHtml(unreadMsgCount)}</a>`;
+      links += `<a href="community/inbox.html" class="navlink-btn">Inbox${unreadBadgeHtml(unreadCount)}</a>`;
+      links += `<a href="community/saved.html" class="navlink-btn">Saved</a>`;
+
+      const navLinks = document.getElementById("navLinks");
+      navLinks.innerHTML = links;
+      navLinks.style.display = "flex";
+
+      const avatarWrap = document.getElementById("navAvatarWrap");
+      const avatarTrigger = document.getElementById("navAvatar");
+      const displayName = profile.display_name || profile.username || "Account";
+      avatarTrigger.innerHTML = `<span style="color:var(--text-1); font-size:13.5px; font-weight:600;">${escapeHtml(displayName)}</span>${avatarHtml(profile, 28)}`;
+      avatarTrigger.title = displayName;
+      avatarWrap.style.display = "inline-flex";
+      document.getElementById("navDivider").style.display = "inline-block";
+
+      // Hover to open (mouse), click to toggle (touch), focus/blur to
+      // support keyboard users tabbing through the menu items.
+      let avatarCloseTimer = null;
+      const openAvatarMenu = () => {
+        clearTimeout(avatarCloseTimer);
+        avatarWrap.classList.add("is-open");
+        avatarTrigger.setAttribute("aria-expanded", "true");
+      };
+      const closeAvatarMenu = () => {
+        avatarWrap.classList.remove("is-open");
+        avatarTrigger.setAttribute("aria-expanded", "false");
+      };
+      const scheduleCloseAvatarMenu = () => {
+        clearTimeout(avatarCloseTimer);
+        avatarCloseTimer = setTimeout(closeAvatarMenu, 150);
+      };
+
+      avatarWrap.addEventListener("mouseenter", openAvatarMenu);
+      avatarWrap.addEventListener("mouseleave", scheduleCloseAvatarMenu);
+      avatarWrap.addEventListener("focusin", openAvatarMenu);
+      avatarWrap.addEventListener("focusout", (e) => {
+        if (!avatarWrap.contains(e.relatedTarget)) scheduleCloseAvatarMenu();
+      });
+      avatarTrigger.addEventListener("click", () => {
+        avatarWrap.classList.contains("is-open") ? closeAvatarMenu() : openAvatarMenu();
+      });
+      document.addEventListener("click", (e) => {
+        if (!avatarWrap.contains(e.target)) closeAvatarMenu();
+      });
+
+      document.getElementById("navLogoutBtn").addEventListener("click", async () => {
+        if (!confirm("Are you sure you want to log out?")) return;
+        await sb.auth.signOut();
+        window.location.href = "index.html";
+      });
+    }
+  }
+})();
+</script>
+<script src="crosshair-render.js"></script>
+<script src="builder.js"></script>
+</body>
+</html>

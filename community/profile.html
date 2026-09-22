@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile — Krunker Resource Hub</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+<link rel="shortcut icon" href="../assets/favicon.ico">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#120c28">
+<meta name="description" content="A community member's profile on Krunker Resource Hub.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Krunker Resource Hub">
+<meta property="og:title" content="Profile — Krunker Resource Hub">
+<meta property="og:description" content="A community member's profile on Krunker Resource Hub.">
+<meta property="og:image" content="../assets/logo.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Profile — Krunker Resource Hub">
+<meta name="twitter:description" content="A community member's profile on Krunker Resource Hub.">
+<meta name="twitter:image" content="../assets/logo.png">
+<link rel="stylesheet" href="community.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  .profile-head{ display:flex; gap:28px; flex-wrap:wrap; align-items:flex-start; }
+  .profile-avatar-wrap{ flex:none; }
+  .profile-info{ flex:1; min-width:240px; }
+  .profile-name-row{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:6px; }
+  .profile-display-name{ font-family:'Baloo 2',sans-serif; font-size:22px; }
+  .profile-username{ color:var(--text-2); font-size:13.5px; margin-bottom:12px; }
+  .profile-stats{ display:flex; gap:26px; margin:14px 0; flex-wrap:wrap; }
+  .profile-stat b{ color:var(--text-0); font-size:15px; }
+  .profile-stat span{ color:var(--text-2); font-size:12.5px; }
+  .profile-bio{ color:var(--text-1); font-size:13.5px; line-height:1.55; white-space:pre-wrap; max-width:480px; }
+  .profile-actions{ margin-top:14px; display:flex; gap:8px; }
+  .btn-follow{
+    padding:9px 22px; border-radius:17px; border:none; background:var(--blue-glow); color:#05070f;
+    font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:14px; cursor:pointer;
+  }
+  .btn-unfollow{
+    padding:9px 22px; border-radius:17px; border:1px solid var(--border-strong); background:rgba(255,255,255,.04);
+    color:var(--text-1); font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:14px; cursor:pointer;
+  }
+  .profile-posts-heading{ margin-top:34px; border-top:1px solid var(--border); padding-top:20px; }
+  .posts-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(160px,1fr)); gap:10px; margin-top:16px; }
+  .post-tile{
+    aspect-ratio:1/1; border-radius:20px; overflow:hidden; border:1px solid var(--border);
+    background:var(--surface-2); text-decoration:none; position:relative; display:block;
+  }
+  .post-tile img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .post-tile-fallback{
+    width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:8px; padding:12px; text-align:center;
+  }
+  .post-tile-fallback .icon{ font-size:32px; }
+  .post-tile-fallback .title{ font-size:12px; color:var(--text-1); font-weight:600; line-height:1.3; }
+  .post-tile-cat{
+    position:absolute; top:6px; left:6px; font-size:9.5px; font-weight:700; padding:2px 7px; border-radius:20px;
+    background:rgba(5,7,15,.72); color:var(--blue-glow); backdrop-filter:blur(2px);
+  }
+</style>
+<link rel="stylesheet" href="../assets/site-glow.css">
+<script>(function(){try{var v=localStorage.getItem("krh:reduceEffects");var r=v==="1"||(v!=="0"&&window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);if(r)document.documentElement.setAttribute("data-glow-effects","off");}catch(e){}})();</script>
+<script src="../assets/site-glow.js" defer></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand"><a href="../index.html"><img src="../assets/logo.png" alt="Krunker Resource Hub" class="brand-logo">Krunker Resource Hub</a></div>
+    <div class="topnav" id="topnav"></div>
+  </div>
+
+  <div class="card" id="loadingCard"><p class="subtitle" style="margin:0;">Loading profile...</p></div>
+
+  <div class="card" id="notFoundCard" style="display:none;">
+    <h1>User not found</h1>
+    <p class="subtitle" style="margin-bottom:0;">This profile doesn't exist, or the link is incorrect.</p>
+  </div>
+
+  <div class="card" id="profileCard" style="display:none;">
+    <div class="profile-head">
+      <div class="profile-avatar-wrap" id="profileAvatar"></div>
+      <div class="profile-info">
+        <div class="profile-name-row">
+          <span class="profile-display-name" id="profileDisplayName"></span>
+          <span id="profileRoleBadge"></span>
+        </div>
+        <div class="profile-username" id="profileUsername"></div>
+        <div class="profile-stats">
+          <div class="profile-stat"><b id="statPosts">0</b> <span>Posts</span></div>
+          <div class="profile-stat"><b id="statFollowers">0</b> <span>Followers</span></div>
+          <div class="profile-stat"><b id="statFollowing">0</b> <span>Following</span></div>
+        </div>
+        <div class="profile-bio" id="profileBio" style="display:none;"></div>
+        <div class="profile-actions" id="profileActions"></div>
+      </div>
+    </div>
+
+    <div class="profile-posts-heading">
+      <h2 style="margin:0;">Posts</h2>
+      <input type="text" id="postsSearchInput" placeholder="Search posts by title..." style="margin-top:14px; max-width:320px;">
+      <div class="posts-grid" id="postsGrid"></div>
+    </div>
+  </div>
+</div>
+
+<script src="supabase-client.js"></script>
+<script>
+const CATEGORY_LABELS = {
+  'crosshair': 'Crosshair',
+  'crosshair-scope': 'Crosshair Scope',
+  'crosshair-hitmarker': 'Crosshair Hitmarker',
+  'crosshair-overlay-damage': 'Damage Overlay',
+  'crosshair-overlay-game': 'Game Overlay',
+  'crosshair-icons-kill': 'Kill Icon',
+  'crosshair-icons-death': 'Death Icon',
+  'crosshair-icons-ammo': 'Ammo Icon',
+  'crosshair-icons-streak': 'Streak Counter Icon',
+  'settings-ready': 'Ready Settings',
+  'css-ready': 'Ready CSS',
+  'maps-official-infected': 'Infected',
+  'maps-official-tdm': 'TDM',
+  'maps-custom-parkour': 'Parkour',
+  'mods-files': 'Mods Files',
+  'scripts-userscript-legal': 'Legal Script',
+  'scripts-userscript-hack': 'Hack Script',
+  'scripts-krunkscript-usable': 'Usable KrunkScripts',
+};
+const IMAGE_CATEGORIES = ['crosshair', 'crosshair-scope', 'crosshair-hitmarker',
+  'crosshair-overlay-damage', 'crosshair-overlay-game',
+  'crosshair-icons-kill', 'crosshair-icons-death', 'crosshair-icons-ammo', 'crosshair-icons-streak'];
+
+const params = new URLSearchParams(window.location.search);
+const TARGET_USERNAME = params.get('user');
+const TARGET_ID = params.get('id');
+
+let me = null;
+let myProfile = null;
+let targetProfile = null;
+
+async function boot() {
+  myProfile = await getMyProfile(); // null if logged out (or banned — getMyProfile handles that)
+  me = myProfile ? { id: myProfile.id } : null;
+
+  const nav = document.getElementById('topnav');
+  if (me) {
+    const [unreadCount, unreadMsgCount] = await Promise.all([
+      getUnreadNotificationCount(me.id),
+      getUnreadMessageCount(me.id),
+    ]);
+    nav.innerHTML = `<a href="inbox.html">Inbox${unreadBadgeHtml(unreadCount)}</a><a href="messages.html">Messages${unreadBadgeHtml(unreadMsgCount)}</a><a href="profile.html?user=${encodeURIComponent(myProfile.username)}" style="margin-left:6px;">My Profile</a>`;
+  } else {
+    nav.innerHTML = `<a href="login.html">Login</a><a href="signup.html">Sign Up</a>`;
+  }
+
+  if (!TARGET_USERNAME && !TARGET_ID) { showNotFound(); return; }
+
+  let query = sb.from('profiles').select('*');
+  query = TARGET_USERNAME ? query.eq('username', TARGET_USERNAME) : query.eq('id', TARGET_ID);
+  const { data: profile, error } = await query.maybeSingle();
+
+  if (error || !profile) { showNotFound(); return; }
+
+  targetProfile = profile;
+  renderProfile(profile);
+  loadStats(profile.id);
+  loadPosts(profile.id);
+}
+
+function showNotFound() {
+  document.getElementById('loadingCard').style.display = 'none';
+  document.getElementById('notFoundCard').style.display = 'block';
+}
+
+function renderProfile(profile) {
+  document.getElementById('loadingCard').style.display = 'none';
+  document.getElementById('profileCard').style.display = 'block';
+  document.title = `${profile.display_name} (@${profile.username}) — Krunker Resource Hub`;
+
+  document.getElementById('profileAvatar').innerHTML = avatarHtml(profile, 110);
+  document.getElementById('profileDisplayName').textContent = profile.display_name;
+  document.getElementById('profileRoleBadge').innerHTML = profile.role !== 'user' ? roleBadge(profile.role) : '';
+  document.getElementById('profileUsername').textContent = `@${profile.username}`;
+
+  if (profile.bio) {
+    const bioEl = document.getElementById('profileBio');
+    bioEl.textContent = profile.bio;
+    bioEl.style.display = 'block';
+  }
+
+  const actionsEl = document.getElementById('profileActions');
+  const isOwnProfile = me && me.id === profile.id;
+  if (isOwnProfile) {
+    actionsEl.innerHTML = `<a href="account-settings.html" class="btn-unfollow" style="text-decoration:none; display:inline-flex; align-items:center;">Edit Profile</a>`;
+  } else {
+    actionsEl.innerHTML = `
+      <button class="btn-follow" id="btnFollow">Follow</button>
+      <a href="messages.html?with=${encodeURIComponent(profile.username)}" class="btn-unfollow" style="text-decoration:none; display:inline-flex; align-items:center;">Message</a>
+    `;
+    refreshFollowButton(profile.id);
+  }
+}
+
+async function refreshFollowButton(targetId) {
+  const btn = document.getElementById('btnFollow');
+  if (!btn) return;
+
+  let amFollowing = false;
+  if (me) {
+    const { data } = await sb.from('follows').select('id').eq('follower_id', me.id).eq('following_id', targetId).maybeSingle();
+    amFollowing = !!data;
+  }
+
+  btn.className = amFollowing ? 'btn-unfollow' : 'btn-follow';
+  btn.textContent = amFollowing ? 'Following' : 'Follow';
+  btn.onclick = () => toggleFollow(targetId, amFollowing);
+}
+
+async function toggleFollow(targetId, currentlyFollowing) {
+  if (!me) { alert('Log in to follow users.'); return; }
+  const btn = document.getElementById('btnFollow');
+  btn.disabled = true;
+
+  if (currentlyFollowing) {
+    await sb.from('follows').delete().eq('follower_id', me.id).eq('following_id', targetId);
+  } else {
+    await sb.from('follows').insert({ follower_id: me.id, following_id: targetId });
+    try {
+      await sb.from('notifications').insert({ user_id: targetId, type: 'new_follower', actor_id: me.id });
+    } catch (e) { /* best-effort */ }
+  }
+
+  btn.disabled = false;
+  refreshFollowButton(targetId);
+  loadStats(targetId);
+}
+
+async function loadStats(profileId) {
+  const [{ count: postCount }, { count: followerCount }, { count: followingCount }] = await Promise.all([
+    sb.from('posts').select('id', { count: 'exact', head: true }).eq('author_id', profileId).eq('status', 'published'),
+    sb.from('follows').select('id', { count: 'exact', head: true }).eq('following_id', profileId),
+    sb.from('follows').select('id', { count: 'exact', head: true }).eq('follower_id', profileId),
+  ]);
+  document.getElementById('statPosts').textContent = postCount || 0;
+  document.getElementById('statFollowers').textContent = followerCount || 0;
+  document.getElementById('statFollowing').textContent = followingCount || 0;
+}
+
+function parsePostThumb(post) {
+  let parsed = null;
+  try { parsed = JSON.parse(post.content); } catch (e) { /* legacy */ }
+  const isImageCat = IMAGE_CATEGORIES.includes(post.category);
+
+  if (isImageCat) {
+    const url = parsed?.file_url || (/^https?:\/\//.test(post.content) ? post.content : null);
+    if (url) return url;
+    return null; /* legacy crosshair-code post, no thumb */
+  }
+  if (parsed?.previews?.length) return parsed.previews[0];
+  return null;
+}
+
+let postsCache = [];
+let postsSearchQuery = "";
+
+async function loadPosts(profileId) {
+  const grid = document.getElementById('postsGrid');
+  const { data, error } = await sb
+    .from('posts')
+    .select('id,title,category,content,created_at')
+    .eq('author_id', profileId)
+    .eq('status', 'published')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    grid.innerHTML = `<div class="empty">Failed to load posts.</div>`;
+    return;
+  }
+  postsCache = data;
+  renderPosts();
+}
+
+function renderPosts() {
+  const grid = document.getElementById('postsGrid');
+  const q = postsSearchQuery.toLowerCase();
+  const data = q ? postsCache.filter(p => p.title.toLowerCase().includes(q)) : postsCache;
+  if (!postsCache.length) {
+    grid.innerHTML = `<div class="empty">No posts yet.</div>`;
+    return;
+  }
+  if (!data.length) {
+    grid.innerHTML = `<div class="empty">No posts match your search.</div>`;
+    return;
+  }
+
+  grid.innerHTML = data.map(p => {
+    const thumb = parsePostThumb(p);
+    const catLabel = CATEGORY_LABELS[p.category] || p.category;
+    return `
+    <a class="post-tile" href="post.html?id=${p.id}" title="${escapeHtml(p.title)}">
+      <span class="post-tile-cat">${escapeHtml(catLabel)}</span>
+      ${thumb
+        ? `<img src="${escapeHtml(thumb)}" alt="${escapeHtml(p.title)}">`
+        : `<div class="post-tile-fallback"><span class="icon">\u{1F4C4}</span><span class="title">${escapeHtml(p.title)}</span></div>`}
+    </a>
+  `;
+  }).join('');
+}
+
+document.getElementById('postsSearchInput').addEventListener('input', (e) => {
+  postsSearchQuery = e.target.value.trim();
+  renderPosts();
+});
+
+boot();
+</script>
+</body>
+</html>

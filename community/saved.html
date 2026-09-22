@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saved Posts — Krunker Resource Hub</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+<link rel="shortcut icon" href="../assets/favicon.ico">
+<link rel="stylesheet" href="community.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  .saved-list{ display:flex; flex-direction:column; gap:10px; }
+  .saved-row{
+    display:flex; align-items:center; justify-content:space-between; gap:14px;
+    border:1px solid var(--border); border-radius:20px; padding:14px 16px; background:var(--surface-2);
+    text-decoration:none; transition:.15s ease;
+  }
+  .saved-row:hover{ border-color:var(--border-strong); transform:translateY(-1px); }
+  .saved-row-title{ font-weight:700; color:var(--text-0); font-size:14.5px; margin-bottom:4px; }
+  .saved-row-meta{ font-size:12px; color:var(--text-2); }
+  .saved-cat-badge{
+    padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700;
+    background:rgba(96,165,250,.14); color:var(--blue-glow); white-space:nowrap;
+  }
+  .btn-unsave{
+    background:none; border:1px solid var(--border-strong); color:var(--text-2); border-radius:16px;
+    padding:6px 12px; font-size:12px; cursor:pointer; white-space:nowrap;
+  }
+  .btn-unsave:hover{ color:#ff8b8b; border-color:#ff8b8b; }
+</style>
+<link rel="stylesheet" href="../assets/site-glow.css">
+<script>(function(){try{var v=localStorage.getItem("krh:reduceEffects");var r=v==="1"||(v!=="0"&&window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);if(r)document.documentElement.setAttribute("data-glow-effects","off");}catch(e){}})();</script>
+<script src="../assets/site-glow.js" defer></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand"><a href="../index.html"><img src="../assets/logo.png" alt="Krunker Resource Hub" class="brand-logo">Krunker Resource Hub</a></div>
+    <div class="topnav" id="topnav"></div>
+  </div>
+
+  <div class="card">
+    <h2>Saved Posts</h2>
+    <p class="subtitle">Posts you've bookmarked, across every section of the site.</p>
+    <div class="saved-list" id="savedList"><div class="empty">Loading...</div></div>
+  </div>
+</div>
+
+<script src="supabase-client.js"></script>
+<script>
+const CATEGORY_LABELS = {
+  'crosshair': 'Crosshair',
+  'crosshair-scope': 'Crosshair Scope',
+  'crosshair-hitmarker': 'Crosshair Hitmarker',
+  'crosshair-overlay-damage': 'Damage Overlay',
+  'crosshair-overlay-game': 'Game Overlay',
+  'crosshair-icons-kill': 'Kill Icon',
+  'crosshair-icons-death': 'Death Icon',
+  'crosshair-icons-ammo': 'Ammo Icon',
+  'crosshair-icons-streak': 'Streak Counter Icon',
+  'settings-ready': 'Ready Settings',
+  'css-ready': 'Ready CSS',
+  'maps-official-infected': 'Infected (Custom Maps)',
+  'maps-official-tdm': 'TDM (Custom Maps)',
+  'maps-custom-parkour': 'Parkour (Custom Maps)',
+  'mods-files': 'Mods Files',
+  'scripts-userscript-legal': 'Legal Script',
+  'scripts-userscript-hack': 'Hack Script',
+  'scripts-krunkscript-usable': 'Usable KrunkScripts',
+};
+
+let me = null;
+
+async function boot() {
+  const profile = await getMyProfile();
+  if (!profile) { window.location.href = "login.html"; return; }
+  me = await getSessionUser();
+
+  const [unreadCount, unreadMsgCount] = await Promise.all([
+    getUnreadNotificationCount(me.id),
+    getUnreadMessageCount(me.id),
+  ]);
+
+  const nav = document.getElementById("topnav");
+  let links = ``;
+  if (profile.role === "admin" || profile.role === "developer") {
+    links += `<a href="admin.html">Admin Panel</a>`;
+  }
+  if (profile.role === "developer") {
+    links += `<a href="developer.html">Developer Panel</a>`;
+  }
+  links += `<a href="inbox.html" style="margin-left:6px;">Inbox${unreadBadgeHtml(unreadCount)}</a>`;
+  links += `<a href="messages.html" style="margin-left:6px;">Messages${unreadBadgeHtml(unreadMsgCount)}</a>`;
+  links += `<a href="profile.html?user=${encodeURIComponent(profile.username)}" style="margin-left:6px;">My Profile</a>`;
+  nav.innerHTML = links;
+
+  loadSaved();
+}
+
+async function loadSaved() {
+  const listEl = document.getElementById("savedList");
+
+  const { data: saves, error } = await sb
+    .from("post_saves")
+    .select("id, post_id, posts(id, title, category, status, created_at)")
+    .eq("user_id", me.id)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    listEl.innerHTML = `<div class="empty">Failed to load your saved posts.</div>`;
+    return;
+  }
+  const valid = (saves || []).filter(s => s.posts);
+  if (!valid.length) {
+    listEl.innerHTML = `<div class="empty">You haven't saved anything yet. Tap the ☆ Save button on any post to bookmark it here.</div>`;
+    return;
+  }
+
+  listEl.innerHTML = valid.map(s => `
+    <a class="saved-row" href="post.html?id=${s.posts.id}">
+      <div>
+        <div class="saved-row-title">${escapeHtml(s.posts.title)}</div>
+        <div class="saved-row-meta">${formatDate(s.posts.created_at)}${s.posts.status !== 'published' ? ' · Draft' : ''}</div>
+      </div>
+      <span class="saved-cat-badge">${escapeHtml(CATEGORY_LABELS[s.posts.category] || s.posts.category)}</span>
+      <button class="btn-unsave" data-save-id="${s.id}">Remove</button>
+    </a>
+  `).join('');
+
+  listEl.querySelectorAll('[data-save-id]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const { error } = await sb.from('post_saves').delete().eq('id', btn.getAttribute('data-save-id'));
+      if (error) { alert('Failed to remove: ' + error.message); return; }
+      loadSaved();
+    });
+  });
+}
+
+boot();
+</script>
+</body>
+</html>

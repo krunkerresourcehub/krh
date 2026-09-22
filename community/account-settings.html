@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Account Settings — Krunker Resource Hub</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+<link rel="shortcut icon" href="../assets/favicon.ico">
+<link rel="stylesheet" href="community.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="../assets/site-glow.css">
+<script>(function(){try{var v=localStorage.getItem("krh:reduceEffects");var r=v==="1"||(v!=="0"&&window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);if(r)document.documentElement.setAttribute("data-glow-effects","off");}catch(e){}})();</script>
+<script src="../assets/site-glow.js" defer></script>
+</head>
+<body>
+<div class="wrap narrow">
+  <div class="topbar">
+    <div class="brand"><a href="../index.html"><img src="../assets/logo.png" alt="Krunker Resource Hub" class="brand-logo">Krunker Resource Hub</a></div>
+    <div class="topnav" id="topnav"></div>
+  </div>
+
+  <div class="card">
+    <h1>Account Settings</h1>
+    <p class="subtitle">Manage your profile picture, personal info, email, and password.</p>
+  </div>
+
+  <!-- Profile Picture -->
+  <div class="card">
+    <h2>Profile Picture</h2>
+    <div style="display:flex; align-items:center; gap:16px; margin-bottom:6px;" id="avatarPreviewWrap"></div>
+    <input type="file" id="fAvatar" accept="image/png,image/jpeg,image/webp,image/gif" style="margin-top:14px;">
+    <p class="hint">PNG, JPG, WEBP or GIF. Max 2MB. Square images look best.</p>
+    <button class="btn" id="btnAvatarUpload">Upload New Picture</button>
+    <div class="msg" id="avatarMsg"></div>
+  </div>
+
+  <!-- Profile Details -->
+  <div class="card">
+    <h2>Profile Details</h2>
+    <label>Full Name</label>
+    <input type="text" id="fName" placeholder="Your real name">
+
+    <label>Username</label>
+    <input type="text" id="fUsername" placeholder="Unique username">
+
+    <label>Krunker Username</label>
+    <input type="text" id="fKrunker" placeholder="Your Krunker username (optional)">
+
+    <label>Bio</label>
+    <textarea id="fBio" placeholder="Tell people a bit about yourself (optional)" maxlength="200" style="min-height:90px;"></textarea>
+    <p class="hint" id="bioCounter" style="margin-top:-8px;">0 / 200</p>
+
+    <button class="btn" id="btnSaveProfile">Save Changes</button>
+    <div class="msg" id="profileMsg"></div>
+  </div>
+
+  <!-- Personal Info: birthday + gender -->
+  <div class="card">
+    <h2>Personal Info</h2>
+    <div class="row2">
+      <div>
+        <label>Date of Birth</label>
+        <input type="date" id="fBirthdate">
+      </div>
+      <div>
+        <label>Gender</label>
+        <select id="fGender">
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="other">Other</option>
+          <option value="prefer_not_to_say">Prefer not to say</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn" id="btnSavePersonal">Save Changes</button>
+    <div class="msg" id="personalMsg"></div>
+  </div>
+
+  <!-- Email -->
+  <div class="card">
+    <h2>Email</h2>
+    <div id="emailDisplayView">
+      <label>Current Email</label>
+      <input type="email" id="fCurrentEmailDisplay" disabled>
+      <button class="btn ghost" id="btnEditEmail">Change Email</button>
+    </div>
+    <div id="emailEditView" style="display:none;">
+      <label>New Email</label>
+      <input type="email" id="fNewEmail" placeholder="new-email@example.com">
+
+      <label>Current Password</label>
+      <div class="pw-wrap">
+        <input type="password" id="fEmailPassword" placeholder="Confirm with your current password">
+        <button class="pw-toggle" data-target="fEmailPassword" tabindex="-1"></button>
+      </div>
+
+      <div class="row2" style="margin-top:14px;">
+        <button class="btn ghost" id="btnCancelEmail" style="margin-top:0;">Cancel</button>
+        <button class="btn" id="btnSaveEmail" style="margin-top:0;">Save Email</button>
+      </div>
+    </div>
+    <div class="msg" id="emailMsg"></div>
+  </div>
+
+  <!-- Password -->
+  <div class="card">
+    <h2>Change Password</h2>
+    <label>Current Password</label>
+    <div class="pw-wrap">
+      <input type="password" id="fCurrentPassword" placeholder="Your current password">
+      <button class="pw-toggle" data-target="fCurrentPassword" tabindex="-1"></button>
+    </div>
+
+    <label>New Password</label>
+    <div class="pw-wrap">
+      <input type="password" id="fNewPassword" placeholder="Minimum 6 characters">
+      <button class="pw-toggle" data-target="fNewPassword" tabindex="-1"></button>
+    </div>
+
+    <label>Confirm New Password</label>
+    <div class="pw-wrap">
+      <input type="password" id="fConfirmPassword" placeholder="Repeat new password">
+      <button class="pw-toggle" data-target="fConfirmPassword" tabindex="-1"></button>
+    </div>
+
+    <button class="btn" id="btnChangePassword">Update Password</button>
+    <div class="msg" id="passwordMsg"></div>
+  </div>
+
+  <div class="card">
+    <h2>Account Info</h2>
+    <p class="hint" id="accountInfo" style="margin-top:0;"></p>
+    <a href="#" id="viewProfileLink" class="btn ghost" style="display:inline-flex; width:auto; padding:9px 18px; text-decoration:none; margin-top:10px;">View My Public Profile</a>
+  </div>
+
+  <div class="card">
+    <button class="btn logout-btn" id="btnLogout">Logout</button>
+  </div>
+</div>
+
+<script src="supabase-client.js"></script>
+<script>
+let me = null;
+let myProfile = null;
+
+async function boot() {
+  me = await requireLogin("login.html");
+  myProfile = await getMyProfile();
+  if (!myProfile) { window.location.href = "login.html"; return; }
+
+  const nav = document.getElementById("topnav");
+  let links = ``;
+  if (myProfile.role === "admin" || myProfile.role === "developer") links += `<a href="admin.html">Admin Panel</a>`;
+  if (myProfile.role === "developer") links += `<a href="developer.html">Developer Panel</a>`;
+  links += `<a href="settings.html" style="margin-left:6px;">Theme</a>`;
+  nav.innerHTML = links;
+  document.getElementById("btnLogout").addEventListener("click", async (e) => {
+    e.preventDefault();
+    if (!confirm("Are you sure you want to log out?")) return;
+    await sb.auth.signOut(); window.location.href = "../index.html";
+  });
+
+  renderAvatarPreview();
+  document.getElementById("fName").value = myProfile.display_name || "";
+  document.getElementById("fUsername").value = myProfile.username || "";
+  document.getElementById("fKrunker").value = myProfile.krunker_username || "";
+  document.getElementById("fBio").value = myProfile.bio || "";
+  document.getElementById("bioCounter").textContent = `${(myProfile.bio || "").length} / 200`;
+  document.getElementById("fBirthdate").value = myProfile.birthdate || "";
+  document.getElementById("fGender").value = myProfile.gender || "prefer_not_to_say";
+  document.getElementById("fCurrentEmailDisplay").value = me.email || "";
+
+  document.getElementById("accountInfo").innerHTML =
+    `Joined: ${formatDate(myProfile.created_at)}` +
+    (myProfile.discord_username ? `<br>Discord: ${escapeHtml(myProfile.discord_username)}` : "");
+  document.getElementById("viewProfileLink").href = `profile.html?user=${encodeURIComponent(myProfile.username)}`;
+}
+
+function renderAvatarPreview() {
+  document.getElementById("avatarPreviewWrap").innerHTML =
+    avatarHtml(myProfile, 72) +
+    `<span class="hint" style="margin-top:0;">Current profile picture</span>`;
+}
+
+document.getElementById("fBio").addEventListener("input", (e) => {
+  document.getElementById("bioCounter").textContent = `${e.target.value.length} / 200`;
+});
+
+// ---------- Avatar upload ----------
+document.getElementById("btnAvatarUpload").addEventListener("click", async () => {
+  const msg = document.getElementById("avatarMsg");
+  msg.className = "msg"; msg.textContent = "";
+  const file = document.getElementById("fAvatar").files[0];
+  if (!file) {
+    msg.className = "msg error show"; msg.textContent = "Choose an image file first.";
+    return;
+  }
+  if (file.size > 2 * 1024 * 1024) {
+    msg.className = "msg error show"; msg.textContent = "File is too large (max 2MB).";
+    return;
+  }
+
+  const btn = document.getElementById("btnAvatarUpload");
+  btn.disabled = true; btn.textContent = "Uploading...";
+
+  const ext = file.name.split(".").pop();
+  const path = `${me.id}/avatar.${ext}`;
+
+  const { error: uploadError } = await sb.storage
+    .from("avatars")
+    .upload(path, file, { upsert: true, cacheControl: "3600" });
+
+  if (uploadError) {
+    msg.className = "msg error show"; msg.textContent = uploadError.message;
+    btn.disabled = false; btn.textContent = "Upload New Picture";
+    return;
+  }
+
+  const { data: publicData } = sb.storage.from("avatars").getPublicUrl(path);
+  const avatar_url = publicData.publicUrl + "?t=" + Date.now(); // cache-bust
+
+  const { error: updateError } = await sb.from("profiles").update({ avatar_url }).eq("id", me.id);
+  if (updateError) {
+    msg.className = "msg error show"; msg.textContent = updateError.message;
+    btn.disabled = false; btn.textContent = "Upload New Picture";
+    return;
+  }
+
+  myProfile.avatar_url = avatar_url;
+  renderAvatarPreview();
+  msg.className = "msg ok show"; msg.textContent = "Profile picture updated!";
+  btn.disabled = false; btn.textContent = "Upload New Picture";
+});
+
+// ---------- Profile details (name / username / krunker) ----------
+document.getElementById("btnSaveProfile").addEventListener("click", async () => {
+  const msg = document.getElementById("profileMsg");
+  msg.className = "msg"; msg.textContent = "";
+
+  const display_name = document.getElementById("fName").value.trim();
+  const username = document.getElementById("fUsername").value.trim();
+  const krunker_username = document.getElementById("fKrunker").value.trim();
+  const bio = document.getElementById("fBio").value.trim();
+
+  if (!display_name || !username) {
+    msg.className = "msg error show"; msg.textContent = "Full name & username are required.";
+    return;
+  }
+
+  const btn = document.getElementById("btnSaveProfile");
+  btn.disabled = true; btn.textContent = "Saving...";
+
+  const { error } = await sb.from("profiles").update({
+    display_name, username, krunker_username: krunker_username || null, bio: bio || null,
+  }).eq("id", me.id);
+
+  btn.disabled = false; btn.textContent = "Save Changes";
+
+  if (error) {
+    msg.className = "msg error show"; msg.textContent = error.message;
+    return;
+  }
+  myProfile.display_name = display_name;
+  myProfile.username = username;
+  myProfile.bio = bio;
+  msg.className = "msg ok show"; msg.textContent = "Profile updated!";
+});
+
+// ---------- Personal info (birthday / gender) ----------
+document.getElementById("btnSavePersonal").addEventListener("click", async () => {
+  const msg = document.getElementById("personalMsg");
+  msg.className = "msg"; msg.textContent = "";
+
+  const birthdate = document.getElementById("fBirthdate").value;
+  const gender = document.getElementById("fGender").value;
+
+  if (!birthdate) {
+    msg.className = "msg error show"; msg.textContent = "Date of birth is required.";
+    return;
+  }
+
+  const btn = document.getElementById("btnSavePersonal");
+  btn.disabled = true; btn.textContent = "Saving...";
+
+  // birthdate/gender live in profile_private now, not profiles.
+  const { error } = await sb.from("profile_private").upsert({ id: me.id, birthdate, gender });
+
+  btn.disabled = false; btn.textContent = "Save Changes";
+
+  if (error) {
+    msg.className = "msg error show"; msg.textContent = error.message;
+    return;
+  }
+  myProfile.birthdate = birthdate;
+  myProfile.gender = gender;
+  msg.className = "msg ok show"; msg.textContent = "Personal info updated!";
+});
+
+// ---------- Email (Discord-style: show current, click to edit) ----------
+document.getElementById("btnEditEmail").addEventListener("click", () => {
+  document.getElementById("emailDisplayView").style.display = "none";
+  document.getElementById("emailEditView").style.display = "block";
+  document.getElementById("fNewEmail").value = me.email || "";
+});
+
+document.getElementById("btnCancelEmail").addEventListener("click", () => {
+  document.getElementById("emailEditView").style.display = "none";
+  document.getElementById("emailDisplayView").style.display = "block";
+  document.getElementById("fNewEmail").value = "";
+  document.getElementById("fEmailPassword").value = "";
+  document.getElementById("emailMsg").className = "msg";
+  document.getElementById("emailMsg").textContent = "";
+});
+
+document.getElementById("btnSaveEmail").addEventListener("click", async () => {
+  const msg = document.getElementById("emailMsg");
+  msg.className = "msg"; msg.textContent = "";
+
+  const newEmail = document.getElementById("fNewEmail").value.trim();
+  const currentPassword = document.getElementById("fEmailPassword").value;
+
+  if (!newEmail || !currentPassword) {
+    msg.className = "msg error show"; msg.textContent = "Fill in the new email and your current password.";
+    return;
+  }
+  if (newEmail === me.email) {
+    msg.className = "msg error show"; msg.textContent = "That's already your current email.";
+    return;
+  }
+
+  const btn = document.getElementById("btnSaveEmail");
+  btn.disabled = true; btn.textContent = "Verifying...";
+
+  // Verify current password by re-authenticating before allowing an email change
+  const { error: verifyError } = await sb.auth.signInWithPassword({ email: me.email, password: currentPassword });
+  if (verifyError) {
+    msg.className = "msg error show"; msg.textContent = "Incorrect current password.";
+    btn.disabled = false; btn.textContent = "Save Email";
+    return;
+  }
+
+  btn.textContent = "Updating...";
+  const { error: updateError } = await sb.auth.updateUser({ email: newEmail });
+
+  btn.disabled = false; btn.textContent = "Save Email";
+
+  if (updateError) {
+    msg.className = "msg error show"; msg.textContent = updateError.message;
+    return;
+  }
+
+  msg.className = "msg ok show";
+  msg.textContent = "Confirmation links sent to your old and new email. Click both to finish changing your email.";
+  document.getElementById("fEmailPassword").value = "";
+});
+
+// ---------- Password (requires current password) ----------
+document.getElementById("btnChangePassword").addEventListener("click", async () => {
+  const msg = document.getElementById("passwordMsg");
+  msg.className = "msg"; msg.textContent = "";
+
+  const currentPw = document.getElementById("fCurrentPassword").value;
+  const pw1 = document.getElementById("fNewPassword").value;
+  const pw2 = document.getElementById("fConfirmPassword").value;
+
+  if (!currentPw || !pw1 || !pw2) {
+    msg.className = "msg error show"; msg.textContent = "Fill in your current password and the new password twice.";
+    return;
+  }
+  if (pw1.length < 6) {
+    msg.className = "msg error show"; msg.textContent = "New password must be at least 6 characters.";
+    return;
+  }
+  if (pw1 !== pw2) {
+    msg.className = "msg error show"; msg.textContent = "New passwords do not match.";
+    return;
+  }
+  if (pw1 === currentPw) {
+    msg.className = "msg error show"; msg.textContent = "New password must be different from your current password.";
+    return;
+  }
+
+  const btn = document.getElementById("btnChangePassword");
+  btn.disabled = true; btn.textContent = "Verifying...";
+
+  const { error: verifyError } = await sb.auth.signInWithPassword({ email: me.email, password: currentPw });
+  if (verifyError) {
+    msg.className = "msg error show"; msg.textContent = "Current password is incorrect.";
+    btn.disabled = false; btn.textContent = "Update Password";
+    return;
+  }
+
+  btn.textContent = "Updating...";
+  const { error } = await sb.auth.updateUser({ password: pw1 });
+
+  btn.disabled = false; btn.textContent = "Update Password";
+
+  if (error) {
+    msg.className = "msg error show"; msg.textContent = error.message;
+    return;
+  }
+  document.getElementById("fCurrentPassword").value = "";
+  document.getElementById("fNewPassword").value = "";
+  document.getElementById("fConfirmPassword").value = "";
+  msg.className = "msg ok show"; msg.textContent = "Password updated!";
+});
+
+boot();
+</script>
+</body>
+</html>

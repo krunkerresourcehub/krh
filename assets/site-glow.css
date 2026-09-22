@@ -1,0 +1,144 @@
+/* ============================================================
+   Site-wide neon-glow accent layer — Krunker Resource Hub
+   ------------------------------------------------------------
+   Adds a soft accent-color glow to buttons, cards, the brand
+   logo, links and focus states across every page on the site.
+   Loaded LAST (right before </head>, after each page's own
+   <style>/<link> tags) so these rules win the cascade without
+   needing to touch each page's existing CSS.
+
+   Uses color-mix() to pull from whatever --accent each page
+   already defines, so every page keeps its own accent hue.
+   Pages that don't define --accent (docs, 404, etc.) fall back
+   to the site's signature purple (#b895ff).
+
+   Tune the whole site's glow strength from one place:
+   ============================================================ */
+:root{ --glow-strength: 1; }
+
+/* Manual "reduce effects" toggle (see site-glow.js) — set on <html>
+   so it works even on pages that don't load style.css/community.css. */
+:root[data-glow-effects="off"]{ --glow-strength: 0; }
+
+/* Respect the OS-level "reduce motion" setting directly in this file,
+   so pages that don't already handle it (css-generator.html,
+   official-css.html, ks-generator.html, generator.html,
+   crosshair-maker.html, kr-docs) aren't left animating glows. This is
+   self-contained on purpose — it doesn't rely on each page's own CSS
+   already having a reduced-motion rule. */
+@media (prefers-reduced-motion: reduce){
+  button, .button, .btn, .mod,
+  input[type="submit"], input[type="button"],
+  .logo, .brand svg, .brand img, header .logo, .brand-logo{
+    transition: none !important;
+  }
+}
+
+@supports (color: color-mix(in srgb, red, blue)) {
+
+  /* ── buttons / button-like controls ── */
+  button, .button, .btn, .mod,
+  input[type="submit"], input[type="button"]{
+    transition: box-shadow .15s ease, border-color .15s ease, filter .15s ease;
+  }
+
+  button:hover, .button:hover, .btn:hover,
+  button.primary:hover, .button.primary:hover, .btn.primary:hover{
+    box-shadow:
+      0 0 calc(10px * var(--glow-strength)) color-mix(in srgb, var(--accent, #b895ff) 45%, transparent),
+      0 0 calc(24px * var(--glow-strength)) color-mix(in srgb, var(--accent, #b895ff) 22%, transparent);
+  }
+
+  /* Buttons that intentionally opt out of their own shadow/color (flat
+     "ghost"/logout styles, or a branded button like Discord's) keep
+     doing that — don't fight a deliberate design choice with glow. */
+  .btn.ghost:hover, .btn.logout-btn:hover{
+    box-shadow: none;
+  }
+  .btn.discord:hover{
+    box-shadow: 0 calc(10px * var(--glow-strength)) calc(24px * var(--glow-strength)) calc(-10px * var(--glow-strength)) rgba(88,101,242,.5);
+  }
+
+  button:focus-visible, .button:focus-visible, .btn:focus-visible,
+  input:focus-visible, textarea:focus-visible, select:focus-visible{
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, #b895ff) 35%, transparent);
+  }
+
+  /* Tap feedback for touchscreens — :hover never fires there, so give
+     buttons the same glow (a touch brighter/tighter) on :active instead. */
+  button:active, .button:active, .btn:active{
+    box-shadow:
+      0 0 calc(6px * var(--glow-strength)) color-mix(in srgb, var(--accent, #b895ff) 55%, transparent),
+      0 0 calc(16px * var(--glow-strength)) color-mix(in srgb, var(--accent, #b895ff) 30%, transparent);
+  }
+  .btn.ghost:active, .btn.logout-btn:active{ box-shadow: none; }
+  .btn.discord:active{
+    box-shadow: 0 calc(10px * var(--glow-strength)) calc(24px * var(--glow-strength)) calc(-10px * var(--glow-strength)) rgba(88,101,242,.5);
+  }
+
+  /* ── cards / panels ──
+     NOTE: .card/.panel/.station are plain layout containers on every
+     page that uses them (login/signup/settings forms, crosshair-maker
+     panels, game-servers stations, etc.) — none of them are clickable
+     or interactive. A hover glow here reads as "this is clickable"
+     when it isn't, and flickers as the cursor passes over big static
+     sections while someone's just filling out a form. Only .mod.on
+     (an actual toggled-on state, not a hover) keeps its glow. */
+  .mod.on{
+    box-shadow: 0 0 calc(18px * var(--glow-strength)) color-mix(in srgb, var(--accent, #b895ff) 16%, transparent);
+  }
+
+  /* ── brand mark / logo ── */
+  .logo, .brand svg, .brand img, header .logo, .brand-logo{
+    filter: drop-shadow(0 0 calc(6px * var(--glow-strength)) color-mix(in srgb, var(--accent, #b895ff) 55%, transparent));
+    transition: filter .15s ease;
+  }
+
+  /* ── links ── */
+  a:hover{
+    text-shadow: 0 0 calc(8px * var(--glow-strength)) color-mix(in srgb, var(--accent, #b895ff) 50%, transparent);
+  }
+
+  /* ── headings that use the accent gradient text treatment ── */
+  h1 .c, .credit{
+    filter: drop-shadow(0 0 calc(4px * var(--glow-strength)) color-mix(in srgb, var(--accent, #b895ff) 40%, transparent));
+  }
+}
+
+/* ── site-wide "reduce effects" toggle (injected by site-glow.js) ──
+   None of the pages on this site have a real <footer>, so this is a
+   small floating control instead — same idea (a persistent, sitewide
+   switch), just without markup to hook a footer onto. */
+.krh-glow-toggle{
+  position: fixed;
+  right: 14px;
+  bottom: 14px;
+  z-index: 9999;
+  padding: 6px 12px;
+  font: 500 12px/1.4 inherit;
+  color: #eae6ff;
+  background: rgba(20, 16, 34, .6);
+  border: 1px solid color-mix(in srgb, var(--accent, #b895ff) 35%, transparent);
+  border-radius: 999px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,0,0,.35);
+  transition: border-color .15s ease, opacity .6s ease;
+  opacity: .55;
+}
+/* Full opacity briefly on a visitor's first ever page load (see
+   site-glow.js), so the control gets noticed once instead of sitting
+   invisible at .55 forever. */
+.krh-glow-toggle.krh-glow-toggle--intro{
+  opacity: 1;
+}
+.krh-glow-toggle:hover, .krh-glow-toggle:focus-visible{
+  opacity: 1;
+  border-color: color-mix(in srgb, var(--accent, #b895ff) 55%, transparent);
+  outline: none;
+}
+@media (prefers-reduced-motion: reduce){
+  .krh-glow-toggle{ transition: none !important; }
+}

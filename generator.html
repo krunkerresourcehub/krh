@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Settings Builder</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+<link rel="shortcut icon" href="assets/favicon.ico">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#120c28">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<meta name="description" content="Build a custom Krunker settings file visually, no coding needed.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Krunker Resource Hub">
+<meta property="og:title" content="Settings Builder — Krunker Resource Hub">
+<meta property="og:description" content="Build a custom Krunker settings file visually, no coding needed.">
+<meta property="og:image" content="assets/logo.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Settings Builder — Krunker Resource Hub">
+<meta name="twitter:description" content="Build a custom Krunker settings file visually, no coding needed.">
+<meta name="twitter:image" content="assets/logo.png">
+<style>
+  :root{
+    --bg:#120c28; --bg2:#170f33; --panel:#1e1642; --panel2:#291c56; --line:rgba(255,255,255,.10); --line2:rgba(255,255,255,.20);
+    --txt:#fdfbff; --dim:#c3b8e8; --faint:#8177ab;
+    --accent:#b895ff; --accent2:#3fe0d8; --bad:#ff6b9d; --good:#4ade9a; --warn:#ffb454;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --display:'Baloo 2',var(--sans);
+
+    /* ---- Account theme (community/settings.html) ----
+       Defaults match the rest of the site; a logged-in user's saved
+       theme overrides these at runtime as inline styles on <html>
+       (applyUserTheme() in community/supabase-client.js). */
+    --accent-gradient:linear-gradient(135deg, #ff6b9d, #b895ff 60%, #3fe0d8);
+    --bg-glow-1:rgba(255,107,157,.28); --bg-glow-2:rgba(63,224,216,.22); --bg-glow-3:rgba(184,149,255,.24);
+    --page-bg-image:none; --page-bg-size:cover; --page-bg-dim:0;
+    --ui-scale:1; --ui-saturation:1; --ui-hue:0deg;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;
+    background-color:var(--bg-0, var(--bg));
+    background-image:var(--page-bg-image),
+      radial-gradient(620px 520px at 8% 6%, var(--bg-glow-1), transparent 62%),
+      radial-gradient(680px 560px at 96% 0%, var(--bg-glow-2), transparent 60%),
+      radial-gradient(720px 620px at 50% 105%, var(--bg-glow-3), transparent 62%);
+    background-size:var(--page-bg-size), auto, auto, auto;
+    background-position:center; background-repeat:no-repeat;
+    zoom:var(--ui-scale); filter:saturate(var(--ui-saturation)) hue-rotate(var(--ui-hue));
+    color:var(--txt);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+
+  header{padding:20px 26px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+    background:linear-gradient(180deg,rgba(30,22,66,.7),transparent)}
+  header .brand{flex:1;min-width:240px}
+  header h1{margin:0;font-family:var(--display);font-size:21px;font-weight:800;letter-spacing:.2px}
+  header h1 .c{background:var(--accent-gradient);-webkit-background-clip:text;background-clip:text;color:transparent}
+  header p{margin:4px 0 0;color:var(--dim);font-size:13px}
+  .verpill{font:600 12px var(--mono);color:#f0e9ff;background:rgba(184,149,255,.13);border:1px solid rgba(184,149,255,.5);padding:4px 11px;border-radius:20px}
+
+  .wrap{display:grid;grid-template-columns:minmax(420px,1fr) 400px;gap:20px;align-items:start;
+    max-width:1620px;margin:0 auto;padding:20px}
+
+  /* top tab bar */
+  .toptabs{display:flex;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:5px;margin-bottom:14px;flex-wrap:wrap;position:sticky;top:20px;z-index:5}
+  .toptabs button{flex:1;min-width:80px;background:transparent;border:none;color:var(--dim);font:700 12.5px var(--sans);padding:9px 10px;border-radius:17px;cursor:pointer;letter-spacing:.3px}
+  .toptabs button:hover{color:var(--txt)}
+  .toptabs button.active{background:var(--accent-gradient);color:#150c2c}
+
+  .tabpanel{display:none;flex-direction:column;gap:14px}
+  .tabpanel.active{display:flex}
+
+  .card{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:20px;padding:16px}
+  details.card>summary{font-size:12px;text-transform:uppercase;letter-spacing:1.4px;color:var(--txt);font-weight:800;cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;user-select:none}
+  details.card>summary::-webkit-details-marker{display:none}
+  details.card>summary::before{content:"▸";color:var(--accent);font-size:13px;transition:.15s;display:inline-block}
+  details.card[open]>summary::before{transform:rotate(90deg)}
+  details.card>summary .sub{margin-left:auto;font-size:11px;letter-spacing:.3px;text-transform:none;color:var(--faint);font-weight:500}
+  details.card[open]{padding-bottom:14px}
+  details.card[open]>summary{margin-bottom:12px}
+
+  label.f{display:block;font-size:12px;color:var(--dim);margin:12px 0 5px;font-weight:500}
+  label.f:first-child{margin-top:0}
+  label.f .val{float:right;color:var(--accent2);font:600 11px var(--mono)}
+  input,textarea,select{width:100%;min-width:0;background:rgba(0,0,0,.22);border:1px solid var(--line);border-radius:17px;color:var(--txt);padding:9px 11px;font:13px var(--mono);transition:.12s}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(184,149,255,.13)}
+  input[type=range]{padding:0;height:28px;accent-color:var(--accent);background:transparent;border:none}
+  input[type=color]{padding:2px;height:34px;cursor:pointer}
+  input::placeholder,textarea::placeholder{color:#665a8c}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+  select{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:30px;
+    background-image:linear-gradient(45deg,transparent 50%,var(--dim) 50%),linear-gradient(135deg,var(--dim) 50%,transparent 50%);
+    background-position:calc(100% - 16px) 16px,calc(100% - 11px) 16px;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+  select option{background:#1a1236;color:var(--txt)}
+
+  .toggles{display:grid;gap:8px}
+  .tg{display:flex;gap:10px;align-items:center;padding:9px 12px;border:1px solid var(--line);border-radius:19px;background:var(--panel);cursor:pointer;transition:.12s}
+  .tg:hover{border-color:var(--line2);background:var(--panel2)}
+  .tg.on{border-color:rgba(184,149,255,.55);background:rgba(184,149,255,.07)}
+  .tg input{width:17px;height:17px;margin:0;accent-color:var(--accent);flex:0 0 auto;cursor:pointer}
+  .tg .t{font-weight:600;font-size:12.5px;flex:1}
+  .tgrow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+  button{font:600 13.5px var(--sans);border:1px solid var(--line2);background:var(--panel2);color:var(--txt);border-radius:18px;padding:10px 15px;cursor:pointer;transition:.12s;white-space:nowrap}
+  button:hover{border-color:#46566a;background:#1b2230}
+  button:active{transform:translateY(1px)}
+  button.primary{background:var(--accent-gradient);color:#150c2c;border:none;font-weight:800;box-shadow:0 6px 22px rgba(80,120,200,.28)}
+  button.primary:hover{filter:brightness(1.06)}
+  .presets{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .presets button{text-align:left;padding:10px 12px}
+  .presets button b{display:block;font-size:12.5px}
+  .presets button span{display:block;color:var(--faint);font-size:10.5px;font-weight:500;margin-top:2px}
+
+  .station{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px;position:sticky;top:20px;max-height:calc(100vh - 40px)}
+  .card-h{font-size:12px;text-transform:uppercase;letter-spacing:1.4px;color:var(--txt);font-weight:800;display:flex;align-items:baseline;gap:8px}
+  .gen-row .primary{width:100%;font-size:15px;padding:13px}
+  .badge{display:inline-block;background:rgba(63,224,216,.12);border:1px solid rgba(63,224,216,.5);color:#a6f5ef;border-radius:20px;padding:3px 11px;font:600 11px var(--mono);margin-left:auto}
+  .out{position:relative;min-height:0;flex:1;display:flex}
+  pre{flex:1;background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:20px;padding:16px;overflow:auto;margin:0;
+    font:12px/1.55 var(--mono);color:#e2d9ff;white-space:pre-wrap;word-break:break-word}
+  .pre-actions{position:absolute;top:10px;right:14px;display:flex;gap:6px;z-index:2}
+  .pre-actions button{padding:6px 12px;font-size:12px;background:rgba(18,24,34,.92);backdrop-filter:blur(4px)}
+  .empty{flex:1;color:var(--faint);padding:40px 20px;text-align:center;border:1px dashed var(--line);border-radius:20px;
+    display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center}
+  .empty b{color:var(--accent2)}
+  .deploy{font-size:11.5px;color:var(--faint);line-height:1.6;border-top:1px solid var(--line);padding-top:11px}
+  .deploy b{color:var(--dim)}
+  .deploy ol{margin:4px 0 0;padding-left:18px}
+  .cfg-grid{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center}
+  .note{font-size:11px;color:var(--faint);border-top:1px dashed var(--line);padding-top:9px;line-height:1.5}
+
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--good);color:#0e2a1c;padding:11px 20px;border-radius:19px;font-weight:700;opacity:0;transition:.2s;pointer-events:none;z-index:60;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  @media (max-width:1080px){ .wrap{grid-template-columns:1fr} .station{position:static;max-height:none} }
+
+  /* ── keybinds ── */
+  .kbtabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .kbtabs button{background:var(--panel);border:1px solid var(--line);color:var(--dim);font:600 11.5px var(--sans);padding:7px 12px;border-radius:17px;cursor:pointer}
+  .kbtabs button:hover{color:var(--txt);border-color:var(--line2)}
+  .kbtabs button.active{background:rgba(184,149,255,.14);border-color:var(--accent);color:var(--txt)}
+  .kbgroup{margin-bottom:14px}
+  .kbgroup-h{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--faint);font-weight:800;margin:0 0 8px 2px}
+  .kbrow{display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--line);border-radius:18px;background:var(--panel);margin-bottom:6px}
+  .kbrow .kblabel{flex:1;font-size:12.5px;font-weight:600;color:var(--txt)}
+  .kbchip{display:flex;align-items:center;gap:6px}
+  .kbkey{min-width:64px;text-align:center;background:rgba(0,0,0,.22);border:1px solid var(--line2);color:var(--accent2);font:700 11.5px var(--mono);padding:7px 9px;border-radius:16px;cursor:pointer;white-space:nowrap}
+  .kbkey:hover{border-color:var(--accent)}
+  .kbkey.listening{border-color:var(--warn);color:var(--warn);animation:kbpulse 1s infinite}
+  .kbkey.unbound{color:var(--faint)}
+  @keyframes kbpulse{0%,100%{opacity:1}50%{opacity:.5}}
+  .kbx{background:none;border:none;color:var(--faint);cursor:pointer;font-size:14px;padding:2px 5px;line-height:1}
+  .kbx:hover{color:var(--bad)}
+
+  .credit{color:var(--accent);font-size:12px;font-weight:600}
+</style>
+<link rel="stylesheet" href="assets/site-glow.css">
+<script>(function(){try{var v=localStorage.getItem("krh:reduceEffects");var r=v==="1"||(v!=="0"&&window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);if(r)document.documentElement.setAttribute("data-glow-effects","off");}catch(e){}})();</script>
+<script src="assets/site-glow.js" defer></script>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <h1><span class="c">Settings</span> Builder</h1>
+    <p>Full Krunker <code style="font:12px var(--mono);background:rgba(0,0,0,.25);border:1px solid var(--line);padding:1px 6px;border-radius:14px;color:#e2d9ff">settings.json</code> generator — mirrors General / Controls / Display / Render / Game / Sound.</p>
+  </div>
+  <span style="color:var(--accent);font-size:12px;font-weight:600" class="credit">✦ made with love by 3000Auras ✦</span>
+  <span class="verpill" id="verTag">v2.0.0</span>
+</header>
+
+<div class="wrap">
+
+  <div class="left">
+
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-h" style="margin-bottom:10px">Presets<span class="sub" style="margin-left:auto;font-size:11px;color:var(--faint);font-weight:500">start from a baseline</span></div>
+      <div class="presets">
+        <button onclick="applyPreset('pro')"><b>Pro / Competitive</b><span>real export — outputs directly, ready to copy</span></button>
+        <button onclick="applyPreset('balanced')"><b>Balanced</b><span>working health bars, clean crosshair, good FPS</span></button>
+        <button onclick="applyPreset('lowend')"><b>Low-end PC</b><span>real export — outputs directly, ready to copy</span></button>
+        <button onclick="applyPreset('casual')"><b>Casual</b><span>real export — outputs directly, ready to copy</span></button>
+      </div>
+    </div>
+
+    <div class="toptabs" id="toptabs">
+      <button class="active" data-tab="general">General</button>
+      <button data-tab="controls">Controls</button>
+      <button data-tab="display">Display</button>
+      <button data-tab="render">Render</button>
+      <button data-tab="game">Game</button>
+      <button data-tab="sound">Sound</button>
+      <button data-tab="keybinds">Keybinds</button>
+    </div>
+
+    <!-- ===================== GENERAL ===================== -->
+    <div class="tabpanel active" id="tab-general">
+      <details class="card" open><summary>Network</summary>
+        <div class="row2">
+          <div><label class="f">Network Rate</label>
+            <select id="networkRate"><option>60</option><option>120</option><option selected>144</option><option>240</option></select>
+          </div>
+          <div><label class="f">Lag Compensation <span class="val" id="v_lagCompensation">1</span></label>
+            <input type="range" id="lagCompensation" min="0" max="2" step="0.1" value="1" oninput="sync('lagCompensation')">
+          </div>
+        </div>
+        <div class="toggles" style="margin-top:10px">
+          <label class="tg" data-t><input type="checkbox" id="showNetworkStats"><span class="t">Show network stats</span></label>
+        </div>
+      </details>
+      <details class="card"><summary>Server Browser & Matchmaking</summary>
+        <div class="toggles">
+          <label class="tg" data-t><input type="checkbox" id="legacyBrowser" checked><span class="t">Legacy browser</span></label>
+          <label class="tg" data-t><input type="checkbox" id="defaultRegionOnly"><span class="t">Default region only</span></label>
+        </div>
+      </details>
+      <details class="card"><summary>Experimental</summary>
+        <div class="toggles">
+          <label class="tg" data-t><input type="checkbox" id="rawMouseInput"><span class="t">Raw mouse input</span></label>
+          <label class="tg" data-t><input type="checkbox" id="aimFreezeFix" checked><span class="t">Aim freeze fix</span></label>
+          <label class="tg" data-t><input type="checkbox" id="instanceRendering"><span class="t">Instance rendering *</span></label>
+          <label class="tg" data-t><input type="checkbox" id="mouseAcceleration"><span class="t">Mouse acceleration</span></label>
+        </div>
+        <label class="f" style="margin-top:10px">Mouse flick fix value <span class="val" id="v_mouseFlickFixVal">200</span></label>
+        <input type="range" id="mouseFlickFixVal" min="0" max="500" step="10" value="200" oninput="sync('mouseFlickFixVal')">
+      </details>
+    </div>
+
+    <!-- ===================== CONTROLS ===================== -->
+    <div class="tabpanel" id="tab-controls">
+      <details class="card" open><summary>Gameplay Sensitivity</summary>
+        <div class="row2">
+          <div><label class="f">X sensitivity <span class="val" id="v_sensitivityX">1.3</span></label><input type="range" id="sensitivityX" min="0.1" max="3" step="0.1" value="1.3" oninput="sync('sensitivityX')"></div>
+          <div><label class="f">Y sensitivity <span class="val" id="v_sensitivityY">1.3</span></label><input type="range" id="sensitivityY" min="0.1" max="3" step="0.1" value="1.3" oninput="sync('sensitivityY')"></div>
+          <div><label class="f">Aim X sensitivity <span class="val" id="v_aimSensitivityX">1.3</span></label><input type="range" id="aimSensitivityX" min="0.1" max="3" step="0.1" value="1.3" oninput="sync('aimSensitivityX')"></div>
+          <div><label class="f">Aim Y sensitivity <span class="val" id="v_aimSensitivityY">1.3</span></label><input type="range" id="aimSensitivityY" min="0.1" max="3" step="0.1" value="1.3" oninput="sync('aimSensitivityY')"></div>
+        </div>
+        <div class="toggles" style="margin-top:10px">
+          <label class="tg" data-t><input type="checkbox" id="scrollDirection" checked><span class="t">Scroll direction</span></label>
+          <label class="tg" data-t><input type="checkbox" id="invertYAxis"><span class="t">Invert Y-axis</span></label>
+          <label class="tg" data-t><input type="checkbox" id="challengeMode"><span class="t">Challenge mode</span></label>
+        </div>
+      </details>
+      <details class="card"><summary>Controller</summary>
+        <div class="toggles" style="margin-bottom:10px">
+          <label class="tg" data-t><input type="checkbox" id="disableControllers"><span class="t">Disable controllers</span></label>
+        </div>
+        <div class="row2">
+          <div><label class="f">X sensitivity <span class="val" id="v_controllerSensX">4</span></label><input type="range" id="controllerSensX" min="0" max="10" step="0.5" value="4" oninput="sync('controllerSensX')"></div>
+          <div><label class="f">Y sensitivity <span class="val" id="v_controllerSensY">4</span></label><input type="range" id="controllerSensY" min="0" max="10" step="0.5" value="4" oninput="sync('controllerSensY')"></div>
+          <div><label class="f">Aim X sensitivity <span class="val" id="v_controllerAimSensX">3</span></label><input type="range" id="controllerAimSensX" min="0" max="10" step="0.5" value="3" oninput="sync('controllerAimSensX')"></div>
+          <div><label class="f">Aim Y sensitivity <span class="val" id="v_controllerAimSensY">3</span></label><input type="range" id="controllerAimSensY" min="0" max="10" step="0.5" value="3" oninput="sync('controllerAimSensY')"></div>
+          <div><label class="f">Dead zone (left) <span class="val" id="v_deadZoneLeft">0.3</span></label><input type="range" id="deadZoneLeft" min="0" max="1" step="0.05" value="0.3" oninput="sync('deadZoneLeft')"></div>
+          <div><label class="f">Dead zone (right) <span class="val" id="v_deadZoneRight">0.25</span></label><input type="range" id="deadZoneRight" min="0" max="1" step="0.05" value="0.25" oninput="sync('deadZoneRight')"></div>
+          <div><label class="f">Trigger threshold <span class="val" id="v_triggerThreshold">0.1</span></label><input type="range" id="triggerThreshold" min="0" max="1" step="0.05" value="0.1" oninput="sync('triggerThreshold')"></div>
+          <div><label class="f">Vibration <span class="val" id="v_vibrationVal">1</span></label><input type="range" id="vibrationVal" min="0" max="1" step="0.1" value="1" oninput="sync('vibrationVal')"></div>
+        </div>
+        <div class="toggles" style="margin-top:10px">
+          <label class="tg" data-t><input type="checkbox" id="controllerInvertY"><span class="t">Invert Y-axis</span></label>
+          <label class="tg" data-t><input type="checkbox" id="vibration"><span class="t">Vibration enabled</span></label>
+          <label class="tg" data-t><input type="checkbox" id="gradualSpeed"><span class="t">Gradual speed</span></label>
+        </div>
+      </details>
+    </div>
+
+    <!-- ===================== DISPLAY ===================== -->
+    <div class="tabpanel" id="tab-display">
+      <details class="card" open><summary>Interface</summary>
+        <label class="f">UI scale <span class="val" id="v_uiScale">1</span></label>
+        <input type="range" id="uiScale" min="0.5" max="2" step="0.05" value="1" oninput="sync('uiScale')">
+        <div class="toggles" style="margin-top:10px">
+          <label class="tg" data-t><input type="checkbox" id="showUI" checked><span class="t">Show UI</span></label>
+          <label class="tg" data-t><input type="checkbox" id="useOldScoreboard"><span class="t">Use old scoreboard</span></label>
+          <label class="tg" data-t><input type="checkbox" id="disableRarityAnimations"><span class="t">Disable rarity animations</span></label>
+          <label class="tg" data-t><input type="checkbox" id="showProfilePictures"><span class="t">Show profile pictures</span></label>
+          <label class="tg" data-t><input type="checkbox" id="dynamicHPBars" checked><span class="t">Dynamic HP bars</span></label>
+          <label class="tg" data-t><input type="checkbox" id="showHitIndicators" checked><span class="t">Show hit indicators</span></label>
+        </div>
+        <div class="row2" style="margin-top:10px">
+          <div><label class="f">Hit indicator color</label><input type="color" id="hitIndicatorColor" value="#ff3355"></div>
+          <div><label class="f">Death marker ADS opacity <span class="val" id="v_deathMarkerADSOpacity">1</span></label><input type="range" id="deathMarkerADSOpacity" min="0" max="1" step="0.1" value="1" oninput="sync('deathMarkerADSOpacity')"></div>
+        </div>
+        <label class="f">Death marker duration <span class="val" id="v_deathMarkerDuration">1</span></label>
+        <input type="range" id="deathMarkerDuration" min="0" max="5" step="0.5" value="1" oninput="sync('deathMarkerDuration')">
+        <div class="toggles" style="margin-top:10px"><label class="tg" data-t><input type="checkbox" id="showDeathMarkers" checked><span class="t">Show death markers</span></label></div>
+      </details>
+
+      <details class="card"><summary>Damage & Counters</summary>
+        <div class="row2">
+          <div><label class="f">Damage scale <span class="val" id="v_dmgScale">1</span></label><input type="range" id="dmgScale" min="0.5" max="1.5" step="0.05" value="1" oninput="sync('dmgScale')"></div>
+          <div><label class="f">Damage color</label><input type="color" id="damageColor" value="#ff3b3b"></div>
+          <div><label class="f">Crit color</label><input type="color" id="critColor" value="#ffcc33"></div>
+        </div>
+        <div class="toggles" style="margin-top:10px"><label class="tg" data-t><input type="checkbox" id="showDamage" checked><span class="t">Show damage numbers</span></label></div>
+        <label class="f" style="margin-top:10px">FPS update rate (ms) <span class="val" id="v_fpsUpdateRate">100</span></label>
+        <input type="range" id="fpsUpdateRate" min="50" max="500" step="10" value="100" oninput="sync('fpsUpdateRate')">
+        <div class="toggles" style="margin-top:10px">
+          <label class="tg" data-t><input type="checkbox" id="showKillFeed" checked><span class="t">Kill feed</span></label>
+          <label class="tg" data-t><input type="checkbox" id="showKillCounter" checked><span class="t">Kill counter</span></label>
+          <label class="tg" data-t><input type="checkbox" id="showDeathCounter" checked><span class="t">Death counter</span></label>
+          <label class="tg" data-t><input type="checkbox" id="showKDCounter"><span class="t">K/D counter</span></label>
+          <label class="tg" data-t><input type="checkbox" id="showScoreCounter" checked><span class="t">Score counter</span></label>
+          <label class="tg" data-t><input type="checkbox" id="showStreakCounter" checked><span class="t">Streak counter</span></label>
+          <label class="tg" data-t><input type="checkbox" id="showPing" checked><span class="t">Ping</span></label>
+          <label class="tg" data-t><input type="checkbox" id="showFPS" checked><span class="t">FPS</span></label>
+        </div>
+      </details>
+
+      <details class="card"><summary>Speedometer</summary>
+        <div class="toggles" style="margin-bottom:10px"><label class="tg" data-t><input type="checkbox" id="showMovementSpeed"><span class="t">Show movement speed</span></label></div>
+        <div class="row3">
+          <div><label class="f">X offset <span class="val" id="v_speedXOffset">5</span></label><input type="range" id="speedXOffset" min="-10" max="10" step="0.5" value="5" oninput="sync('speedXOffset')"></div>
+          <div><label class="f">Y offset <span class="val" id="v_speedYOffset">5.4</span></label><input type="range" id="speedYOffset" min="-10" max="10" step="0.1" value="5.4" oninput="sync('speedYOffset')"></div>
+          <div><label class="f">Scale <span class="val" id="v_speedScale">2.4</span></label><input type="range" id="speedScale" min="0.5" max="4" step="0.1" value="2.4" oninput="sync('speedScale')"></div>
+        </div>
+        <div class="row2" style="margin-top:10px">
+          <div><label class="f">Color (current)</label><input type="color" id="speedColorCurrent" value="#ffdd55"></div>
+          <div><label class="f">Color (max)</label><input type="color" id="speedColorMax" value="#ff3355"></div>
+        </div>
+      </details>
+
+      <details class="card"><summary>Nametags</summary>
+        <div class="row2">
+          <div><label class="f">Nametag display</label><select id="nametagDisplay"><option selected>Everyone</option><option>Team</option><option>Off</option></select></div>
+          <div><label class="f">Nametag style</label><select id="nametagStyle"><option selected>Default</option><option>Simple</option><option>Health Bar</option></select></div>
+          <div><label class="f">Opacity <span class="val" id="v_nametagOpacity">1</span></label><input type="range" id="nametagOpacity" min="0" max="1" step="0.1" value="1" oninput="sync('nametagOpacity')"></div>
+          <div><label class="f">Scale <span class="val" id="v_nametagScale">1</span></label><input type="range" id="nametagScale" min="0.5" max="2" step="0.1" value="1" oninput="sync('nametagScale')"></div>
+          <div><label class="f">Health color (team)</label><input type="color" id="nametagHealthColorTeam" value="#7cff6b"></div>
+          <div><label class="f">Health color (enemy)</label><input type="color" id="nametagHealthColorEnemy" value="#ff4444"></div>
+        </div>
+        <div class="toggles" style="margin-top:10px"><label class="tg" data-t><input type="checkbox" id="nametagHealthNumber"><span class="t">Show health number</span></label></div>
+      </details>
+
+      <details class="card"><summary>Objective, Minimap & Skins</summary>
+        <div class="row2">
+          <div><label class="f">Objective opacity <span class="val" id="v_objectiveOpacity">1</span></label><input type="range" id="objectiveOpacity" min="0" max="1" step="0.1" value="1" oninput="sync('objectiveOpacity')"></div>
+          <div><label class="f">ADS objective opacity <span class="val" id="v_adsObjectiveOpacity">0.5</span></label><input type="range" id="adsObjectiveOpacity" min="0" max="1" step="0.1" value="0.5" oninput="sync('adsObjectiveOpacity')"></div>
+          <div><label class="f">Minimap scale <span class="val" id="v_minimapScale">1</span></label><input type="range" id="minimapScale" min="0.5" max="2" step="0.1" value="1" oninput="sync('minimapScale')"></div>
+          <div><label class="f">Minimap zoom <span class="val" id="v_minimapZoom">1</span></label><input type="range" id="minimapZoom" min="0.5" max="2" step="0.1" value="1" oninput="sync('minimapZoom')"></div>
+        </div>
+        <div class="toggles" style="margin-top:10px">
+          <label class="tg" data-t><input type="checkbox" id="hideNonTradableSkins"><span class="t">Hide non-tradable skins</span></label>
+          <label class="tg" data-t><input type="checkbox" id="showMinimap"><span class="t">Show minimap</span></label>
+        </div>
+      </details>
+
+      <details class="card"><summary>Medals</summary>
+        <div class="toggles" style="margin-bottom:10px">
+          <label class="tg" data-t><input type="checkbox" id="showMedals"><span class="t">Show medals</span></label>
+          <label class="tg" data-t><input type="checkbox" id="classicMedals"><span class="t">Classic medals</span></label>
+          <label class="tg" data-t><input type="checkbox" id="playMedalSounds" checked><span class="t">Play medal sounds</span></label>
+        </div>
+        <div class="row2">
+          <div><label class="f">Scale <span class="val" id="v_medalScale">1</span></label><input type="range" id="medalScale" min="0.5" max="2" step="0.1" value="1" oninput="sync('medalScale')"></div>
+          <div><label class="f">Color hue <span class="val" id="v_medalColorHue">0</span></label><input type="range" id="medalColorHue" min="0" max="360" step="5" value="0" oninput="sync('medalColorHue')"></div>
+        </div>
+      </details>
+
+      <details class="card"><summary>Chat</summary>
+        <div class="row2">
+          <div><label class="f">Show chat box</label><select id="showChatBox"><option selected>Always</option><option>In-combat</option><option>Off</option></select></div>
+          <div><label class="f">Chat height <span class="val" id="v_chatHeight">5</span></label><input type="range" id="chatHeight" min="1" max="10" step="1" value="5" oninput="sync('chatHeight')"></div>
+          <div><label class="f">Chat opacity <span class="val" id="v_chatOpacity">1</span></label><input type="range" id="chatOpacity" min="0" max="1" step="0.1" value="1" oninput="sync('chatOpacity')"></div>
+          <div><label class="f">Chat BG opacity <span class="val" id="v_chatBGOpacity">0</span></label><input type="range" id="chatBGOpacity" min="0" max="1" step="0.1" value="0" oninput="sync('chatBGOpacity')"></div>
+        </div>
+        <div class="toggles" style="margin-top:10px">
+          <label class="tg" data-t><input type="checkbox" id="profanityFilter"><span class="t">Profanity filter</span></label>
+          <label class="tg" data-t><input type="checkbox" id="showPlayerMessages" checked><span class="t">Show player messages</span></label>
+          <label class="tg" data-t><input type="checkbox" id="showUnboxings" checked><span class="t">Show unboxings</span></label>
+          <label class="tg" data-t><input type="checkbox" id="chatTextOutline"><span class="t">Chat text outline</span></label>
+        </div>
+      </details>
+
+      <details class="card"><summary>Crosshair</summary>
+        <div class="row2">
+          <div><label class="f">Type</label>
+            <select id="crosshairType"><option>Off</option><option selected>Precision</option><option>Dynamic</option><option>Layered</option><option>Shapes</option><option>Image</option></select>
+          </div>
+          <div><label class="f">Style (Layered / Shapes)</label>
+            <select id="crosshairStyle"><option selected>Cross</option><option>Hollow Circle</option><option>Solid Circle</option><option>Hollow Square</option><option>Solid Square</option></select>
+          </div>
+        </div>
+        <div class="row2" style="margin-top:10px">
+          <div><label class="f">Color</label><input type="color" id="crosshairColor" value="#ffffff"></div>
+          <div><label class="f">Shadow color</label><input type="color" id="crosshairShadowColor" value="#000000"></div>
+        </div>
+        <div class="row3" style="margin-top:10px">
+          <div><label class="f">Thickness <span class="val" id="v_crosshairThickness">0.1</span></label><input type="range" id="crosshairThickness" min="0" max="2" step="0.1" value="0.1" oninput="sync('crosshairThickness')"></div>
+          <div><label class="f">Size <span class="val" id="v_crosshairSize">4</span></label><input type="range" id="crosshairSize" min="0" max="20" step="0.5" value="4" oninput="sync('crosshairSize')"></div>
+          <div><label class="f">Gap <span class="val" id="v_crosshairGap">-5</span></label><input type="range" id="crosshairGap" min="-10" max="20" step="0.5" value="-5" oninput="sync('crosshairGap')"></div>
+          <div><label class="f">Shadow thickness <span class="val" id="v_crosshairShadowThickness">1.5</span></label><input type="range" id="crosshairShadowThickness" min="0" max="5" step="0.1" value="1.5" oninput="sync('crosshairShadowThickness')"></div>
+          <div><label class="f">Opacity <span class="val" id="v_crosshairOpacity">1</span></label><input type="range" id="crosshairOpacity" min="0" max="1" step="0.1" value="1" oninput="sync('crosshairOpacity')"></div>
+        </div>
+        <div class="toggles" style="margin-top:10px">
+          <label class="tg" data-t><input type="checkbox" id="crosshairAlwaysShow" checked><span class="t">Always show</span></label>
+          <label class="tg" data-t><input type="checkbox" id="crosshairDot" checked><span class="t">Dot</span></label>
+        </div>
+        <label class="f" style="margin-top:10px">Crosshair image URL (Type: Image)</label>
+        <input type="text" id="crosshairImage" placeholder="https://i.imgur.com/...">
+        <div class="row2" style="margin-top:10px">
+          <div><label class="f">Image width <span class="val" id="v_crosshairImageWidth">0</span></label><input type="range" id="crosshairImageWidth" min="0" max="50" step="1" value="0" oninput="sync('crosshairImageWidth')"></div>
+          <div><label class="f">Image height <span class="val" id="v_crosshairImageHeight">0</span></label><input type="range" id="crosshairImageHeight" min="0" max="50" step="1" value="0" oninput="sync('crosshairImageHeight')"></div>
+        </div>
+      </details>
+
+      <details class="card"><summary>Hitmarker</summary>
+        <div class="toggles" style="margin-bottom:10px"><label class="tg" data-t><input type="checkbox" id="hitmarkerShow" checked><span class="t">Show hitmarker</span></label></div>
+        <div class="row2">
+          <div><label class="f">Color</label><input type="color" id="hitmarkerColor" value="#40e0d0"></div>
+          <div><label class="f">Kill color</label><input type="color" id="hitmarkerKillColor" value="#ff3355"></div>
+        </div>
+        <div class="row3" style="margin-top:10px">
+          <div><label class="f">Length <span class="val" id="v_hitmarkerLength">23</span></label><input type="range" id="hitmarkerLength" min="0" max="40" step="1" value="23" oninput="sync('hitmarkerLength')"></div>
+          <div><label class="f">Thickness <span class="val" id="v_hitmarkerThickness">3.5</span></label><input type="range" id="hitmarkerThickness" min="0" max="10" step="0.5" value="3.5" oninput="sync('hitmarkerThickness')"></div>
+          <div><label class="f">Spacing <span class="val" id="v_hitmarkerSpacing">5</span></label><input type="range" id="hitmarkerSpacing" min="0" max="20" step="1" value="5" oninput="sync('hitmarkerSpacing')"></div>
+          <div><label class="f">Opacity <span class="val" id="v_hitmarkerOpacity">1</span></label><input type="range" id="hitmarkerOpacity" min="0" max="1" step="0.1" value="1" oninput="sync('hitmarkerOpacity')"></div>
+          <div><label class="f">Anim size <span class="val" id="v_hitmarkerAnimSize">0.3</span></label><input type="range" id="hitmarkerAnimSize" min="0" max="1" step="0.05" value="0.3" oninput="sync('hitmarkerAnimSize')"></div>
+          <div><label class="f">Anim speed <span class="val" id="v_hitmarkerAnimSpeed">0.001</span></label><input type="range" id="hitmarkerAnimSpeed" min="0" max="0.01" step="0.0005" value="0.001" oninput="sync('hitmarkerAnimSpeed')"></div>
+          <div><label class="f">Fade speed <span class="val" id="v_hitmarkerFadeSpeed">0.01</span></label><input type="range" id="hitmarkerFadeSpeed" min="0" max="0.1" step="0.005" value="0.01" oninput="sync('hitmarkerFadeSpeed')"></div>
+        </div>
+      </details>
+    </div>
+
+    <!-- ===================== RENDER ===================== -->
+    <div class="tabpanel" id="tab-render">
+      <details class="card" open><summary>Performance</summary>
+        <div class="row2">
+          <div><label class="f">Resolution <span class="val" id="v_resolution">0.9</span></label><input type="range" id="resolution" min="0.4" max="1" step="0.05" value="0.9" oninput="sync('resolution')"></div>
+          <div><label class="f">Frame cap</label><select id="frameCap"><option value="0" selected>Unlimited</option><option value="60">60</option><option value="120">120</option><option value="144">144</option><option value="240">240</option></select></div>
+          <div><label class="f">Aspect ratio</label><select id="aspectRatioPreset"><option selected>Native</option><option>800x600</option><option>1024x768</option><option>1280x960</option><option>1280x1024</option><option>1440x1080</option><option>1656x1080</option></select></div>
+          <div><label class="f">Reflection quality</label><select id="reflectionQuality"><option selected>Map Dependent</option><option>32</option><option>64</option><option>128</option><option>256</option><option>1024</option><option>2048</option></select></div>
+        </div>
+        <div class="row3" style="margin-top:10px">
+          <div><label class="f">Particle distance <span class="val" id="v_particleDistance">1000</span></label><input type="range" id="particleDistance" min="0" max="2000" step="50" value="1000" oninput="sync('particleDistance')"></div>
+          <div><label class="f">Render distance <span class="val" id="v_renderDistance">100</span></label><input type="range" id="renderDistance" min="0" max="200" step="5" value="100" oninput="sync('renderDistance')"></div>
+        </div>
+        <div class="toggles" style="margin-top:10px">
+          <label class="tg" data-t><input type="checkbox" id="antialiasing"><span class="t">Antialiasing *</span></label>
+          <label class="tg" data-t><input type="checkbox" id="lowSpec"><span class="t">Low spec</span></label>
+          <label class="tg" data-t><input type="checkbox" id="noTextures"><span class="t">No textures *</span></label>
+          <label class="tg" data-t><input type="checkbox" id="mapDetails" checked><span class="t">Map details *</span></label>
+          <label class="tg" data-t><input type="checkbox" id="particles" checked><span class="t">Particles</span></label>
+          <label class="tg" data-t><input type="checkbox" id="shadows"><span class="t">Shadows</span></label>
+          <label class="tg" data-t><input type="checkbox" id="softShadows"><span class="t">Soft shadows *</span></label>
+          <label class="tg" data-t><input type="checkbox" id="highResShadows"><span class="t">High-res shadows *</span></label>
+          <label class="tg" data-t><input type="checkbox" id="dynamicShadows"><span class="t">Dynamic shadows</span></label>
+          <label class="tg" data-t><input type="checkbox" id="oldShading"><span class="t">Old shading</span></label>
+        </div>
+      </details>
+
+      <details class="card"><summary>Effects & Animations</summary>
+        <div class="toggles">
+          <label class="tg" data-t><input type="checkbox" id="bulletTrails" checked><span class="t">Bullet trails</span></label>
+          <label class="tg" data-t><input type="checkbox" id="yourTrails" checked><span class="t">Your trails</span></label>
+          <label class="tg" data-t><input type="checkbox" id="muzzleFlash"><span class="t">Muzzle flash</span></label>
+          <label class="tg" data-t><input type="checkbox" id="bulletCasings"><span class="t">Bullet casings</span></label>
+          <label class="tg" data-t><input type="checkbox" id="bulletImpactHoles"><span class="t">Bullet impact holes</span></label>
+          <label class="tg" data-t><input type="checkbox" id="sniperFlap" checked><span class="t">Sniper flap</span></label>
+          <label class="tg" data-t><input type="checkbox" id="sniperFlapAnimation" checked><span class="t">Sniper flap animation</span></label>
+          <label class="tg" data-t><input type="checkbox" id="textureAnimations" checked><span class="t">Texture animations</span></label>
+          <label class="tg" data-t><input type="checkbox" id="objectAnimations" checked><span class="t">Object animations</span></label>
+          <label class="tg" data-t><input type="checkbox" id="disableAnimatedPaints"><span class="t">Disable animated paints *</span></label>
+          <label class="tg" data-t><input type="checkbox" id="ambientShading"><span class="t">Ambient shading</span></label>
+          <label class="tg" data-t><input type="checkbox" id="screenShake"><span class="t">Screen shake</span></label>
+          <label class="tg" data-t><input type="checkbox" id="weaponsShine"><span class="t">Weapons shine</span></label>
+          <label class="tg" data-t><input type="checkbox" id="showExplosions" checked><span class="t">Show explosions</span></label>
+          <label class="tg" data-t><input type="checkbox" id="postProcessing"><span class="t">Post processing</span></label>
+        </div>
+        <label class="f" style="margin-top:10px">Lighting *</label>
+        <select id="lighting"><option>Low</option><option selected>Normal</option><option>High</option><option>Physical</option></select>
+      </details>
+
+      <details class="card"><summary>HUD Editing — Bars & Colors</summary>
+        <div class="row2">
+          <div><label class="f">HUD health (high)</label><input type="color" id="hudHealthHigh" value="#4dd6ff"></div>
+          <div><label class="f">HUD health (low)</label><input type="color" id="hudHealthLow" value="#ff4444"></div>
+          <div><label class="f">Progress bar color</label><input type="color" id="progressBarColor" value="#ffffff"></div>
+          <div><label class="f">Charge bar color</label><input type="color" id="chargeBarColor" value="#ffffff"></div>
+          <div><label class="f">Overcharge color</label><input type="color" id="overchargeColor" value="#ff3355"></div>
+          <div><label class="f">Popup score color</label><input type="color" id="popupScoreColor" value="#ffdd00"></div>
+          <div><label class="f">Bullet trail color</label><input type="color" id="bulletTrailColor" value="#ff9de2"></div>
+          <div><label class="f">Bullet tracer color</label><input type="color" id="bulletTracerColor" value="#d4a8ff"></div>
+          <div><label class="f">Grapple rope color</label><input type="color" id="grappleRopeColor" value="#c9c9c9"></div>
+          <div><label class="f">Speed lines color</label><input type="color" id="speedLinesColor" value="#cbb8ff"></div>
+        </div>
+        <div class="row3" style="margin-top:10px">
+          <div><label class="f">Progress bar scale <span class="val" id="v_progressBarScale">1</span></label><input type="range" id="progressBarScale" min="0.5" max="2" step="0.1" value="1" oninput="sync('progressBarScale')"></div>
+          <div><label class="f">Progress bar rotation <span class="val" id="v_progressBarRotation">0</span></label><input type="range" id="progressBarRotation" min="0" max="360" step="5" value="0" oninput="sync('progressBarRotation')"></div>
+          <div><label class="f">Charge bar scale <span class="val" id="v_chargeBarScale">0.5</span></label><input type="range" id="chargeBarScale" min="0.1" max="2" step="0.1" value="0.5" oninput="sync('chargeBarScale')"></div>
+          <div><label class="f">Charge bar rotation <span class="val" id="v_chargeBarRotation">270</span></label><input type="range" id="chargeBarRotation" min="0" max="360" step="5" value="270" oninput="sync('chargeBarRotation')"></div>
+          <div><label class="f">Popup score scale <span class="val" id="v_popupScoreScale">0.9</span></label><input type="range" id="popupScoreScale" min="0.5" max="2" step="0.1" value="0.9" oninput="sync('popupScoreScale')"></div>
+          <div><label class="f">Popup score Y offset <span class="val" id="v_popupScoreYOffset">2.5</span></label><input type="range" id="popupScoreYOffset" min="-20" max="20" step="0.1" value="2.5" oninput="sync('popupScoreYOffset')"></div>
+        </div>
+        <div class="toggles" style="margin-top:10px">
+          <label class="tg" data-t><input type="checkbox" id="progressBarShadow" checked><span class="t">Progress bar shadow</span></label>
+          <label class="tg" data-t><input type="checkbox" id="chargeBarShadow" checked><span class="t">Charge bar shadow</span></label>
+          <label class="tg" data-t><input type="checkbox" id="showPopupScore" checked><span class="t">Show popup score</span></label>
+          <label class="tg" data-t><input type="checkbox" id="popupScoreShadow"><span class="t">Popup score shadow</span></label>
+          <label class="tg" data-t><input type="checkbox" id="bulletTracers" checked><span class="t">Bullet tracers</span></label>
+        </div>
+      </details>
+
+      <details class="card"><summary>HUD Editing — Fine Tuning</summary>
+        <div class="row3">
+          <div><label class="f">Saturation (in-game) <span class="val" id="v_saturationIngame">1</span></label><input type="range" id="saturationIngame" min="0" max="2" step="0.1" value="1" oninput="sync('saturationIngame')"></div>
+          <div><label class="f">Saturation (UI) <span class="val" id="v_saturationUI">1</span></label><input type="range" id="saturationUI" min="0" max="2" step="0.1" value="1" oninput="sync('saturationUI')"></div>
+          <div><label class="f">Color hue (in-game) <span class="val" id="v_colorHueIngame">0</span></label><input type="range" id="colorHueIngame" min="0" max="360" step="5" value="0" oninput="sync('colorHueIngame')"></div>
+          <div><label class="f">Color hue (UI) <span class="val" id="v_colorHueUI">0</span></label><input type="range" id="colorHueUI" min="0" max="360" step="5" value="0" oninput="sync('colorHueUI')"></div>
+          <div><label class="f">Vignette <span class="val" id="v_vignette">0</span></label><input type="range" id="vignette" min="0" max="1" step="0.1" value="0" oninput="sync('vignette')"></div>
+          <div><label class="f">Killfeed limit <span class="val" id="v_killfeedLimit">8</span></label><input type="range" id="killfeedLimit" min="1" max="20" step="1" value="8" oninput="sync('killfeedLimit')"></div>
+          <div><label class="f">Speed lines <span class="val" id="v_speedLines">0</span></label><input type="range" id="speedLines" min="0" max="1" step="0.1" value="0" oninput="sync('speedLines')"></div>
+          <div><label class="f">Tracer offset <span class="val" id="v_tracerOffset">0</span></label><input type="range" id="tracerOffset" min="-5" max="5" step="0.5" value="0" oninput="sync('tracerOffset')"></div>
+        </div>
+      </details>
+    </div>
+
+    <!-- ===================== GAME ===================== -->
+    <div class="tabpanel" id="tab-game">
+      <details class="card" open><summary>Gameplay Privacy</summary>
+        <div class="toggles">
+          <label class="tg" data-t><input type="checkbox" id="streamerMode"><span class="t">Streamer mode</span></label>
+          <label class="tg" data-t><input type="checkbox" id="anonymousMode"><span class="t">Anonymous mode</span></label>
+          <label class="tg" data-t><input type="checkbox" id="showRegionInfo" checked><span class="t">Show region info</span></label>
+          <label class="tg" data-t><input type="checkbox" id="showServerTimers" checked><span class="t">Show server timers</span></label>
+          <label class="tg" data-t><input type="checkbox" id="showVerifiedBadge" checked><span class="t">Show verified badge</span></label>
+          <label class="tg" data-t><input type="checkbox" id="showPremiumBadge"><span class="t">Show premium badge</span></label>
+          <label class="tg" data-t><input type="checkbox" id="showCustomBadge" checked><span class="t">Show custom badge</span></label>
+          <label class="tg" data-t><input type="checkbox" id="showRankedBadge" checked><span class="t">Show ranked badge</span></label>
+        </div>
+        <label class="f" style="margin-top:10px">Hide game title (custom text)</label>
+        <input type="text" id="hideGameTitle" placeholder="Custom Title">
+      </details>
+
+      <details class="card"><summary>View Model</summary>
+        <div class="row3">
+          <div><label class="f">FOV <span class="val" id="v_fov">100</span></label><input type="range" id="fov" min="60" max="140" step="1" value="100" oninput="sync('fov')"></div>
+          <div><label class="f">Weapon FOV <span class="val" id="v_weaponFOV">150</span></label><input type="range" id="weaponFOV" min="60" max="150" step="1" value="150" oninput="sync('weaponFOV')"></div>
+          <div><label class="f">ADS FOV power <span class="val" id="v_weaponADSFOVPower">0</span></label><input type="range" id="weaponADSFOVPower" min="0" max="1" step="0.1" value="0" oninput="sync('weaponADSFOVPower')"></div>
+          <div><label class="f">Weapon bobbing <span class="val" id="v_weaponBobbing">0</span></label><input type="range" id="weaponBobbing" min="0" max="2" step="0.1" value="0" oninput="sync('weaponBobbing')"></div>
+          <div><label class="f">Weapon leaning <span class="val" id="v_weaponLeaning">0.3</span></label><input type="range" id="weaponLeaning" min="0" max="1" step="0.1" value="0.3" oninput="sync('weaponLeaning')"></div>
+          <div><label class="f">Weapon rotation <span class="val" id="v_weaponRotation">0</span></label><input type="range" id="weaponRotation" min="0" max="1" step="0.1" value="0" oninput="sync('weaponRotation')"></div>
+          <div><label class="f">X offset <span class="val" id="v_weaponXOffset">1</span></label><input type="range" id="weaponXOffset" min="-3" max="3" step="0.1" value="1" oninput="sync('weaponXOffset')"></div>
+          <div><label class="f">Y offset <span class="val" id="v_weaponYOffset">2</span></label><input type="range" id="weaponYOffset" min="-3" max="3" step="0.1" value="2" oninput="sync('weaponYOffset')"></div>
+          <div><label class="f">Z offset <span class="val" id="v_weaponZOffset">0.1</span></label><input type="range" id="weaponZOffset" min="-3" max="3" step="0.1" value="0.1" oninput="sync('weaponZOffset')"></div>
+          <div><label class="f">ADS Y offset <span class="val" id="v_weaponADSYOffset">0</span></label><input type="range" id="weaponADSYOffset" min="-3" max="3" step="0.1" value="0" oninput="sync('weaponADSYOffset')"></div>
+          <div><label class="f">Swap Y <span class="val" id="v_weaponSwapY">1</span></label><input type="range" id="weaponSwapY" min="0" max="2" step="0.1" value="1" oninput="sync('weaponSwapY')"></div>
+          <div><label class="f">Reload Y <span class="val" id="v_weaponReloadY">1</span></label><input type="range" id="weaponReloadY" min="0" max="2" step="0.1" value="1" oninput="sync('weaponReloadY')"></div>
+          <div><label class="f">Wall slide / jump lean <span class="val" id="v_wallSlideLean">0.5</span></label><input type="range" id="wallSlideLean" min="0" max="1" step="0.1" value="0.5" oninput="sync('wallSlideLean')"></div>
+        </div>
+        <div class="toggles" style="margin-top:10px">
+          <label class="tg" data-t><input type="checkbox" id="toggleWeaponADS"><span class="t">Toggle weapon ADS</span></label>
+          <label class="tg" data-t><input type="checkbox" id="weaponAimAnimation"><span class="t">Weapon aim animation</span></label>
+          <label class="tg" data-t><input type="checkbox" id="hideWeaponADS" checked><span class="t">Hide weapon on ADS</span></label>
+          <label class="tg" data-t><input type="checkbox" id="showHands" checked><span class="t">Show hands</span></label>
+          <label class="tg" data-t><input type="checkbox" id="showPrimary" checked><span class="t">Show primary</span></label>
+          <label class="tg" data-t><input type="checkbox" id="showSecondary" checked><span class="t">Show secondary</span></label>
+          <label class="tg" data-t><input type="checkbox" id="showMelee" checked><span class="t">Show melee</span></label>
+          <label class="tg" data-t><input type="checkbox" id="leftHanded"><span class="t">Left handed</span></label>
+          <label class="tg" data-t><input type="checkbox" id="roundedArms"><span class="t">Rounded arms *</span></label>
+        </div>
+      </details>
+
+      <details class="card"><summary>Customization</summary>
+        <div class="toggles" style="margin-bottom:10px">
+          <label class="tg" data-t><input type="checkbox" id="loadMods" checked><span class="t">Load mods</span></label>
+          <label class="tg" data-t><input type="checkbox" id="allowLogoChanges"><span class="t">Allow logo changes</span></label>
+          <label class="tg" data-t><input type="checkbox" id="autoLoadMod" checked><span class="t">Auto-load mod</span></label>
+          <label class="tg" data-t><input type="checkbox" id="scopeBordersEnabled"><span class="t">Scope borders</span></label>
+          <label class="tg" data-t><input type="checkbox" id="useDamageOverlay"><span class="t">Use damage overlay</span></label>
+          <label class="tg" data-t><input type="checkbox" id="particleEffectOnKill"><span class="t">Particle effect on kill</span></label>
+          <label class="tg" data-t><input type="checkbox" id="enableJumpScare" checked><span class="t">Enable jump scare</span></label>
+        </div>
+        <div class="row2">
+          <div><label class="f">Scope border color</label><input type="color" id="scopeBorderColor" value="#29b6ff"></div>
+          <div><label class="f">Scope opacity <span class="val" id="v_scopeOpacity">0</span></label><input type="range" id="scopeOpacity" min="0" max="1" step="0.1" value="0" oninput="sync('scopeOpacity')"></div>
+          <div><label class="f">Scope image width <span class="val" id="v_scopeImageWidth">10</span></label><input type="range" id="scopeImageWidth" min="0" max="20" step="1" value="10" oninput="sync('scopeImageWidth')"></div>
+          <div><label class="f">Scope image height <span class="val" id="v_scopeImageHeight">10</span></label><input type="range" id="scopeImageHeight" min="0" max="20" step="1" value="10" oninput="sync('scopeImageHeight')"></div>
+          <div><label class="f">Reticle image width <span class="val" id="v_reticleImageWidth">1.4</span></label><input type="range" id="reticleImageWidth" min="0" max="5" step="0.1" value="1.4" oninput="sync('reticleImageWidth')"></div>
+          <div><label class="f">Reticle image height <span class="val" id="v_reticleImageHeight">1.4</span></label><input type="range" id="reticleImageHeight" min="0" max="5" step="0.1" value="1.4" oninput="sync('reticleImageHeight')"></div>
+        </div>
+        <label class="f" style="margin-top:10px">Match end message</label>
+        <input type="text" id="matchEndMessage" placeholder="GG!">
+      </details>
+    </div>
+
+    <!-- ===================== SOUND ===================== -->
+    <div class="tabpanel" id="tab-sound">
+      <details class="card" open><summary>Audio</summary>
+        <div class="row3">
+          <div><label class="f">Master <span class="val" id="v_masterVolume">0.5</span></label><input type="range" id="masterVolume" min="0" max="1" step="0.05" value="0.5" oninput="sync('masterVolume')"></div>
+          <div><label class="f">Ambient <span class="val" id="v_ambientVolume">0.2</span></label><input type="range" id="ambientVolume" min="0" max="1" step="0.05" value="0.2" oninput="sync('ambientVolume')"></div>
+          <div><label class="f">Action <span class="val" id="v_actionVolume">0.3</span></label><input type="range" id="actionVolume" min="0" max="1" step="0.05" value="0.3" oninput="sync('actionVolume')"></div>
+          <div><label class="f">Weapon <span class="val" id="v_weaponVolume">0.4</span></label><input type="range" id="weaponVolume" min="0" max="1" step="0.05" value="0.4" oninput="sync('weaponVolume')"></div>
+          <div><label class="f">Player <span class="val" id="v_playerVolume">0.21</span></label><input type="range" id="playerVolume" min="0" max="1" step="0.01" value="0.21" oninput="sync('playerVolume')"></div>
+          <div><label class="f">Cosmetics <span class="val" id="v_cosmeticsVolume">0.3</span></label><input type="range" id="cosmeticsVolume" min="0" max="1" step="0.05" value="0.3" oninput="sync('cosmeticsVolume')"></div>
+          <div><label class="f">UI <span class="val" id="v_uiVolume">0.3</span></label><input type="range" id="uiVolume" min="0" max="1" step="0.05" value="0.3" oninput="sync('uiVolume')"></div>
+          <div><label class="f">Asset <span class="val" id="v_assetVolume">0.3</span></label><input type="range" id="assetVolume" min="0" max="1" step="0.05" value="0.3" oninput="sync('assetVolume')"></div>
+        </div>
+      </details>
+      <details class="card"><summary>Voice Chat</summary>
+        <div class="row2">
+          <div><label class="f">Mic quality</label><select id="micQuality"><option>Low</option><option selected>Medium</option><option>High</option><option>Epic</option><option>Ultra</option></select></div>
+          <div><label class="f">Voice chat type</label><select id="voiceChatType"><option selected>Default</option><option>Spacial / Proximity</option></select></div>
+          <div><label class="f">Mic volume <span class="val" id="v_micVolume">0.5</span></label><input type="range" id="micVolume" min="0" max="1" step="0.05" value="0.5" oninput="sync('micVolume')"></div>
+          <div><label class="f">Voice volume <span class="val" id="v_voiceVolume">0.5</span></label><input type="range" id="voiceVolume" min="0" max="1" step="0.05" value="0.5" oninput="sync('voiceVolume')"></div>
+          <div><label class="f">Voice chat distance <span class="val" id="v_voiceChatDistance">5</span></label><input type="range" id="voiceChatDistance" min="1" max="20" step="1" value="5" oninput="sync('voiceChatDistance')"></div>
+        </div>
+        <div class="toggles" style="margin-top:10px"><label class="tg" data-t><input type="checkbox" id="voiceMuteSpectators"><span class="t">Mute spectators</span></label></div>
+      </details>
+    </div>
+
+    <!-- ===================== KEYBINDS ===================== -->
+    <div class="tabpanel" id="tab-keybinds">
+      <div class="card" style="padding:12px 16px">
+        <div class="note" style="border-top:none;padding-top:0">Click a key chip, then press a keyboard key, click any mouse button (including left/right), or scroll to bind it. Click <b>×</b> to unbind. Defaults below come from a real exported layout — rebind anything you like. Left/right/side mouse-click codes are best-effort (not confirmed by a real export) — if a mouse bind doesn't work in-game, tell me and I'll refine it.</div>
+      </div>
+      <div class="kbtabs" id="kbtabs"></div>
+      <div id="kbRoot"></div>
+    </div>
+
+  </div>
+
+  <div class="right">
+    <div class="station">
+      <div class="card-h">Output<span class="badge" id="fieldCount">0 fields</span></div>
+      <div class="gen-row"><button class="primary" onclick="generate()">Generate settings.json</button></div>
+      <div class="out" id="outWrap"><div class="empty">Nothing generated yet.<br><b>Set your options, then hit Generate.</b></div></div>
+
+      <div class="cfg-grid">
+        <input id="presetName" placeholder="preset name (for save)">
+        <button onclick="saveLocal()">Save</button>
+        <button onclick="deleteLocal()">Delete</button>
+      </div>
+      <select id="savedList" onchange="loadLocal()"></select>
+
+      <details class="sub-d" style="border-top:1px dashed var(--line);padding-top:10px">
+        <summary style="cursor:pointer;color:var(--dim);font-size:12px;list-style:none">+ Import existing settings JSON</summary>
+        <textarea id="importBox" style="margin-top:8px;min-height:70px" placeholder="paste an exported settings.json here"></textarea>
+        <button style="margin-top:8px;width:100%" onclick="importPaste()">Import & fill form</button>
+      </details>
+
+      <div class="deploy">
+        <b>How to use in Krunker:</b>
+        <ol>
+          <li>Click Generate, then Copy or Download.</li>
+          <li>In Krunker, open Settings → find the <b>Import</b> field.</li>
+          <li>Paste the text and confirm.</li>
+        </ol>
+      </div>
+      <div class="note">The badge above shows <b>confirmed</b> vs <b>unverified</b> fields. Confirmed = real Krunker key, cross-checked against actual exported settings.json files. Unverified fields are output as <b>guess_&lt;name&gt;</b> — Krunker ignores those safely, they just won't do anything yet. Fields marked <b>*</b> may need a game restart. Keybinds aren't generated here — set those in-game under Controls → Keybinds.</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// #toast is position:fixed and needs to stay pinned to the viewport.
+// <body> carries a `filter` (for the account theme's UI saturation/hue
+// controls), and any element with a filter becomes the containing block
+// for its position:fixed descendants — so left as a child of body, it'd
+// end up anchored to body's own (page-length) box instead of the
+// viewport. Moving it to be a sibling of <body> (a direct child of
+// <html>, which never gets that filter) keeps it correctly fixed.
+(function(){ var t = document.getElementById("toast"); if (t) document.documentElement.appendChild(t); })();
+</script>
+
+<script src="generator.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="community/supabase-client.js"></script>
+<script>(async () => { try { if (await getSessionUser()) await getMyProfile(); } catch (e) {} })();</script>
+</body>
+</html>

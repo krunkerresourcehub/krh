@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel — Krunker Resource Hub</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+<link rel="shortcut icon" href="../assets/favicon.ico">
+<link rel="stylesheet" href="community.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="../assets/site-glow.css">
+<script>(function(){try{var v=localStorage.getItem("krh:reduceEffects");var r=v==="1"||(v!=="0"&&window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);if(r)document.documentElement.setAttribute("data-glow-effects","off");}catch(e){}})();</script>
+<script src="../assets/site-glow.js" defer></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand"><a href="../index.html"><img src="../assets/logo.png" alt="Krunker Resource Hub" class="brand-logo">Krunker Resource Hub</a></div>
+    <div class="topnav" id="topnav"></div>
+  </div>
+
+  <div class="card">
+    <h1>Admin Panel</h1>
+    <p class="subtitle">Manage all posts: publish, unpublish, or delete.</p>
+  </div>
+
+  <div class="card">
+    <h2>All Posts</h2>
+    <div class="row2" style="margin-bottom:16px;">
+      <select id="filterStatus">
+        <option value="all">All statuses</option>
+        <option value="published">Published only</option>
+        <option value="draft">Draft only</option>
+      </select>
+      <select id="filterCategory">
+        <option value="all">All categories</option>
+        <option value="general">General</option>
+        <option value="crosshair">Crosshair</option>
+      </select>
+      <input type="text" id="filterSearch" placeholder="Search title...">
+    </div>
+    <div id="allPosts"><div class="empty">Loading...</div></div>
+  </div>
+
+  <div class="card">
+    <button class="btn logout-btn" id="btnLogout">Logout</button>
+  </div>
+</div>
+
+<script src="supabase-client.js"></script>
+<script>
+let allData = [];
+
+async function boot() {
+  const profile = await requireRole(["admin", "developer"]);
+  if (!profile) return;
+
+  const nav = document.getElementById("topnav");
+  let links = `<a href="profile.html?user=${encodeURIComponent(profile.username)}">My Profile</a><a href="logs.html">History Logs</a>`;
+  if (profile.role === "developer") links += `<a href="developer.html">Developer Panel</a>`;
+  links += `<span style="color:var(--text-1); font-size:13.5px; margin-left:4px;">${escapeHtml(profile.display_name)} ${roleBadge(profile.role)}</span>`;
+  links += `<a href="account-settings.html" style="margin-left:6px;">Account</a>`;
+  links += `<a href="settings.html" style="margin-left:6px;">Theme</a>`;
+  nav.innerHTML = links;
+  document.getElementById("btnLogout").addEventListener("click", async (e) => {
+    e.preventDefault();
+    if (!confirm("Are you sure you want to log out?")) return;
+    await sb.auth.signOut(); window.location.href = "../index.html";
+  });
+
+  loadAll();
+  document.getElementById("filterStatus").addEventListener("change", render);
+  document.getElementById("filterCategory").addEventListener("change", render);
+  document.getElementById("filterSearch").addEventListener("input", render);
+}
+
+async function loadAll() {
+  const { data, error } = await sb
+    .from("posts")
+    .select("*, profiles!posts_author_id_fkey(username,display_name,avatar_url)")
+    .order("created_at", { ascending: false });
+  const el = document.getElementById("allPosts");
+  if (error) { el.innerHTML = `<div class="empty">Failed to load: ${escapeHtml(error.message)}</div>`; return; }
+  allData = data;
+  render();
+}
+
+function render() {
+  const status = document.getElementById("filterStatus").value;
+  const category = document.getElementById("filterCategory").value;
+  const search = document.getElementById("filterSearch").value.toLowerCase();
+  const el = document.getElementById("allPosts");
+  let rows = allData;
+  if (status !== "all") rows = rows.filter(p => p.status === status);
+  if (category !== "all") rows = rows.filter(p => p.category === category);
+  if (search) rows = rows.filter(p => p.title.toLowerCase().includes(search));
+
+  if (!rows.length) { el.innerHTML = `<div class="empty">No matching posts.</div>`; return; }
+
+  el.innerHTML = rows.map(p => `
+    <div class="post-item">
+      <div class="title">${escapeHtml(p.title)}</div>
+      <div class="meta">
+        <span class="status-pill ${p.status === 'published' ? 'status-published' : 'status-draft'}">${p.status}</span>
+        ${p.category === 'crosshair' ? '<span class="role-badge role-admin">Crosshair</span>' : ''}
+        <span style="display:inline-flex; align-items:center; gap:5px;">${avatarHtml(p.profiles, 16)} by ${escapeHtml(p.profiles?.display_name || "?")} (@${escapeHtml(p.profiles?.username || "-")})</span>
+        <span>${formatDate(p.created_at)}</span>
+      </div>
+      <div class="content">${escapeHtml(p.content)}</div>
+      <div class="post-actions">
+        ${p.status === 'draft'
+          ? `<button class="btn small green" onclick="setStatus('${p.id}','published')">Publish</button>`
+          : `<button class="btn small ghost" onclick="setStatus('${p.id}','draft')">Unpublish</button>`}
+        <button class="btn small danger" onclick="removePost('${p.id}')">Delete</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+async function setStatus(id, status) {
+  const post = allData.find(p => p.id === id);
+  const { error } = await sb.from("posts").update({ status }).eq("id", id);
+  if (error) { alert("Failed: " + error.message); return; }
+
+  /* logAction is DELIBERATELY not awaited: the action itself already
+     succeeded, so the UI can refresh right away while the log is
+     written in the background.
+     (In post.html it's still awaited because the page navigates away
+     immediately — if not awaited, the browser cancels the request.) */
+  logAction(status === "published" ? "post_publish" : "post_unpublish", {
+    targetType: "post",
+    targetId: id,
+    targetLabel: post ? post.title : null,
+    targetUserId: post ? post.author_id : null,
+    meta: { author: post?.profiles?.username || null, category: post?.category || null },
+  });
+
+  loadAll();
+}
+
+async function removePost(id) {
+  const post = allData.find(p => p.id === id);
+  const reasonInput = prompt(`Permanently delete "${post ? post.title : "this post"}". Enter a reason (required):`, "");
+  if (reasonInput === null) return;
+  const reason = reasonInput.trim();
+  if (!reason) { alert("A reason is required to delete a post."); return; }
+  if (!confirm(`Permanently delete this post?\n\nReason: ${reason}\n\nThis cannot be undone.`)) return;
+
+  const { error } = await sb.from("posts").delete().eq("id", id);
+  if (error) { alert("Failed: " + error.message); return; }
+
+  /* The log is written AFTER the delete succeeds, but the title &
+     author were already snapshotted from allData above — so the log
+     stays informative even after the post is gone from the database. */
+  /* logAction is DELIBERATELY not awaited: the action itself already
+     succeeded, so the UI can refresh right away while the log is
+     written in the background.
+     (In post.html it's still awaited because the page navigates away
+     immediately — if not awaited, the browser cancels the request.) */
+  logAction("post_delete", {
+    targetType: "post",
+    targetId: id,
+    targetLabel: post ? post.title : null,
+    targetUserId: post ? post.author_id : null,
+    reason,
+    meta: { author: post?.profiles?.username || null, category: post?.category || null },
+  });
+
+  loadAll();
+}
+
+boot();
+</script>
+</body>
+</html>

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Krunker Resource Hub</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+<link rel="shortcut icon" href="../assets/favicon.ico">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#120c28">
+<meta name="description" content="Community submissions on Krunker Resource Hub.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Krunker Resource Hub">
+<meta property="og:title" content="Krunker Resource Hub">
+<meta property="og:description" content="Community submissions on Krunker Resource Hub.">
+<meta property="og:image" content="../assets/logo.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Krunker Resource Hub">
+<meta name="twitter:description" content="Community submissions on Krunker Resource Hub.">
+<meta name="twitter:image" content="../assets/logo.png">
+<link rel="stylesheet" href="community.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="../assets/site-glow.css">
+<script>(function(){try{var v=localStorage.getItem("krh:reduceEffects");var r=v==="1"||(v!=="0"&&window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);if(r)document.documentElement.setAttribute("data-glow-effects","off");}catch(e){}})();</script>
+<script src="../assets/site-glow.js" defer></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand"><a href="../index.html"><img src="../assets/logo.png" alt="Krunker Resource Hub" class="brand-logo">Krunker Resource Hub</a></div>
+    <div class="topnav" id="topnav"></div>
+  </div>
+
+  <div class="card">
+    <h1 id="pageTitle">Posts</h1>
+    <p class="subtitle" id="pageSubtitle">Community submissions for this section.</p>
+  </div>
+
+  <div class="card" id="submitCard" style="display:none;">
+    <h2 id="submitHeading">Post Here</h2>
+    <label>Title</label>
+    <input type="text" id="pTitle" placeholder="Title">
+    <label id="contentLabel">Content</label>
+    <textarea id="pContent" placeholder="Write your content, paste your code, or link a file here"></textarea>
+    <input type="file" id="pFile" style="display:none;">
+    <div id="pPreviewWrap" style="display:none; margin:12px 0;">
+      <p class="hint" id="pFileName"></p>
+    </div>
+    <p class="hint" id="uploadSizeHint" style="display:none;"></p>
+    <div id="pDescWrap" style="display:none;">
+      <label>Description</label>
+      <textarea id="pDescription" placeholder="Describe what this is, how to install it, etc. (optional)"></textarea>
+    </div>
+    <button class="btn green" id="btnPublish">Publish</button>
+    <div class="msg" id="createMsg"></div>
+  </div>
+
+  <div class="card" id="loginPrompt">
+    <p class="subtitle" style="margin-bottom:14px;">Log in to post here.</p>
+    <a href="login.html" class="btn ghost" style="display:block; text-align:center; margin-bottom:10px;">Login</a>
+    <a href="signup.html" class="btn" style="display:block; text-align:center;">Sign Up</a>
+  </div>
+
+  <div class="card" id="feedCard">
+    <h2 id="feedHeading">All Posts</h2>
+    <input type="text" id="feedSearch" placeholder="Search by title..." style="margin-bottom:14px;">
+    <div id="feed"><div class="empty">Loading...</div></div>
+    <button class="btn ghost" id="btnLoadMoreFeed" style="display:none; margin-top:14px;">Load More</button>
+  </div>
+
+  <div class="card" id="logoutCard" style="display:none;">
+    <button class="btn logout-btn" id="btnLogout">Logout</button>
+  </div>
+</div>
+
+<script src="supabase-client.js"></script>
+<script>
+let me = null;
+let pendingFiles = []; /* array of File objects — single-file mode just keeps this at length 1 */
+const FEED_PAGE_SIZE = 50;
+let feedOffset = 0;
+let feedSearchQuery = "";
+
+const params = new URLSearchParams(window.location.search);
+const CAT = params.get("cat") || "crosshair";
+const TITLE = params.get("title") || "Posts";
+const FILETYPE_RAW = params.get("filetype") || null; /* e.g. "txt" or "txt,js" — switches to file-upload mode */
+/* List of allowed extensions, lowercase, no leading dot. e.g. ["txt","js"] */
+const FILETYPES = FILETYPE_RAW ? FILETYPE_RAW.split(",").map(s => s.trim().toLowerCase()).filter(Boolean) : [];
+const FILETYPE = FILETYPES[0] || null; /* kept for anything that only needs a single default extension */
+const SHOW_DESC = params.get("desc") === "1"; /* adds an optional description textarea alongside the file upload */
+const MULTIPLE = params.get("multiple") === "1"; /* allows selecting/uploading more than one file per post */
+
+document.title = TITLE + " — Krunker Resource Hub";
+document.getElementById("pageTitle").textContent = TITLE;
+document.getElementById("pageSubtitle").textContent = `Community submissions filed under ${TITLE}.`;
+document.getElementById("submitHeading").textContent = `Post Your ${TITLE}`;
+document.getElementById("feedHeading").textContent = `All ${TITLE} Posts`;
+
+if (FILETYPES.length) {
+  document.getElementById("pContent").style.display = "none";
+  const extLabel = FILETYPES.map(ext => "." + ext).join(" or ");
+  document.getElementById("contentLabel").textContent = `${TITLE} File${MULTIPLE ? "(s)" : ""} (${extLabel})`;
+  const fileInput = document.getElementById("pFile");
+  fileInput.style.display = "block";
+  fileInput.accept = FILETYPES.map(ext => "." + ext).join(",");
+  if (MULTIPLE) fileInput.multiple = true;
+  document.getElementById("uploadSizeHint").style.display = "block";
+  const uploadMaxBytes = FILETYPES.includes("zip") ? UPLOAD_MAX_BYTES_ZIP : UPLOAD_MAX_BYTES_DEFAULT;
+  document.getElementById("uploadSizeHint").textContent = `Max ${formatMaxSize(uploadMaxBytes)} per file.`;
+  /* The gallery for this category now lives on the main placeholder page,
+     so hide the inline feed card entirely to avoid duplicating it here. */
+  document.getElementById("feedCard").style.display = "none";
+}
+
+if (FILETYPES.length && SHOW_DESC) {
+  document.getElementById("pDescWrap").style.display = "block";
+}
+
+document.getElementById("pFile")?.addEventListener("change", (e) => {
+  const msg = document.getElementById("createMsg");
+  const files = Array.from(e.target.files || []);
+  if (!files.length) return;
+  const extLabel = FILETYPES.map(x => "." + x).join(" or ");
+  const badFile = files.find(f => {
+    const ext = (f.name.split(".").pop() || "").toLowerCase();
+    return FILETYPES.length && !FILETYPES.includes(ext);
+  });
+  if (badFile) {
+    msg.className = "msg error show";
+    msg.textContent = `"${badFile.name}" isn't allowed \u2014 only ${extLabel} files are allowed.`;
+    e.target.value = "";
+    pendingFiles = [];
+    document.getElementById("pPreviewWrap").style.display = "none";
+    return;
+  }
+  const oversized = files.map(f => checkUploadSize(f)).find(Boolean);
+  if (oversized) {
+    msg.className = "msg error show"; msg.textContent = oversized;
+    e.target.value = "";
+    pendingFiles = [];
+    document.getElementById("pPreviewWrap").style.display = "none";
+    return;
+  }
+  msg.className = ""; msg.textContent = "";
+  pendingFiles = files;
+  document.getElementById("pFileName").textContent = files.length > 1
+    ? `Selected ${files.length} files: ${files.map(f => f.name).join(", ")}`
+    : `Selected: ${files[0].name}`;
+  document.getElementById("pPreviewWrap").style.display = "block";
+});
+
+async function boot() {
+  me = await getSessionUser();
+  if (me) await getMyProfile(); // triggers ban-check + redirect to banned.html if this account is banned
+  const nav = document.getElementById("topnav");
+  nav.innerHTML = "";
+
+  if (me) {
+    document.getElementById("logoutCard").style.display = "block";
+    document.getElementById("btnLogout").addEventListener("click", async (e) => {
+      e.preventDefault();
+      if (!confirm("Are you sure you want to log out?")) return;
+      await sb.auth.signOut(); window.location.reload();
+    });
+
+    document.getElementById("submitCard").style.display = "block";
+    document.getElementById("loginPrompt").style.display = "none";
+  }
+
+  if (!FILETYPE) loadFeed();
+}
+
+document.getElementById("btnPublish")?.addEventListener("click", async () => {
+  const msg = document.getElementById("createMsg");
+  const title = document.getElementById("pTitle").value.trim();
+
+  if (FILETYPES.length) {
+    const extLabel = FILETYPES.map(x => "." + x).join(" or ");
+    if (!title || !pendingFiles.length) {
+      msg.className = "msg error show";
+      msg.textContent = `Title & ${MULTIPLE ? "at least one" : "a"} ${extLabel} file are required.`;
+      return;
+    }
+    const badFile = pendingFiles.find(f => {
+      const ext = (f.name.split(".").pop() || "").toLowerCase();
+      return !FILETYPES.includes(ext);
+    });
+    if (badFile) {
+      msg.className = "msg error show"; msg.textContent = `Only ${extLabel} files are allowed.`;
+      return;
+    }
+    const oversized = pendingFiles.map(f => checkUploadSize(f)).find(Boolean);
+    if (oversized) {
+      msg.className = "msg error show"; msg.textContent = oversized;
+      return;
+    }
+    const btn = document.getElementById("btnPublish");
+    btn.disabled = true; btn.textContent = "Publishing...";
+
+    const uploaded = [];
+    for (const file of pendingFiles) {
+      const fileExt = (file.name.split(".").pop() || "").toLowerCase();
+      const path = `${me.id}/${CAT}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${fileExt}`;
+      const { error: uploadError } = await sb.storage
+        .from("post-files")
+        .upload(path, file, { upsert: true, cacheControl: "3600" });
+
+      if (uploadError) {
+        msg.className = "msg error show"; msg.textContent = uploadError.message;
+        btn.disabled = false; btn.textContent = "Publish";
+        return;
+      }
+      const { data: publicData } = sb.storage.from("post-files").getPublicUrl(path);
+      uploaded.push({ file_url: publicData.publicUrl, file_name: file.name });
+    }
+
+    let content;
+    if (MULTIPLE) {
+      content = JSON.stringify({
+        files: uploaded,
+        description: SHOW_DESC ? document.getElementById("pDescription").value.trim() : "",
+      });
+    } else if (SHOW_DESC) {
+      content = JSON.stringify({
+        file_url: uploaded[0].file_url,
+        file_name: uploaded[0].file_name,
+        description: document.getElementById("pDescription").value.trim(),
+      });
+    } else {
+      content = uploaded[0].file_url;
+    }
+
+    const { error } = await sb.from("posts").insert({
+      author_id: me.id, title, content, status: "published", category: CAT,
+    });
+    btn.disabled = false; btn.textContent = "Publish";
+    if (error) {
+      msg.className = "msg error show"; msg.textContent = error.message;
+      return;
+    }
+    msg.className = "msg ok show"; msg.textContent = "Posted!";
+    document.getElementById("pTitle").value = "";
+    document.getElementById("pFile").value = "";
+    if (SHOW_DESC) document.getElementById("pDescription").value = "";
+    document.getElementById("pPreviewWrap").style.display = "none";
+    pendingFiles = [];
+    try {
+      if (window.parent && typeof window.parent.loadFileGallery === "function") {
+        window.parent.loadFileGallery(CAT);
+      }
+    } catch(e) { /* cross-origin or not embedded — ignore */ }
+    return;
+  }
+
+  const content = document.getElementById("pContent").value.trim();
+  if (!title || !content) {
+    msg.className = "msg error show"; msg.textContent = "Title & content are required.";
+    return;
+  }
+  const { error } = await sb.from("posts").insert({
+    author_id: me.id, title, content, status: "published", category: CAT,
+  });
+  if (error) {
+    msg.className = "msg error show"; msg.textContent = error.message;
+    return;
+  }
+  msg.className = "msg ok show"; msg.textContent = "Posted!";
+  document.getElementById("pTitle").value = "";
+  document.getElementById("pContent").value = "";
+  loadFeed();
+});
+
+async function loadFeed(reset = true) {
+  const el = document.getElementById("feed");
+  const loadMoreBtn = document.getElementById("btnLoadMoreFeed");
+  if (reset) { feedOffset = 0; el.innerHTML = `<div class="empty">Loading...</div>`; }
+
+  let query = sb
+    .from("posts")
+    .select("*, profiles!posts_author_id_fkey(username,display_name,avatar_url)")
+    .eq("status", "published")
+    .eq("category", CAT)
+    .order("created_at", { ascending: false })
+    .range(feedOffset, feedOffset + FEED_PAGE_SIZE - 1);
+  if (feedSearchQuery) query = query.ilike("title", `%${feedSearchQuery}%`);
+
+  const { data, error } = await query;
+  if (error) { el.innerHTML = `<div class="empty">Failed to load: ${escapeHtml(error.message)}</div>`; return; }
+
+  if (reset && !data.length) {
+    el.innerHTML = `<div class="empty">${feedSearchQuery ? "No posts match your search." : "Nothing posted here yet. Be the first!"}</div>`;
+    loadMoreBtn.style.display = "none";
+    return;
+  }
+
+  const html = data.map(p => `
+    <div class="post-item">
+      <div class="title">${escapeHtml(p.title)}</div>
+      <div class="meta">
+        <span style="display:inline-flex; align-items:center; gap:5px;">${avatarHtml(p.profiles, 16)} by ${escapeHtml(p.profiles?.display_name || "?")}</span>
+        <span>${formatDate(p.created_at)}</span>
+      </div>
+      <div class="content">${escapeHtml(p.content)}</div>
+    </div>
+  `).join("");
+
+  if (reset) el.innerHTML = html; else el.insertAdjacentHTML("beforeend", html);
+  feedOffset += data.length;
+  loadMoreBtn.style.display = data.length === FEED_PAGE_SIZE ? "block" : "none";
+}
+
+let feedSearchDebounce = null;
+document.getElementById("feedSearch")?.addEventListener("input", (e) => {
+  clearTimeout(feedSearchDebounce);
+  feedSearchDebounce = setTimeout(() => {
+    feedSearchQuery = e.target.value.trim();
+    loadFeed(true);
+  }, 300);
+});
+
+document.getElementById("btnLoadMoreFeed")?.addEventListener("click", () => loadFeed(false));
+
+boot();
+</script>
+</body>
+</html>

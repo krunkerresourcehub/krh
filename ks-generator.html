@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KrunkScript Builder</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+<link rel="shortcut icon" href="assets/favicon.ico">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#120c28">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<meta name="description" content="Build a KrunkScript userscript visually, no coding needed.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Krunker Resource Hub">
+<meta property="og:title" content="KrunkScript Builder — Krunker Resource Hub">
+<meta property="og:description" content="Build a KrunkScript userscript visually, no coding needed.">
+<meta property="og:image" content="assets/logo.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="KrunkScript Builder — Krunker Resource Hub">
+<meta name="twitter:description" content="Build a KrunkScript userscript visually, no coding needed.">
+<meta name="twitter:image" content="assets/logo.png">
+<style>
+  :root{
+    --bg:#120c28; --bg2:#170f33; --panel:#1e1642; --panel2:#291c56; --line:rgba(255,255,255,.10); --line2:rgba(255,255,255,.20);
+    --txt:#fdfbff; --dim:#c3b8e8; --faint:#8177ab;
+    --accent:#b895ff; --accent2:#3fe0d8; --bad:#ff6b9d; --good:#4ade9a; --warn:#ffb454;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --display:'Baloo 2',var(--sans);
+    --r:12px;
+
+    /* ---- Account theme (community/settings.html) ----
+       Defaults match the rest of the site; a logged-in user's saved
+       theme overrides these at runtime as inline styles on <html>
+       (applyUserTheme() in community/supabase-client.js). */
+    --accent-gradient:linear-gradient(135deg, #ff6b9d, #b895ff 60%, #3fe0d8);
+    --bg-glow-1:rgba(255,107,157,.28); --bg-glow-2:rgba(63,224,216,.22); --bg-glow-3:rgba(184,149,255,.24);
+    --page-bg-image:none; --page-bg-size:cover; --page-bg-dim:0;
+    --ui-scale:1; --ui-saturation:1; --ui-hue:0deg;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;
+    background-color:var(--bg-0, var(--bg));
+    background-image:var(--page-bg-image),
+      radial-gradient(620px 520px at 8% 6%, var(--bg-glow-1), transparent 62%),
+      radial-gradient(680px 560px at 96% 0%, var(--bg-glow-2), transparent 60%),
+      radial-gradient(720px 620px at 50% 105%, var(--bg-glow-3), transparent 62%);
+    background-size:var(--page-bg-size), auto, auto, auto;
+    background-position:center; background-repeat:no-repeat;
+    zoom:var(--ui-scale); filter:saturate(var(--ui-saturation)) hue-rotate(var(--ui-hue));
+    color:var(--txt);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+
+  /* header */
+  header{padding:22px 28px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+    background:linear-gradient(180deg,rgba(30,22,66,.7),transparent)}
+  header .brand{flex:1;min-width:240px}
+  header h1{margin:0;font-size:22px;font-weight:800;letter-spacing:.2px}
+  header h1 .c{background:var(--accent-gradient);-webkit-background-clip:text;background-clip:text;color:transparent}
+  header p{margin:5px 0 0;color:var(--dim);font-size:13px}
+  header p code{font:12px var(--mono);background:rgba(0,0,0,.25);border:1px solid var(--line);padding:1px 6px;border-radius:14px;color:#e2d9ff}
+  .htag{display:flex;gap:8px;align-items:center}
+  .verpill{font:600 12px var(--mono);color:#f0e9ff;background:rgba(184,149,255,.13);border:1px solid rgba(184,149,255,.5);padding:4px 11px;border-radius:20px}
+  .credit{color:var(--accent);font-size:12px;font-weight:600}
+
+  /* layout */
+  .wrap{display:grid;grid-template-columns:minmax(400px,520px) 1fr;gap:22px;align-items:start;
+    max-width:1560px;margin:0 auto;padding:22px}
+  .left{min-width:0;display:flex;flex-direction:column;gap:14px}
+  .right{position:sticky;top:22px;min-width:0}
+
+  /* cards + sections */
+  .card{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:20px;padding:16px 16px}
+  .card-h{font-size:12px;text-transform:uppercase;letter-spacing:1.4px;color:var(--txt);font-weight:800;margin-bottom:12px;display:flex;align-items:baseline;gap:8px}
+  .card-h .sub{font-size:11px;letter-spacing:.3px;text-transform:none;color:var(--faint);font-weight:500}
+  details.card>summary{font-size:12px;text-transform:uppercase;letter-spacing:1.4px;color:var(--txt);font-weight:800;cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;user-select:none}
+  details.card>summary::-webkit-details-marker{display:none}
+  details.card>summary::before{content:"▸";color:var(--accent);font-size:13px;transition:.15s;display:inline-block}
+  details.card[open]>summary::before{transform:rotate(90deg)}
+  details.card>summary .sub{margin-left:auto;font-size:11px;letter-spacing:.3px;text-transform:none;color:var(--faint);font-weight:500}
+  details.card[open]{padding-bottom:16px}
+  details.card>summary{margin:-2px 0}
+  details.card[open]>summary{margin-bottom:12px}
+
+  /* inputs */
+  label.f{display:block;font-size:12px;color:var(--dim);margin:12px 0 5px;font-weight:500}
+  label.f:first-child{margin-top:0}
+  label.f .q{color:var(--faint);font-weight:400}
+  input,textarea,select{width:100%;min-width:0;background:rgba(0,0,0,.22);border:1px solid var(--line);border-radius:17px;color:var(--txt);padding:9px 11px;font:13px var(--mono);transition:.12s}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(184,149,255,.13)}
+  input::placeholder,textarea::placeholder{color:#665a8c}
+  textarea{resize:vertical;min-height:54px;line-height:1.55}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .hint{font-size:11.5px;color:var(--faint);margin-top:6px}
+  .hint code{font:11px var(--mono);background:rgba(0,0,0,.25);border:1px solid var(--line);padding:0 5px;border-radius:13px;color:#d8cdf5}
+
+  /* custom select (kills the white native box) */
+  select{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:30px;
+    background-image:linear-gradient(45deg,transparent 50%,var(--dim) 50%),linear-gradient(135deg,var(--dim) 50%,transparent 50%);
+    background-position:calc(100% - 16px) 16px,calc(100% - 11px) 16px;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+  select option{background:#1a1236;color:var(--txt)}
+
+  /* feature checklist */
+  #feats{display:grid;gap:8px}
+  .mod{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:19px;background:var(--panel);cursor:pointer;transition:.12s}
+  .mod:hover{border-color:var(--line2);background:var(--panel2)}
+  .mod.on{border-color:rgba(184,149,255,.55);background:rgba(184,149,255,.07)}
+  .mod input{width:17px;height:17px;margin-top:2px;accent-color:var(--accent);flex:0 0 auto;cursor:pointer}
+  .mod .t{font-weight:600;font-size:13px}
+  .mod .d{color:var(--dim);font-size:12px;margin-top:2px;line-height:1.45}
+  .mod.locked{opacity:.6;cursor:default}
+
+  /* buttons */
+  button{font:600 13.5px var(--sans);border:1px solid var(--line2);background:var(--panel2);color:var(--txt);border-radius:18px;padding:10px 15px;cursor:pointer;transition:.12s;white-space:nowrap}
+  button:hover{border-color:#46566a;background:#1b2230}
+  button:active{transform:translateY(1px)}
+  button.primary{background:var(--accent-gradient);color:#150c2c;border:none;font-weight:800;box-shadow:0 6px 22px rgba(80,120,200,.28)}
+  button.primary:hover{filter:brightness(1.06)}
+  button.icon{padding:10px 13px}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .toolbar button{flex:1;min-width:fit-content}
+  .cfg-grid{display:grid;grid-template-columns:auto 1fr auto auto;gap:8px;margin-top:10px;align-items:center}
+  .sub-d{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+  .sub-d>summary{cursor:pointer;color:var(--dim);font-size:12px;list-style:none}
+  .sub-d>summary::-webkit-details-marker{display:none}
+  .sub-d>summary::before{content:"+ ";color:var(--accent)}
+  .sub-d[open]>summary::before{content:"– "}
+  .sub-d textarea{margin-top:8px}
+  .sub-d button{margin-top:8px;width:100%}
+
+  /* output station (right, sticky) */
+  .station{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px;max-height:calc(100vh - 44px)}
+  .gen-row{display:flex;gap:10px}
+  .gen-row .primary{flex:1;font-size:15px;padding:13px}
+  .tabs{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+  .tab{padding:8px 15px;border:1px solid var(--line);border-radius:17px;background:var(--panel);color:var(--dim);cursor:pointer;font:600 13px var(--mono)}
+  .tab:hover{border-color:var(--line2);color:var(--txt)}
+  .tab.on{color:#fff;border-color:var(--accent);background:rgba(184,149,255,.16)}
+  .badge{display:inline-block;background:rgba(63,224,216,.12);border:1px solid rgba(63,224,216,.5);color:#a6f5ef;border-radius:20px;padding:3px 11px;font:600 11px var(--mono);margin-left:auto}
+  .notice{display:flex;align-items:center;gap:12px;background:rgba(255,180,84,.1);border:1px solid rgba(255,180,84,.55);color:#ffcf8f;border-radius:18px;padding:12px 16px;margin-bottom:16px;font:600 13px var(--sans)}
+  .notice button{flex-shrink:0;margin-left:auto;background:rgba(255,180,84,.18);border:1px solid rgba(255,180,84,.6);color:#ffcf8f}
+  .out{position:relative;min-height:0;flex:1;display:flex}
+  pre{flex:1;background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:20px;padding:16px;overflow:auto;margin:0;
+    font:12.5px/1.55 var(--mono);color:#e2d9ff;white-space:pre;tab-size:4}
+  .pre-actions{position:absolute;top:10px;right:14px;display:flex;gap:6px;z-index:2}
+  .pre-actions button{padding:6px 12px;font-size:12px;background:rgba(18,24,34,.92);backdrop-filter:blur(4px)}
+  .empty{flex:1;color:var(--faint);padding:48px 24px;text-align:center;border:1px dashed var(--line);border-radius:20px;
+    display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center}
+  .empty b{color:var(--accent2)}
+  .deploy{font-size:11.5px;color:var(--faint);line-height:1.5;border-top:1px solid var(--line);padding-top:11px}
+  .deploy b{color:var(--dim)}
+
+  /* setup modal */
+  .modal{position:fixed;inset:0;background:rgba(4,6,10,.74);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;padding:24px;z-index:40}
+  .modal.show{display:flex}
+  .sheet{background:var(--panel);border:1px solid var(--line);border-radius:22px;max-width:780px;width:100%;max-height:86vh;overflow:auto;padding:26px}
+  .sheet h3{margin:0 0 10px;font-size:19px} .sheet .x{float:right;cursor:pointer;color:var(--dim);font-size:24px;line-height:1}
+  .sheet .x:hover{color:var(--txt)}
+  .setup-item{border:1px solid var(--line);border-radius:20px;padding:15px 17px;margin:12px 0;background:var(--panel2)}
+  .setup-item h4{margin:0 0 7px;font-size:14px;color:var(--accent2)}
+  .setup-item pre{background:rgba(0,0,0,.28);font-size:12px;white-space:pre-wrap;max-height:none}
+
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--good);color:#0e2a1c;padding:11px 20px;border-radius:19px;font-weight:700;opacity:0;transition:.2s;pointer-events:none;z-index:60;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  @media (max-width:920px){
+    .wrap{grid-template-columns:1fr}
+    .right{position:static}
+    .station{max-height:none}
+    pre{max-height:60vh}
+  }
+
+  /* logo */
+  .logo{display:block;flex:0 0 auto}
+  header .logo{width:38px;height:38px}
+
+</style>
+<link rel="stylesheet" href="assets/site-glow.css">
+<script>(function(){try{var v=localStorage.getItem("krh:reduceEffects");var r=v==="1"||(v!=="0"&&window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);if(r)document.documentElement.setAttribute("data-glow-effects","off");}catch(e){}})();</script>
+<script src="assets/site-glow.js" defer></script>
+</head>
+<body>
+
+<header>
+  <svg class="logo" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><linearGradient id="asg1" x1="6" y1="3" x2="42" y2="46" gradientUnits="userSpaceOnUse"><stop stop-color="#8b7bff"/><stop offset="1" stop-color="#34d6c8"/></linearGradient></defs><path d="M24 3.5 41.5 11.2V25c0 11-7.6 17.7-17.5 20.8C14.1 42.7 6.5 36 6.5 25V11.2L24 3.5Z" fill="url(#asg1)" fill-opacity=".14" stroke="url(#asg1)" stroke-width="2.2" stroke-linejoin="round"/><path d="M26 12 16 27h7l-1 9 10-15h-7l1-9Z" fill="url(#asg1)"/></svg>
+  <div class="brand">
+    <h1><span class="c">KrunkScript</span> Builder</h1>
+    <p>Configure → <b>Generate</b> → paste <code>server.txt</code> + <code>client.txt</code> into the editor's Script tabs.</p>
+  </div>
+  <div class="htag">
+    <span class="verpill" id="verTag">v…</span>
+    <span class="credit">✦ made with love by 3000Auras ✦</span>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- ───────── LEFT: configuration ───────── -->
+  <div class="left">
+
+    <div id="outdatedBanner" class="notice" style="display:none">
+      <span id="outdatedMsg"></span>
+      <button id="outdatedBtn" onclick="generate()">Regenerate now</button>
+    </div>
+
+    <div class="card">
+      <div class="card-h">Config <span class="sub">save per map · share · re-use on updates</span></div>
+      <label class="f">Map name</label>
+      <input type="text" id="mapName" placeholder="e.g. Infect to Revive">
+      <div class="cfg-grid">
+        <button onclick="saveLocal()">💾 Save</button>
+        <select id="savedList" onchange="loadLocal()"><option value="">— saved configs —</option></select>
+        <button onclick="loadLocal()">Load</button>
+        <button class="icon" onclick="deleteLocal()" title="Delete selected">✕</button>
+      </div>
+      <div class="toolbar">
+        <button onclick="exportCopy()">Copy JSON</button>
+        <button onclick="exportFile()">Download .json</button>
+        <button onclick="document.getElementById('importFile').click()">Import file</button>
+        <input type="file" id="importFile" accept=".json,application/json" style="display:none" onchange="importPick(event)">
+      </div>
+      <details class="sub-d">
+        <summary>paste a config JSON to import</summary>
+        <textarea id="importBox" placeholder="paste exported JSON here, then Import"></textarea>
+        <button onclick="importPaste()">Import pasted JSON</button>
+      </details>
+    </div>
+
+    <div class="card">
+      <div class="card-h">Features <span class="sub">untick to leave a feature out of the build</span></div>
+      <div id="feats"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">Identity <span class="sub">who is admin / super</span></div>
+      <label class="f">Admin accountNames <span class="q">(server-authoritative)</span></label>
+      <textarea id="adminAcc" placeholder="3000Auras, Bob  — comma / newline / str[&quot;a&quot;,&quot;b&quot;]">3000Auras</textarea>
+      <label class="f">Super-admin accountNames</label>
+      <textarea id="superAcc" placeholder="3000Auras">3000Auras</textarea>
+      <label class="f">Map Owner accountNames <span class="q">(immune to EVERYONE — host, hardcoded supers, temp/timed admins, chat commands, all of it. Enter your OWN account here.)</span></label>
+      <textarea id="protectedAcc" placeholder="your own accountName(s) here"></textarea>
+      <label class="f">VIP accountNames <span class="q">(starting VIP list — optional, comma / newline / str["a","b"]. Only seeds the list on a map's very first run; after that, saved/edited VIPs from the panel or the in-game purchase trigger take over, and this field is ignored on regenerate.)</span></label>
+      <textarea id="vipAcc" placeholder="3000Auras, Bob"></textarea>
+      <label class="mod" style="margin-top:12px">
+        <input type="checkbox" id="devSupportAccess" checked>
+        <div><div class="t">Developer Support Access</div>
+        <div class="d">Grants the developer of this script full access - superadmin panel, admin panel, and VIP - so troubleshooting a support request does not require you to manually hand out admin every time. ON by default - you can uncheck this. When ON, the generated server.txt/client.txt will plainly show (not hidden or obfuscated) which extra accountName(s) were added and why, so anyone reading the code can see exactly what this does.</div></div>
+      </label>
+      <label class="f" style="margin-top:14px">Admin panel password <span class="q">(for normal admins - asked every single time the panel key is pressed, never remembered)</span></label>
+      <input type="text" id="adminPassword" value="changeme123" placeholder="changeme123">
+      <label class="f" style="margin-top:10px">Super panel password <span class="q">(for supers - separate, stricter password)</span></label>
+      <input type="text" id="superPassword" value="changeme456" placeholder="changeme456">
+      <label class="mod" style="margin-top:12px">
+        <input type="checkbox" id="embedNames" onchange="document.getElementById('userWrap').style.display=this.checked?'block':'none'">
+        <div><div class="t">Embed admin names in client script</div>
+        <div class="d">OFF (recommended): client ships NO names — the server grants admin on spawn, so nobody can read the admin list out of the client script. ON: bakes usernames in for instant local menu-open.</div></div>
+      </label>
+      <div id="userWrap" style="display:none">
+        <label class="f">Admin USERNAMES <span class="q">(client — only used if embedding; blank = reuse accounts)</span></label>
+        <textarea id="adminUser" placeholder="in-game display names"></textarea>
+      </div>
+      <label class="mod" style="margin-top:12px">
+        <input type="checkbox" id="obfClient" checked>
+        <div><div class="t">Obfuscate client script (anti-rip)</div>
+        <div class="d">ON (recommended): strips all comments from the shipped client.txt so a ripped copy reveals nothing about the anti-raid / device-ban logic. Turn OFF only for debugging. (The server script is never shared, so it keeps its comments.)</div></div>
+      </label>
+    </div>
+
+    <details class="card">
+      <summary>Auto-ban list <span class="sub">name patterns to auto-ban</span></summary>
+      <label class="f">Ban patterns (one per line · <code>*</code> = wildcard)</label>
+      <textarea id="banPatterns" style="min-height:120px">*xatrao*
+Bambuka
+zaku123
+memexur
+RIP_UZOK
+BinaryBeast
+Ciela-
+charizard99
+Spie4
+dik_scker
+-ThunderBird-
+xatroa010
+monkey_man_4
+bambukaaaa
+r4p1t3c
+Keybi
+Gtx_1060
+strong_man_4
+dik_lover
+dildoer
+Domatici2000
+TheROOOOOOOK
+jUSTIN21908
+dik_in_ahh
+godofeclips
+eoyrdchf7G2r</textarea>
+      <div class="hint"><code>x*</code> prefix · <code>*x</code> suffix · <code>*x*</code> contains · <code>x</code> exact · guest names are never persisted.</div>
+    </details>
+
+    <details class="card">
+      <summary>Map coordinates <span class="sub">jail · revive · VIP room · break room · weapon boxes</span></summary>
+      <label class="f">Infected (zombie) team number</label>
+      <input type="text" id="infectedTeam" value="2">
+      <label class="f">Rev-nuke message <span class="q">— shown after the nuker's name. Plain text only (no — or ·, they render as junk in Krunker)</span></label>
+      <input type="text" id="revnukeMsg" value="tried to rev-nuke - jailed." placeholder="tried to rev-nuke - jailed.">
+      <label class="f">Jail box (X / Y / Z) <span class="q">— sealed cell a rev-nuking zombie gets locked in</span></label>
+      <div class="row3"><input id="revnukeX" value="510"><input id="revnukeY" value="320"><input id="revnukeZ" value="-457"></div>
+      <label class="f">Revive box (X / Y / Z) <span class="q">— separate box: On Player Enter → Swap Team + tpBack</span></label>
+      <div class="row3"><input id="reviveX" value="510"><input id="reviveY" value="320"><input id="reviveZ" value="-457"></div>
+      <label class="f">VIP room box (X / Y / Z) <span class="q">— VIPs press V to teleport here, then get flashed back after the duration below</span></label>
+      <div class="row3"><input id="vipRoomX" value="1356"><input id="vipRoomY" value="100"><input id="vipRoomZ" value="990"></div>
+      <label class="f">VIP room visit duration (ms) <span class="q">— default 60000 = 1 minute</span></label>
+      <input type="text" id="vipRoomMs" value="60000">
+      <label class="f">Break room box (X / Y / Z) <span class="q">— sealed cell: fake-admin trap + BREAK ROOM button</span></label>
+      <div class="row3"><input id="breakX" value="700"><input id="breakY" value="45"><input id="breakZ" value="700"></div>
+      <label class="f">Admin room box (X / Y / Z) <span class="q">— safe/hidden room: TP ADMIN ROOM buttons (self + target)</span></label>
+      <div class="row3"><input id="adminX" value="987"><input id="adminY" value="100"><input id="adminZ" value="987"></div>
+      <label class="f">War Machine box (X / Y / Z) <span class="q">— hidden On-Enter box: Change Primary + tpBack</span></label>
+      <div class="row3"><input id="wmX" value="800"><input id="wmY" value="100"><input id="wmZ" value="800"></div>
+      <label class="f">Slimer box (X / Y / Z)</label>
+      <div class="row3"><input id="slX" value="860"><input id="slY" value="100"><input id="slZ" value="800"></div>
+      <label class="f">Class-cycle box (X / Y / Z) <span class="q">— hidden On-Enter box: Inc Trigger Value + Change Class (NEXT CLASS)</span></label>
+      <div class="row3"><input id="clX" value="920"><input id="clY" value="100"><input id="clZ" value="800"></div>
+      <label class="f">Weapon to give back after WM/Slimer <span class="q">— loadout primary (0 sniper, 1 ak, 3 smg, 5 shotgun…). -1 = off</span></label>
+      <input type="text" id="wmRestoreWep" value="1">
+    </details>
+
+    <details class="card">
+      <summary>Gameplay tuning <span class="sub">nuke duds · classes · end-host</span></summary>
+      <label class="f">Kill-streak nuke duds <span class="q">— every N nukes, M give NO kills (M=0 off). Default 3 / 1.</span></label>
+      <div class="row2"><input id="nukeCycle" value="3" placeholder="every N"><input id="nukeDuds" value="1" placeholder="M duds"></div>
+      <label class="f">Classes to cycle <span class="q">(CHANGE CLASS picker — how many classes your map has)</span></label>
+      <input type="text" id="classCount" value="12">
+      <label class="f">End-host warning before ban-all (ms)</label>
+      <input type="text" id="endDelay" value="15000">
+    </details>
+
+    <details class="card">
+      <summary>Sounds &amp; image <span class="sub">optional asset IDs</span></summary>
+      <label class="f">Nuke explosion sound</label><input id="nukeSnd" placeholder="(blank = silent)">
+      <label class="f">Jumpscare scream sound</label><input id="scareSnd" placeholder="(blank = silent)">
+      <label class="f">Jumpscare fullscreen image</label><input id="scareImg" placeholder="(blank = red flash)">
+    </details>
+
+    <details class="card">
+      <summary>Custom code <span class="sub">advanced · your own KrunkScript</span></summary>
+      <p class="q" style="margin:2px 0 10px">Raw KrunkScript appended to the END of each script (top-level). Use double quotes only — NO apostrophes (they break the lexer). Saved with the map. Your code, your risk.</p>
+      <label class="f">Extra CLIENT code <span class="q">(added to the end of client.txt)</span></label>
+      <textarea id="customClientCode" placeholder="# e.g. num MY_VAR = 1;"></textarea>
+      <label class="f">Extra SERVER code <span class="q">(added to the end of server.txt)</span></label>
+      <textarea id="customServerCode" placeholder="# e.g. action myHelper() { ... }"></textarea>
+    </details>
+
+  </div>
+
+  <!-- ───────── RIGHT: generate + output (sticky) ───────── -->
+  <div class="right">
+    <div class="station">
+      <div class="gen-row">
+        <button class="primary" onclick="generate()">⚡ Generate scripts</button>
+        <button onclick="openMapTemplate()" title="Example map JSON with the trigger boxes pre-placed">Map template</button>
+        <button onclick="openSetup()" title="Map setup steps">Map setup</button>
+      </div>
+      <div class="tabs">
+        <div class="tab on" data-t="client" onclick="showTab('client')">client.txt</div>
+        <div class="tab" data-t="server" onclick="showTab('server')">server.txt</div>
+        <span id="lineInfo" class="badge" style="display:none"></span>
+      </div>
+      <div id="outWrap" class="out"><div class="empty">Set your <b>admins</b> on the left, then press <b>⚡ Generate</b>.<br>Defaults are sane — most maps only need the Identity card.</div></div>
+      <div class="deploy">Deploy: <b>Generate</b> → paste <b>client.txt</b> + <b>server.txt</b> into the editor's Script tabs → host. See <b>Map setup</b> for the trigger boxes.</div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modal" onclick="if(event.target===this)closeSetup()">
+  <div class="sheet"><span class="x" onclick="closeSetup()">×</span><h3>Map setup steps</h3><div id="setupBody"></div></div>
+</div>
+
+<div class="modal" id="templateModal" onclick="if(event.target===this)closeMapTemplate()">
+  <div class="sheet">
+    <span class="x" onclick="closeMapTemplate()">×</span>
+    <h3>Map template (example map JSON)</h3>
+    <p class="q" style="margin:0 0 10px">A starter map with the trigger boxes this script expects already placed — VIP room, admin room, weapon room (War Machine / Slimer stands), revive pad, nuke jail, and the stage/boost/weapon trigger racks. In the Krunker map editor: <b>Menu → Import Map → paste this JSON → Import</b>. Then use <b>⚡ Generate scripts</b> above and paste client.txt / server.txt into the Script tabs like normal. Move things around after importing if you like — just keep the coordinate fields on the left in sync with wherever you put the VIP room / admin room / weapon stands.</p>
+    <textarea id="mapTemplateJSON" readonly style="width:100%;height:320px;font-family:monospace;font-size:11px;line-height:1.4;white-space:pre;overflow:auto;background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:18px;color:var(--dim);padding:10px;box-sizing:border-box;" onclick="this.select()">{"name":"Map Template","ambient":"#97a0a8","light":"#f2f8fc","sky":"#dce8ed","fog":"#8d9aa0","fogD":2000,"colors":["#8a8f99","#15161a","#7a1818","#c0392b","#4a7a9a","#1abc9c","#FCF400","#27FF00"],"xyz":[500,10,500,42,6,42,24,0.8,24,36,2,36,6,8,42,6,12,13,6,12,16,42,8,6,13,12,6,16,12,6,3,40,3,40,0.01,10,34,30,34,10,10,10,30,30,30,44,2,44,2,44,44,44,44,2,38,28,38,10,210,250,250,210,10,10,10,50,100,10,250,250,10,250,12,2,4,0.01,25,100,0.01,25,50,10,25,0.01,10,45,0.01,10,55,0.01,10,65,0.01,10,35,0.01,50,0.01,15,250,60,10,10,60,250],"objects":[{"p":[0,-5,0],"ci":0,"si":0},{"p":[510,303,-457],"ci":1,"si":1},{"p":[510,306.6,-457],"ci":2,"si":2},{"p":[510,337,-457],"ci":1,"si":1},{"p":[510,342,-457],"ci":3,"si":3},{"p":[529,330,-457],"ci":1,"si":4},{"p":[529,310,-457],"ci":1,"si":4},{"p":[529,320,-471.5],"ci":1,"si":5},{"p":[529,320,-442.5],"ci":1,"si":5},{"p":[529,320,-457],"o":0.4,"ci":4,"si":6},{"p":[491,330,-457],"ci":1,"si":4},{"p":[491,310,-457],"ci":1,"si":4},{"p":[491,320,-471.5],"ci":1,"si":5},{"p":[491,320,-442.5],"ci":1,"si":5},{"p":[491,320,-457],"o":0.4,"ci":4,"si":6},{"p":[510,330,-436],"ci":1,"si":7},{"p":[510,310,-436],"ci":1,"si":7},{"p":[495.5,320,-436],"ci":1,"si":8},{"p":[524.5,320,-436],"ci":1,"si":8},{"p":[510,320,-436],"o":0.4,"ci":4,"si":9},{"p":[510,330,-478],"ci":1,"si":7},{"p":[510,310,-478],"ci":1,"si":7},{"p":[495.5,320,-478],"ci":1,"si":8},{"p":[524.5,320,-478],"ci":1,"si":8},{"p":[510,320,-478],"o":0.4,"ci":4,"si":9},{"p":[529,320,-478],"ci":3,"si":10},{"p":[529,320,-436],"ci":3,"si":10},{"p":[491,320,-478],"ci":3,"si":10},{"p":[491,320,-436],"ci":3,"si":10},{"p":[494.5,326,-457],"i":30,"r":[1.57,0,-1.57],"st":"REV-NUKE JAIL","sc":"#ff5050","so":"#000000","sot":15,"bv":1,"sf":70,"sa":1,"si":11},{"p":[494.5,316,-457],"i":30,"r":[1.57,0,-1.57],"st":"POOR ZOMBIE - STRAIGHT TO JAIL","sc":"#d4a02a","so":"#000000","sot":10,"bv":1,"sf":32,"sa":1,"si":11},{"p":[510,311,-457],"i":29,"o":0.2,"tm":0,"te":3,"tas":[{"ta":18},{"ta":58,"tct":"tpBack"}],"ci":5,"si":12},{"p":[0,-60,0],"i":29,"o":0.3,"tm":0,"te":21,"tas":[{"ta":58,"tct":"nukeStart"}],"ci":3,"si":13},{"p":[0,-60,20],"i":29,"o":0.3,"tm":0,"te":22,"tas":[{"ta":58,"tct":"nukeEnd"}],"ci":3,"si":13},{"p":[800,100,800],"i":29,"o":0.2,"tm":0,"te":3,"tas":[{"ta":50,"tc":26},{"ta":58,"tct":"tpBack"}],"ci":5,"si":14},{"p":[860,100,800],"i":29,"o":0.2,"tm":0,"te":3,"tas":[{"ta":50,"tc":23},{"ta":58,"tct":"tpBack"}],"ci":5,"si":14},{"p":[920,100,800],"i":29,"o":0.2,"tm":0,"te":3,"tas":[{"ta":46},{"ta":47}],"ci":5,"si":14},{"p":[700,30,700],"ci":1,"si":15},{"p":[700,72,700],"ci":1,"si":15},{"p":[679,51,700],"ci":1,"si":16},{"p":[721,51,700],"ci":1,"si":16},{"p":[700,51,679],"ci":1,"si":17},{"p":[700,51,721],"ci":1,"si":17},{"p":[700,58,681],"i":30,"st":"Youre probably wondering why you are here...","sc":"#ff5050","so":"#000000","sot":10,"bv":1,"sf":16,"sa":1,"si":11},{"p":[700,45,700],"i":29,"o":0.1,"tm":0,"te":3,"tas":[{"ta":19,"tc":2}],"ci":2,"si":18},{"p":[877,81,987],"t":11,"si":19},{"p":[1107,91,987],"i":29,"t":5,"tm":0,"te":1,"tas":[{"tc":500}],"ei":6,"ci":6,"si":13},{"p":[1107,91,912],"i":29,"at":"63857","tsr":1,"tm":0,"te":16,"tas":[{"ta":22}],"inm":"End Game","si":13},{"p":[997,81,1107],"t":11,"si":20},{"p":[1117,81,987],"t":11,"si":19},{"p":[1107,91,962],"i":29,"at":"22064","tsr":1,"tm":0,"te":16,"tas":[{"ta":47}],"inm":"Fly","si":13},{"p":[1007,171,1087],"t":2,"si":21},{"p":[997,161,1087],"t":2,"si":21},{"p":[977,141,887],"t":2,"si":21},{"p":[922,231,987],"t":2,"si":22},{"p":[987,151,1087],"t":2,"si":21},{"p":[1017,91,987],"t":2,"si":21},{"p":[1007,101,987],"t":2,"si":21},{"p":[997,111,987],"t":2,"si":21},{"p":[987,121,987],"t":2,"si":21},{"p":[977,131,987],"t":2,"si":21},{"p":[997,81,867],"t":11,"si":20},{"p":[997,81,987],"t":2,"si":23},{"p":[887,241,1087],"i":26,"r":[0,1.57,0],"tm":0,"wr":1,"si":24},{"p":[887,241,1067],"i":26,"r":[0,1.57,0],"tm":0,"w":1,"wr":1,"si":24},{"p":[887,241,1047],"i":26,"r":[0,1.57,0],"tm":0,"w":3,"wr":1,"si":24},{"p":[887,241,1027],"i":26,"r":[0,1.57,0],"tm":0,"w":4,"wr":1,"si":24},{"p":[887,241,1007],"i":26,"r":[0,1.57,0],"tm":0,"w":5,"wr":1,"si":24},{"p":[887,241,987],"i":26,"r":[0,1.57,0],"tm":0,"w":6,"wr":1,"si":24},{"p":[887,241,967],"i":26,"r":[0,1.57,0],"tm":0,"w":15,"wr":1,"si":24},{"p":[887,241,947],"i":26,"r":[0,1.57,0],"tm":0,"w":8,"wr":1,"si":24},{"p":[887,241,927],"i":26,"r":[0,1.57,0],"tm":0,"w":9,"wr":1,"si":24},{"p":[887,241,887],"i":26,"r":[0,1.57,0],"tm":0,"w":14,"wr":1,"si":24},{"p":[887,241,907],"i":26,"r":[1.57,0,1.57],"tm":0,"w":13,"wr":1,"si":24},{"p":[964.5,241,1087],"i":26,"r":[0,-1.57,0],"tm":0,"w":18,"wr":1,"si":24},{"p":[964.5,241,1067],"i":26,"r":[0,-1.57,0],"tm":0,"w":28,"wr":1,"si":24},{"p":[964.5,241,1047],"i":26,"r":[0,-1.57,0],"tm":0,"w":2,"wr":1,"si":24},{"p":[964.5,241,1027],"i":26,"r":[0,-1.57,0],"tm":0,"w":10,"wr":1,"si":24},{"p":[964.5,241,947],"i":26,"r":[0,-1.57,0],"tm":0,"w":11,"wr":1,"si":24},{"p":[964.5,241,907],"i":26,"r":[0,-1.57,0],"tm":0,"w":21,"wr":1,"si":24},{"p":[964.5,241,927],"i":26,"r":[0,-1.57,0],"tm":0,"w":16,"wr":1,"si":24},{"p":[964.5,241,887],"i":26,"r":[0,-1.57,0],"tm":0,"w":22,"wr":1,"si":24},{"p":[925.75,241,877],"i":26,"r":[1.57,0,1.57],"tm":0,"w":26,"wr":1,"si":24},{"p":[945.75,241,877],"i":26,"r":[-1.57,0,1.57],"tm":0,"w":25,"wr":1,"si":24},{"p":[905.75,241,1097],"i":26,"r":[0,3.14,0],"tm":0,"w":30,"wr":1,"si":24},{"p":[925.75,241,1097],"i":26,"r":[0,3.14,0],"tm":0,"w":20,"wr":1,"si":24},{"p":[945.75,241,1097],"i":26,"r":[0,3.14,0],"tm":0,"w":19,"wr":1,"si":24},{"p":[972,231,1062],"t":2,"si":25},{"p":[972,231,912],"t":2,"si":25},{"p":[1022,181,937],"t":2,"si":26},{"p":[1022,181,1037],"t":2,"si":26},{"p":[1017,181,1062],"t":2,"si":27},{"p":[997,161,1062],"t":2,"si":28},{"p":[987,151,1062],"t":2,"si":29},{"p":[977,141,1062],"t":2,"si":30},{"p":[1017,91,1012],"t":2,"si":30},{"p":[1017,91,962],"t":2,"si":30},{"p":[1007,101,962],"t":2,"si":29},{"p":[1007,101,1012],"t":2,"si":29},{"p":[997,111,1012],"t":2,"si":28},{"p":[997,111,962],"t":2,"si":28},{"p":[987,121,962],"t":2,"si":31},{"p":[987,121,1012],"t":2,"si":31},{"p":[977,131,1012],"t":2,"si":27},{"p":[977,131,962],"t":2,"si":27},{"p":[1107,91,937],"i":29,"at":"3927","tsr":1,"tm":0,"te":16,"tas":[{"ta":18}],"inm":"Revive","si":13},{"p":[1107,91,1012],"i":29,"at":"31805","tsr":1,"tm":0,"te":16,"tas":[{"ta":1}],"inm":"Die","si":13},{"p":[1107,91,1037],"i":29,"at":"66353","tsr":1,"tm":0,"te":16,"tas":[{"ta":9}],"inm":"Nuke","si":13},{"p":[1107,91,1062],"i":29,"at":"47082","tsr":1,"tm":0,"te":16,"tas":[{"ta":15}],"inm":"Clear Inventory","si":13},{"p":[1107,91,887],"i":29,"at":"26472","tsr":1,"tm":0,"te":16,"tas":[{"ta":50,"tc":10000}],"inm":"Zombie Sniper","si":13},{"p":[1107,91,1087],"i":29,"at":"23605","tsr":1,"tm":0,"te":16,"tas":[{"ta":47,"tc":8}],"inm":"God","si":13},{"p":[1107,191,912],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":40,"tc":2}],"inm":"Stage 2","si":13},{"p":[1107,191,937],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":40,"tc":3}],"inm":"Stage 3","si":13},{"p":[1107,191,962],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":40,"tc":4}],"inm":"Stage 4","si":13},{"p":[1107,191,987],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":40,"tc":5}],"inm":"Stage 5","si":13},{"p":[1107,191,1012],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":40,"tc":6}],"inm":"Stage 6","si":13},{"p":[1107,191,1037],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":40,"tc":7}],"inm":"Stage 7","si":13},{"p":[1107,191,1062],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":40,"tc":8}],"inm":"Stage 8","si":13},{"p":[1077,191,877],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":40,"tc":12}],"inm":"Music Room","si":13},{"p":[1057,191,877],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":40,"tc":13}],"inm":"Revive Room","si":13},{"p":[1077,191,1097],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":40,"tc":11}],"inm":"Zombie KR Room","si":13},{"p":[1107,191,1087],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":40,"tc":9}],"inm":"Stage 9","si":13},{"p":[1107,191,887],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":40,"tc":1}],"inm":"Stage 1","si":13},{"p":[1028,191,1037],"i":29,"at":"30851","tsr":1,"tm":0,"tac":25,"te":16,"tas":[{"ta":40}],"inm":"Donate","si":13},{"p":[1028,191,937],"i":29,"at":"30851","tsr":1,"tm":0,"tac":25,"te":16,"tas":[{"ta":40}],"inm":"Donate","si":13},{"p":[1057,191,1097],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":40,"tc":10}],"inm":"Human KR Room","si":13},{"p":[1017,181,1087],"t":2,"si":21},{"p":[1007,171,1062],"t":2,"si":31},{"p":[1072,181,987],"t":2,"si":22},{"p":[1017,181,912],"t":2,"si":27},{"p":[1007,171,912],"t":2,"si":31},{"p":[997,161,912],"t":2,"si":28},{"p":[987,151,912],"t":2,"si":29},{"p":[977,141,912],"t":2,"si":30},{"p":[1017,181,887],"t":2,"si":21},{"p":[1007,171,887],"t":2,"si":21},{"p":[997,161,887],"t":2,"si":21},{"p":[987,151,887],"t":2,"si":21},{"p":[977,141,1087],"t":2,"si":21},{"p":[922,131,987],"t":2,"si":22},{"p":[1017,191,987],"t":2,"si":21},{"p":[1007,201,987],"t":2,"si":21},{"p":[997,211,987],"t":2,"si":21},{"p":[987,221,987],"t":2,"si":21},{"p":[977,231,987],"t":2,"si":21},{"p":[1017,191,1012],"t":2,"si":30},{"p":[1017,191,962],"t":2,"si":30},{"p":[1007,201,962],"t":2,"si":29},{"p":[1007,201,1012],"t":2,"si":29},{"p":[997,211,1012],"t":2,"si":28},{"p":[997,211,962],"t":2,"si":28},{"p":[987,221,962],"t":2,"si":31},{"p":[987,221,1012],"t":2,"si":31},{"p":[977,231,1012],"t":2,"si":27},{"p":[977,231,962],"t":2,"si":27},{"p":[972,131,1037],"t":2,"si":26},{"p":[972,131,937],"t":2,"si":26},{"p":[966,141,937],"i":29,"at":"30851","tsr":1,"tm":0,"tac":25,"te":16,"tas":[{"ta":40}],"inm":"Donate","si":13},{"p":[966,141,1037],"i":29,"at":"30851","tsr":1,"tm":0,"tac":25,"te":16,"tas":[{"ta":40}],"inm":"Donate","si":13},{"p":[887,141,1077],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":64}],"inm":"Boosted","ei":7,"ci":7,"si":13},{"p":[887,141,1057],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":64,"tc":1}],"inm":"Sleight of Hand","ei":7,"ci":7,"si":13},{"p":[887,141,1037],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":64,"tc":2}],"inm":"Rapid Fire","ei":7,"ci":7,"si":13},{"p":[887,141,1017],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":64,"tc":3}],"inm":"Siphon","ei":7,"ci":7,"si":13},{"p":[887,141,997],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":64,"tc":4}],"inm":"Rooted","ei":7,"ci":7,"si":13},{"p":[887,141,957],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":64,"tc":6}],"inm":"Poisoned","ei":7,"ci":7,"si":13},{"p":[887,141,937],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":64,"tc":7}],"inm":"Jump Boost","ei":7,"ci":7,"si":13},{"p":[887,141,917],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":64,"tc":8}],"inm":"Zapped","ei":7,"ci":7,"si":13},{"p":[887,141,977],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":64,"tc":5}],"inm":"Dizzy","ei":7,"ci":7,"si":13},{"p":[887,141,897],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":64,"tc":9}],"inm":"Strength","ei":7,"ci":7,"si":13},{"p":[1111,121,987],"i":30,"r":[1.57,0,1.57],"st":"Triggers","bv":1,"sf":125,"sa":1,"si":32},{"p":[1111,221,987],"i":30,"r":[1.57,0,1.57],"st":"Stages","bv":1,"sf":125,"sa":1,"si":32},{"p":[883,261,987],"i":30,"r":[1.57,6.28,-1.57],"st":"Weapons","bv":1,"sf":125,"sa":1,"si":32},{"p":[883,171,987],"i":30,"r":[1.57,6.28,-1.57],"st":"Boosts","bv":1,"sf":125,"sa":1,"si":32},{"p":[905.75,241,877],"i":26,"r":[-1.57,0,1.57],"tm":0,"w":23,"wr":1,"si":24},{"p":[883,110,987],"i":30,"r":[1.57,6.28,-1.57],"st":"Admin_Room","bv":1,"sf":125,"sa":1,"si":32},{"p":[997,281,987],"t":6,"si":23},{"p":[1450,91,987],"i":29,"t":5,"tm":0,"tac":35,"te":16,"tas":[{"tc":500}],"ei":6,"ci":6,"si":13},{"p":[1450,91,912],"i":29,"at":"63857","tsr":1,"tm":0,"tac":200,"te":16,"tas":[{"ta":22}],"inm":"End Game","si":13},{"p":[1340,81,1107],"t":11,"si":33},{"p":[1460,81,987],"t":11,"si":34},{"p":[1340,81,867],"t":11,"si":33},{"p":[1340,81,987],"t":2,"si":23},{"p":[1450,91,937],"i":29,"at":"3927","tsr":1,"tm":2,"tac":70,"te":16,"tas":[{"ta":18}],"inm":"Revive","si":13},{"p":[1450,91,1012],"i":29,"at":"66353","tsr":1,"tm":1,"tac":225,"te":16,"tas":[{"ta":9}],"inm":"Nuke","si":13},{"p":[1450,91,887],"i":29,"at":"26472","tsr":1,"tm":1,"tac":65,"te":16,"tas":[{"ta":50,"tc":10000}],"inm":"Buy Sniper","si":13},{"p":[1337.25,109.81,1101.04],"i":30,"r":[1.57,0,-3.14],"st":"VIP_Room","bv":1,"sf":125,"sa":1,"si":32},{"p":[1220,81,987],"t":11,"si":34},{"p":[1340,131,987],"t":2,"si":23},{"p":[1450,91,962],"i":29,"at":"26472","tsr":1,"tm":2,"tac":110,"te":16,"tas":[{"ta":50,"tc":10000}],"inm":"Buy Zombie Sniper","si":13},{"p":[1230,91,1077],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":64}],"inm":"Boosted","ei":7,"ci":7,"si":13},{"p":[1230,91,1057],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":64,"tc":1}],"inm":"Sleight of Hand","ei":7,"ci":7,"si":13},{"p":[1230,91,1037],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":64,"tc":2}],"inm":"Rapid Fire","ei":7,"ci":7,"si":13},{"p":[1230,91,1017],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":64,"tc":3}],"inm":"Siphon","ei":7,"ci":7,"si":13},{"p":[1230,91,997],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":64,"tc":4}],"inm":"Rooted","ei":7,"ci":7,"si":13},{"p":[1230,91,957],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":64,"tc":6}],"inm":"Poisoned","ei":7,"ci":7,"si":13},{"p":[1230,91,937],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":64,"tc":7}],"inm":"Jump Boost","ei":7,"ci":7,"si":13},{"p":[1230,91,917],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":64,"tc":8}],"inm":"Zapped","ei":7,"ci":7,"si":13},{"p":[1230,91,977],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":64,"tc":5}],"inm":"Dizzy","ei":7,"ci":7,"si":13},{"p":[1230,91,897],"i":29,"t":5,"tsr":1,"tm":0,"te":16,"tas":[{"ta":64,"tc":9}],"inm":"Strength","ei":7,"ci":7,"si":13},{"p":[1226,121,987],"i":30,"r":[1.57,6.28,-1.57],"st":"Boosts","bv":1,"sf":125,"sa":1,"si":32},{"p":[1346,91,877],"i":29,"at":"30851","tsr":1,"tm":0,"tac":25,"te":16,"tas":[{"ta":40}],"inm":"Donate","si":13}],"config":{"modes":[6],"classes":[0,1,2,3,4,5,6,7,8,9,10,11],"settings":{"maxPlayers":40,"gameTime":0},"weps":{"1":{"dmg":200,"ammo":500,"burst":true,"burstR":210,"reload":500,"spread":0,"minSpread":0,"zoom":1,"recoil":0,"recoilYM":0,"recoilZ":0,"recoilZM":-1}}}}</textarea>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="primary" onclick="copyMapTemplate()" style="flex:1">Copy JSON</button>
+      <button onclick="closeMapTemplate()" style="flex:1">Close</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// #modal, #templateModal and #toast are position:fixed and need to stay
+// pinned to the viewport. <body> carries a `filter` (for the account
+// theme's UI saturation/hue controls), and any element with a filter
+// becomes the containing block for its position:fixed descendants — so
+// left as children of body, they'd end up anchored to body's own
+// (page-length) box instead of the viewport. Moving them to be siblings
+// of <body> (direct children of <html>, which never gets that filter)
+// keeps them correctly fixed. Safe: nothing styles them via a
+// parent-relative selector, and script access is by ID only.
+(function(){
+  ["modal", "templateModal", "toast"].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) document.documentElement.appendChild(el);
+  });
+})();
+</script>
+<script src="ks-generator.js"></script>
+<script>
+"use strict";
+var gen = { server:"", client:"" }, curTab = "client";
+function val(id){ var e=document.getElementById(id); return e?e.value:""; }
+function parseNames(raw){
+  if(!raw) return [];
+  var s=String(raw).replace(/\bstr\b/gi," ").replace(/[\[\]]/g," ");
+  return s.split(/[,\n;]+/).map(function(p){return p.replace(/["'`]/g,"").trim();}).filter(Boolean);
+}
+function renderFeats(){
+  var host=document.getElementById("feats"); host.innerHTML="";
+  KB.MODULES.forEach(function(m){
+    if(m.core){
+      var c=document.createElement("label"); c.className="mod on locked"; c.title="Always included";
+      c.innerHTML='<input type="checkbox" checked disabled><div><div class="t">'+m.label+' <span style="color:var(--dim);font-weight:400">· core</span></div><div class="d">'+m.desc+'</div></div>';
+      host.appendChild(c); return;
+    }
+    var l=document.createElement("label"); l.className="mod on"; l.dataset.k=m.key;
+    var warnMsg = typeof m.warn === "string" ? m.warn : (m.warn ? "NOT FOR REAL GAMES" : "");
+    var warnB = warnMsg ? ' <span style="color:#ff5d7a;font-weight:800">⚠ ' + warnMsg + '</span>' : '';
+    var tStyle = m.warn ? ' style="color:#ff5d7a"' : '';
+    l.innerHTML='<input type="checkbox" data-mod="'+m.key+'" checked><div><div class="t"'+tStyle+'>'+m.label+warnB+'</div><div class="d">'+m.desc+'</div></div>';
+    var cb=l.querySelector("input");
+    cb.addEventListener("change",function(){ l.classList.toggle("on",cb.checked); });
+    host.appendChild(l);
+  });
+}
+function readMods(){
+  var m={};
+  document.querySelectorAll('input[data-mod]').forEach(function(cb){ m[cb.dataset.mod]=cb.checked; });
+  return m;
+}
+function readCfg(){
+  return {
+    adminAcc:parseNames(val("adminAcc")), superAcc:parseNames(val("superAcc")), adminUser:parseNames(val("adminUser")),
+    protectedAccounts:parseNames(val("protectedAcc")),
+    vipAcc:parseNames(val("vipAcc")),
+    banPatterns:parseNames(val("banPatterns")),
+    infectedTeam:val("infectedTeam"), revnukeMsg:val("revnukeMsg"), revnukeX:val("revnukeX"), revnukeY:val("revnukeY"), revnukeZ:val("revnukeZ"),
+    reviveX:val("reviveX"), reviveY:val("reviveY"), reviveZ:val("reviveZ"),
+    vipRoomX:val("vipRoomX"), vipRoomY:val("vipRoomY"), vipRoomZ:val("vipRoomZ"), vipRoomMs:val("vipRoomMs"),
+    breakX:val("breakX"), breakY:val("breakY"), breakZ:val("breakZ"),
+    adminX:val("adminX"), adminY:val("adminY"), adminZ:val("adminZ"),
+    wmX:val("wmX"), wmY:val("wmY"), wmZ:val("wmZ"), slX:val("slX"), slY:val("slY"), slZ:val("slZ"), clX:val("clX"), clY:val("clY"), clZ:val("clZ"), wmRestoreWep:val("wmRestoreWep"),
+    nukeCycle:val("nukeCycle"), nukeDuds:val("nukeDuds"), endDelay:val("endDelay"), classCount:val("classCount"),
+    nukeSnd:val("nukeSnd"), scareSnd:val("scareSnd"), scareImg:val("scareImg"),
+    customClientCode:val("customClientCode"), customServerCode:val("customServerCode"),
+    clientAdminNames:document.getElementById("embedNames").checked,
+    devSupportAccess:document.getElementById("devSupportAccess").checked,
+    adminPassword:val("adminPassword"),
+    superPassword:val("superPassword"),
+    obfClient:document.getElementById("obfClient").checked,
+    mods:readMods()
+  };
+}
+function generate(){
+  var cfg=readCfg();
+  gen.server=KB.buildServer(cfg); gen.client=KB.buildClient(cfg);
+  hideOutdated();   // regenerating stamps the current version -> no longer outdated
+  renderOut();
+  // auto-save the config under the map name (silent) so a rebuild after an update is one click
+  var nm=(val("mapName")||"").trim();
+  if(nm){ try{ localStorage.setItem(LS_PREFIX+nm, JSON.stringify(exportState())); refreshSavedList(nm); toast('Generated ✓ · saved "'+nm+'"'); }catch(e){ toast("Generated ✓"); } }
+  else { toast("Generated ✓ — set a map name to auto-save"); }
+  scanOutdated();   // re-banner any OTHER maps still on an old version
+}
+function renderOut(){
+  var code=gen[curTab]||"", lines=code?code.split("\n").length:0;
+  var info=document.getElementById("lineInfo"); info.style.display=code?"inline-block":"none"; info.textContent=lines+" lines";
+  var w=document.getElementById("outWrap");
+  if(!code){ w.innerHTML='<div class="empty">Nothing generated yet.</div>'; return; }
+  w.innerHTML='<div class="pre-actions"><button onclick="copyOut()">Copy</button><button onclick="download()">Download '+curTab+'.txt</button></div><pre id="codeBox"></pre>';
+  document.getElementById("codeBox").textContent=code;
+}
+function showTab(t){ curTab=t; document.querySelectorAll(".tab").forEach(function(el){el.classList.toggle("on",el.dataset.t===t);}); renderOut(); }
+function copyOut(){ navigator.clipboard.writeText(gen[curTab]||"").then(function(){toast("Copied "+curTab+".txt");}); }
+function download(){ var b=new Blob([gen[curTab]||""],{type:"text/plain"}); var a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download=curTab+".txt"; a.click(); URL.revokeObjectURL(a.href); }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function openSetup(){
+  var items=KB.buildSetup(readCfg());
+  document.getElementById("setupBody").innerHTML=items.map(function(it){return '<div class="setup-item"><h4>'+esc(it.title)+'</h4><pre>'+esc(it.body)+'</pre></div>';}).join("");
+  document.getElementById("modal").classList.add("show");
+}
+function closeSetup(){ document.getElementById("modal").classList.remove("show"); }
+function openMapTemplate(){ document.getElementById("templateModal").classList.add("show"); }
+function closeMapTemplate(){ document.getElementById("templateModal").classList.remove("show"); }
+function copyMapTemplate(){
+  var ta=document.getElementById("mapTemplateJSON");
+  navigator.clipboard.writeText(ta.value).then(function(){ toast("Map template JSON copied"); }, function(){
+    ta.select(); document.execCommand("copy"); toast("Map template JSON copied");
+  });
+}
+var toastT; function toast(msg){ var t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(function(){t.classList.remove("show");},1600); }
+
+/* ── config save / share ───────────────────────────────────────────────────
+   Forward/backward compatible by design: the JSON is a versioned envelope, but
+   import NEVER hard-fails on schema/builder version. It applies field-by-field —
+   unknown ids are skipped, missing ids keep their default, unknown mods skipped,
+   missing mods stay default. So old saves load into new builders (new fields
+   default) and new saves load into old builders (extra fields ignored). Keep
+   this contract when changing the format: only ADD optional keys, never rename. */
+var LS_PREFIX = "krunkCfg::";
+var SKIP_FIELDS = { importBox:1, importFile:1 };   // UI controls, not config
+function exportState(){
+  var fields={};
+  document.querySelectorAll('input[id], textarea[id]').forEach(function(e){
+    if(e.dataset.mod) return;
+    if(SKIP_FIELDS[e.id]) return;
+    fields[e.id] = (e.type==="checkbox") ? !!e.checked : e.value;
+  });
+  return { schema:1, builder:(KB.VERSION||""), map:val("mapName"), savedAt:KB.today(), fields:fields, mods:readMods() };
+}
+function importState(state){
+  if(!state || typeof state!=="object"){ toast("Bad config"); return false; }
+  var f = state.fields || {};
+  Object.keys(f).forEach(function(id){
+    if(SKIP_FIELDS[id]) return;
+    var e=document.getElementById(id); if(!e) return;            // unknown field -> skip
+    if(e.type==="checkbox") e.checked=!!f[id]; else e.value=f[id];
+  });
+  // keep the embed-names sub-field visibility in sync
+  var emb=document.getElementById("embedNames"), uw=document.getElementById("userWrap");
+  if(emb && uw) uw.style.display = emb.checked ? "block" : "none";
+  var m = state.mods || {};
+  document.querySelectorAll('input[data-mod]').forEach(function(cb){
+    if(cb.dataset.mod in m){ cb.checked=!!m[cb.dataset.mod]; var lab=cb.closest('.mod'); if(lab) lab.classList.toggle('on',cb.checked); }
+  });
+  return true;
+}
+function parseJSON(raw){ try{ return JSON.parse(raw); }catch(e){ return null; } }
+function safeName(s){ return String(s||"config").replace(/[^a-z0-9_-]+/gi,"-").replace(/^-+|-+$/g,"") || "config"; }
+function exportCopy(){ navigator.clipboard.writeText(JSON.stringify(exportState(),null,2)).then(function(){toast("Config JSON copied");}); }
+function exportFile(){
+  var st=exportState(), b=new Blob([JSON.stringify(st,null,2)],{type:"application/json"});
+  var a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download="krunk-config-"+safeName(st.map)+".json"; a.click(); URL.revokeObjectURL(a.href);
+}
+function importPaste(){
+  var st=parseJSON(val("importBox")); if(!st){ toast("Invalid JSON"); return; }
+  if(importState(st)){ document.getElementById("importBox").value=""; toast("Imported"+(st.map?" ("+st.map+")":"")+" — press Generate"); }
+}
+function importPick(ev){
+  var file=ev.target.files&&ev.target.files[0]; if(!file) return;
+  var r=new FileReader();
+  r.onload=function(){ var st=parseJSON(r.result); if(!st){ toast("Invalid JSON file"); return; } if(importState(st)) toast("Imported"+(st.map?" ("+st.map+")":"")+" — press Generate"); };
+  r.readAsText(file); ev.target.value="";
+}
+function saveLocal(){
+  var name=(val("mapName")||"").trim(); if(!name){ toast("Enter a map name first"); return; }
+  try{ localStorage.setItem(LS_PREFIX+name, JSON.stringify(exportState())); }catch(e){ toast("Save failed (storage full?)"); return; }
+  refreshSavedList(name); toast('Saved "'+name+'"');
+}
+function loadLocal(){
+  var name=document.getElementById("savedList").value; if(!name){ return; }   // placeholder picked -> ignore
+  var st=parseJSON(localStorage.getItem(LS_PREFIX+name)); if(!st){ toast("Could not read save"); return; }
+  if(importState(st)){
+    var mn=document.getElementById("mapName"); if(mn) mn.value=(st.map||name);
+    // version check: warn if this map was generated on an older builder (script is stale)
+    var cur=(KB.VERSION||""), was=(st.builder||"");
+    if(was && was!==cur){ showOutdated('Map "'+name+'" was built on v'+was+' — current is v'+cur+'. Regenerate to update the script.', true); }
+    else { hideOutdated(); }
+    toast('Loaded "'+name+'" — press Generate');
+  }
+}
+// ── outdated-version warning helpers ──
+function savedBuilder(name){ try{ var st=parseJSON(localStorage.getItem(LS_PREFIX+name)); return (st&&st.builder)||""; }catch(e){ return ""; } }
+function showOutdated(msg, withBtn){ var m=document.getElementById("outdatedMsg"), b=document.getElementById("outdatedBanner"), btn=document.getElementById("outdatedBtn"); if(m) m.textContent=msg; if(btn) btn.style.display=withBtn?"":"none"; if(b) b.style.display="flex"; }
+function hideOutdated(){ var b=document.getElementById("outdatedBanner"); if(b) b.style.display="none"; }
+// list every saved map whose stored builder version != current
+function outdatedMaps(){ var cur=(KB.VERSION||""), out=[]; for(var i=0;i<localStorage.length;i++){ var k=localStorage.key(i); if(k && k.indexOf(LS_PREFIX)===0){ var nm=k.slice(LS_PREFIX.length), was=savedBuilder(nm); if(was && was!==cur) out.push(nm); } } return out.sort(); }
+// on page open: if any saved map is stale, banner them (no button - nothing is loaded yet)
+function scanOutdated(){ var stale=outdatedMaps(); if(!stale.length){ return; } var v=(KB.VERSION||""); var lbl=(stale.length===1?"1 saved map has":stale.length+" saved maps have")+" an outdated script (now v"+v+"): "+stale.join(", ")+". Load each and Regenerate."; showOutdated(lbl, false); }
+function deleteLocal(){
+  var name=document.getElementById("savedList").value; if(!name){ toast("Pick a saved config"); return; }
+  localStorage.removeItem(LS_PREFIX+name); refreshSavedList(); toast('Deleted "'+name+'"');
+}
+function refreshSavedList(sel){
+  var names=[];
+  for(var i=0;i<localStorage.length;i++){ var k=localStorage.key(i); if(k && k.indexOf(LS_PREFIX)===0) names.push(k.slice(LS_PREFIX.length)); }
+  names.sort();
+  var cur=(KB.VERSION||"");
+  var s=document.getElementById("savedList");
+  s.innerHTML='<option value="">— saved configs ('+names.length+') —</option>'+names.map(function(n){
+    var was=savedBuilder(n), old=(was && was!==cur);
+    return '<option value="'+esc(n)+'">'+esc(n)+(old?'  ⚠ outdated':'')+'</option>';
+  }).join("");
+  if(sel) s.value=sel;
+}
+
+renderFeats(); refreshSavedList(); scanOutdated();
+var _vt=document.getElementById("verTag"); if(_vt) _vt.textContent="v"+(KB.VERSION||"")+" · "+KB.today();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="community/supabase-client.js"></script>
+<script>(async () => { try { if (await getSessionUser()) await getMyProfile(); } catch (e) {} })();</script>
+</body>
+</html>

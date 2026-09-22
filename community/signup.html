@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign Up — Krunker Resource Hub</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+<link rel="shortcut icon" href="../assets/favicon.ico">
+<link rel="stylesheet" href="community.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<link rel="stylesheet" href="../assets/site-glow.css">
+<script>(function(){try{var v=localStorage.getItem("krh:reduceEffects");var r=v==="1"||(v!=="0"&&window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);if(r)document.documentElement.setAttribute("data-glow-effects","off");}catch(e){}})();</script>
+<script src="../assets/site-glow.js" defer></script>
+</head>
+<body>
+<div class="wrap narrow">
+  <div class="topbar">
+    <div class="brand"><a href="../index.html"><img src="../assets/logo.png" alt="Krunker Resource Hub" class="brand-logo">Krunker Resource Hub</a></div>
+  </div>
+
+  <div class="card">
+    <h1>Create Account</h1>
+    <p class="subtitle">Step 1: connect Discord. Step 2: complete your account details.</p>
+
+    <!-- STEP 1: Discord connect -->
+    <div class="step active" id="step1">
+      <button class="btn discord" id="btnDiscord"><i>🔗</i> Connect with Discord</button>
+      <p class="hint">We only use your Discord username for identity verification — it's not used for login.</p>
+    </div>
+
+    <!-- STEP 2: registration form (muncul setelah discord connect) -->
+    <div class="step" id="step2">
+      <div class="msg ok show" id="discordConnected" style="margin-bottom:6px;"></div>
+
+      <label>Full Name</label>
+      <input type="text" id="fName" placeholder="Your real name">
+
+      <label>Username</label>
+      <input type="text" id="fUsername" placeholder="Shown on your posts, must be unique">
+
+      <label>Email</label>
+      <input type="email" id="fEmail" placeholder="email@example.com">
+
+      <label>Password</label>
+      <div class="pw-wrap">
+        <input type="password" id="fPassword" placeholder="Minimum 6 characters">
+        <button class="pw-toggle" data-target="fPassword" tabindex="-1"></button>
+      </div>
+
+      <div class="row2">
+        <div>
+          <label>Date of Birth</label>
+          <input type="date" id="fBirthdate">
+        </div>
+        <div>
+          <label>Gender</label>
+          <select id="fGender">
+            <option value="">Select...</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+            <option value="prefer_not_to_say">Prefer not to say</option>
+          </select>
+        </div>
+      </div>
+
+      <label>Username Krunker</label>
+      <input type="text" id="fKrunker" placeholder="Your Krunker username (optional)">
+
+      <div id="turnstileWrap" style="margin:16px 0; display:none;">
+        <div class="cf-turnstile" data-sitekey="0x0000000000000000000000" data-callback="onTurnstileSuccess" data-expired-callback="onTurnstileExpired" id="turnstileWidget"></div>
+      </div>
+
+      <button class="btn" id="btnSubmit">Create Account</button>
+      <div class="msg" id="formMsg"></div>
+    </div>
+
+    <div class="divider">or</div>
+    <a href="login.html" class="btn ghost" style="display:block; text-align:center; text-decoration:none;">Already have an account? Log In</a>
+  </div>
+</div>
+
+<script src="supabase-client.js"></script>
+<script>
+// =========================================================
+//  ANTI-BOT (Cloudflare Turnstile, free) — OPTIONAL
+//  1. Go to https://dash.cloudflare.com/?to=/:account/turnstile
+//     and create a widget (any domain works for testing).
+//  2. Paste the SITE key below.
+//  3. Paste the SECRET key into Supabase Dashboard > Authentication
+//     > Settings > Bot and Abuse Protection > enable "Turnstile"
+//     and paste it there. Supabase verifies the token server-side —
+//     nothing else to build.
+//  Left blank (default), signup just works without a captcha, same
+//  as before — this is purely additive.
+// =========================================================
+const TURNSTILE_SITE_KEY = "";
+// =========================================================
+
+let discordMeta = null; // { discord_id, discord_username }
+let turnstileToken = null;
+
+if (TURNSTILE_SITE_KEY) {
+  document.getElementById("turnstileWrap").style.display = "block";
+  document.getElementById("turnstileWidget").setAttribute("data-sitekey", TURNSTILE_SITE_KEY);
+}
+
+function onTurnstileSuccess(token) { turnstileToken = token; }
+function onTurnstileExpired() { turnstileToken = null; }
+
+async function init() {
+  // If returning from the OAuth redirect, a temporary Discord session is active here
+  const { data: { session } } = await sb.auth.getSession();
+  if (session && session.user.app_metadata.provider === "discord") {
+    const identity = session.user.identities.find(i => i.provider === "discord");
+    discordMeta = {
+      discord_id: session.user.user_metadata.provider_id || session.user.user_metadata.sub || identity?.id,
+      discord_username: session.user.user_metadata.full_name || session.user.user_metadata.name || session.user.user_metadata.custom_claims?.global_name || "Discord User",
+    };
+    // Sign out sesi sementara ini — akun asli dibuat via email/password di step 2
+    await sb.auth.signOut();
+    showStep2();
+  }
+}
+
+function showStep2() {
+  document.getElementById("step1").classList.remove("active");
+  document.getElementById("step2").classList.add("active");
+  document.getElementById("discordConnected").textContent =
+    "✓ Discord connected as: " + discordMeta.discord_username;
+}
+
+document.getElementById("btnDiscord").addEventListener("click", async () => {
+  await sb.auth.signInWithOAuth({
+    provider: "discord",
+    options: { redirectTo: window.location.href }
+  });
+});
+
+document.getElementById("btnSubmit").addEventListener("click", async () => {
+  const msg = document.getElementById("formMsg");
+  msg.className = "msg"; msg.textContent = "";
+
+  const name = document.getElementById("fName").value.trim();
+  const username = document.getElementById("fUsername").value.trim();
+  const email = document.getElementById("fEmail").value.trim();
+  const password = document.getElementById("fPassword").value;
+  const birthdate = document.getElementById("fBirthdate").value;
+  const gender = document.getElementById("fGender").value;
+  const krunker = document.getElementById("fKrunker").value.trim();
+
+  if (!name || !username || !email || !password || !birthdate || !gender) {
+    msg.className = "msg error show"; msg.textContent = "Please fill in all required fields.";
+    return;
+  }
+  if (password.length < 6) {
+    msg.className = "msg error show"; msg.textContent = "Password must be at least 6 characters.";
+    return;
+  }
+  if (TURNSTILE_SITE_KEY && !turnstileToken) {
+    msg.className = "msg error show"; msg.textContent = "Please complete the verification challenge.";
+    return;
+  }
+
+  const btn = document.getElementById("btnSubmit");
+  btn.disabled = true; btn.textContent = "Processing...";
+
+  const { data: signUpData, error: signUpError } = await sb.auth.signUp({
+    email, password,
+    options: turnstileToken ? { captchaToken: turnstileToken } : undefined,
+  });
+  if (signUpError) {
+    msg.className = "msg error show"; msg.textContent = signUpError.message;
+    btn.disabled = false; btn.textContent = "Create Account";
+    if (window.turnstile && TURNSTILE_SITE_KEY) window.turnstile.reset();
+    turnstileToken = null;
+    return;
+  }
+
+  // If confirm email is enabled, there's no session yet right away — try signing in manually
+  let user = signUpData.user;
+  if (!signUpData.session) {
+    const { data: signInData, error: signInError } = await sb.auth.signInWithPassword({ email, password });
+    if (!signInError) user = signInData.user;
+  }
+
+  if (!user) {
+    msg.className = "msg ok show";
+    msg.textContent = "Account created! Check your email to verify, then log in.";
+    btn.disabled = false; btn.textContent = "Create Account";
+    return;
+  }
+
+  const { error: profileError } = await sb.from("profiles").insert({
+    id: user.id,
+    username,
+    display_name: name,
+    krunker_username: krunker || null,
+  });
+
+  if (profileError) {
+    msg.className = "msg error show";
+    msg.textContent = "Login account created but profile failed to save: " + profileError.message;
+    btn.disabled = false; btn.textContent = "Create Account";
+    return;
+  }
+
+  // Sensitive personal fields go in profile_private (only you / staff can
+  // read this table — see sql/fix_security_issues.sql).
+  const { error: privateError } = await sb.from("profile_private").insert({
+    id: user.id,
+    birthdate,
+    gender,
+    discord_id: discordMeta?.discord_id || null,
+    discord_username: discordMeta?.discord_username || null,
+  });
+
+  if (privateError) {
+    msg.className = "msg error show";
+    msg.textContent = "Account created but personal info failed to save: " + privateError.message;
+    btn.disabled = false; btn.textContent = "Create Account";
+    return;
+  }
+
+  window.location.href = `profile.html?user=${encodeURIComponent(username)}`;
+});
+
+init();
+</script>
+</body>
+</html>

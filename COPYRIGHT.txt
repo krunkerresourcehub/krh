@@ -1,0 +1,6 @@
+Krunker Resource Hub
+Copyright (c) 2026 Krunker Resource Hub. All Rights Reserved.
+
+This project and all its contents (code, design, documentation, and
+assets) are protected by copyright law. See the LICENSE file in this
+repository for full terms.

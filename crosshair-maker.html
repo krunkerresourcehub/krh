@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Custom Crosshair Maker</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+<link rel="shortcut icon" href="assets/favicon.ico">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#120c28">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<meta name="description" content="Design a custom Krunker crosshair and export it as a PNG, free in your browser.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Krunker Resource Hub">
+<meta property="og:title" content="Custom Crosshair Maker — Krunker Resource Hub">
+<meta property="og:description" content="Design a custom Krunker crosshair and export it as a PNG, free in your browser.">
+<meta property="og:image" content="assets/logo.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Custom Crosshair Maker — Krunker Resource Hub">
+<meta name="twitter:description" content="Design a custom Krunker crosshair and export it as a PNG, free in your browser.">
+<meta name="twitter:image" content="assets/logo.png">
+<style>
+  :root{
+    --bg:#120c28; --bg2:#170f33; --panel:#1e1642; --panel2:#291c56; --line:rgba(255,255,255,.10); --line2:rgba(255,255,255,.20);
+    --txt:#fdfbff; --dim:#c3b8e8; --faint:#8177ab;
+    --accent:#4ade9a; --accent2:#3fe0d8; --bad:#ff6b9d; --warn:#ffb454;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --display:'Baloo 2',var(--sans);
+    --label:'Plus Jakarta Sans',var(--sans);
+    --r:20px;
+
+    /* ---- Account theme (community/settings.html) ----
+       Defaults match the rest of the site; a logged-in user's saved
+       theme overrides these at runtime as inline styles on <html>
+       (applyUserTheme() in community/supabase-client.js). */
+    --accent-gradient:linear-gradient(135deg, #ff6b9d, #b895ff 60%, #3fe0d8);
+    --bg-glow-1:rgba(255,107,157,.28); --bg-glow-2:rgba(63,224,216,.22); --bg-glow-3:rgba(184,149,255,.24);
+    --page-bg-image:none; --page-bg-size:cover; --page-bg-dim:0;
+    --ui-scale:1; --ui-saturation:1; --ui-hue:0deg;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;
+    background-color:var(--bg-0, var(--bg));
+    background-image:var(--page-bg-image),
+      radial-gradient(620px 520px at 8% 6%, var(--bg-glow-1), transparent 62%),
+      radial-gradient(680px 560px at 96% 0%, var(--bg-glow-2), transparent 60%),
+      radial-gradient(720px 620px at 50% 105%, var(--bg-glow-3), transparent 62%);
+    background-size:var(--page-bg-size), auto, auto, auto;
+    background-position:center; background-repeat:no-repeat;
+    zoom:var(--ui-scale); filter:saturate(var(--ui-saturation)) hue-rotate(var(--ui-hue));
+    color:var(--txt);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+
+  header{padding:20px 26px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+    background:linear-gradient(180deg,rgba(30,22,66,.6),transparent)}
+  header .brand{flex:1;min-width:220px}
+  header h1{margin:0;font-family:var(--display);font-size:20px;font-weight:800;letter-spacing:.2px}
+  header h1 .c{background:var(--accent-gradient);-webkit-background-clip:text;background-clip:text;color:transparent}
+  header p{margin:4px 0 0;color:var(--dim);font-size:12.5px;font-family:var(--label);font-weight:600}
+
+  .wrap{display:grid;grid-template-columns:minmax(320px,420px) 1fr;gap:20px;align-items:start;
+    max-width:1400px;margin:0 auto;padding:20px}
+  @media(max-width:860px){.wrap{grid-template-columns:1fr}}
+
+  .panel{background:rgba(255,255,255,.045);backdrop-filter:blur(20px);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+  .panel + .panel{margin-top:16px}
+  .panel h2{margin:0 0 14px;font-size:13.5px;letter-spacing:.2px;color:var(--dim);font-weight:700;font-family:var(--label)}
+
+  .field{margin-bottom:14px}
+  .field label{display:flex;justify-content:space-between;font-size:12.5px;color:var(--dim);margin-bottom:6px;font-weight:600;font-family:var(--label)}
+  .field label span.val{color:var(--accent);font-family:var(--mono);font-size:12px}
+  input[type=range]{width:100%;accent-color:var(--accent);}
+  input[type=color]{width:44px;height:32px;padding:0;border:1px solid var(--line);border-radius:12px;background:none;cursor:pointer}
+  .row{display:flex;align-items:center;gap:10px}
+  .row .grow{flex:1}
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0}
+  .toggle-row span{font-size:13px;color:var(--txt);font-weight:600;font-family:var(--label)}
+  switch-input{display:none}
+
+  .sw{position:relative;display:inline-block;width:40px;height:22px;flex:none}
+  .sw input{opacity:0;width:0;height:0}
+  .sw .slider{position:absolute;inset:0;background:var(--panel2);border:1px solid var(--line2);border-radius:20px;cursor:pointer;transition:.2s}
+  .sw .slider::before{content:"";position:absolute;height:16px;width:16px;left:2px;top:2px;background:var(--faint);border-radius:50%;transition:.2s}
+  .sw input:checked + .slider{background:rgba(74,222,154,.25);border-color:var(--accent)}
+  .sw input:checked + .slider::before{transform:translateX(18px);background:var(--accent)}
+
+  .preview-stage{
+    position:relative;border:1px solid var(--line);border-radius:var(--r);
+    background:
+      linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px),
+      #0e0a22;
+    background-size:28px 28px;
+    height:440px;display:flex;align-items:center;justify-content:center;overflow:hidden;
+  }
+  canvas{display:block}
+
+  .presets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+  .preset-btn{padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel2);color:var(--dim);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--label);transition:.2s ease}
+  .preset-btn:hover{border-color:var(--line2);color:var(--txt);transform:translateY(-2px)}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px 16px;border-radius:999px;border:none;
+    font-weight:700;font-size:14px;cursor:pointer;font-family:var(--label);margin-top:8px;transition:.2s ease}
+  .btn.primary{background:var(--accent-gradient);color:#0e1a12}
+  .btn.ghost{background:var(--panel2);color:var(--txt);border:1px solid var(--line)}
+  .btn:hover{filter:brightness(1.08);transform:translateY(-2px)}
+
+  textarea{width:100%;min-height:90px;background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:16px;color:var(--txt);
+    font-family:var(--mono);font-size:12.5px;padding:12px;resize:vertical}
+
+  .msg{font-size:12.5px;margin-top:8px;padding:9px 13px;border-radius:14px;display:none}
+  .msg.show{display:block}
+  .msg.ok{background:rgba(74,222,154,.14);color:#a7f5cd;border:1px solid rgba(74,222,154,.35)}
+  .msg.error{background:rgba(255,107,157,.14);color:#ffb3cd;border:1px solid rgba(255,107,157,.35)}
+</style>
+<link rel="stylesheet" href="assets/site-glow.css">
+<script>(function(){try{var v=localStorage.getItem("krh:reduceEffects");var r=v==="1"||(v!=="0"&&window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);if(r)document.documentElement.setAttribute("data-glow-effects","off");}catch(e){}})();</script>
+<script src="assets/site-glow.js" defer></script>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <h1>Custom <span class="c">Crosshair</span> Maker</h1>
+    <p>Design your crosshair live, export the code, or post it for others to use.</p>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- LEFT: controls -->
+  <div class="left">
+    <div class="panel">
+      <h2>Presets</h2>
+      <div class="presets" id="presets"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Shape</h2>
+      <div class="field">
+        <label>Style</label>
+        <select id="cShape" style="width:100%; padding:9px 10px; background:var(--panel2); color:var(--txt); border:1px solid var(--line); border-radius:8px; font-family:inherit; font-size:13.5px;">
+          <option value="cross">Cross</option>
+          <option value="circle">Circle</option>
+          <option value="square">Square</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Color <span class="val" id="vColor"></span></label>
+        <div class="row"><input type="color" id="cColor" value="#2fd06a"></div>
+      </div>
+      <div class="field">
+        <label>Thickness <span class="val" id="vThickness"></span></label>
+        <input type="range" id="cThickness" min="1" max="10" step="0.5" value="2.5">
+      </div>
+      <div class="field">
+        <label>Length <span class="val" id="vLength"></span></label>
+        <input type="range" id="cLength" min="2" max="30" step="1" value="10">
+      </div>
+      <div class="field">
+        <label>Center Gap <span class="val" id="vGap"></span></label>
+        <input type="range" id="cGap" min="0" max="20" step="1" value="4">
+      </div>
+      <div class="field">
+        <label>Opacity <span class="val" id="vOpacity"></span></label>
+        <input type="range" id="cOpacity" min="0.1" max="1" step="0.05" value="1">
+      </div>
+      <div class="toggle-row">
+        <span>T-Style (hide top line)</span>
+        <label class="sw"><input type="checkbox" id="cTStyle"><span class="slider"></span></label>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Center Dot</h2>
+      <div class="toggle-row">
+        <span>Enable dot</span>
+        <label class="sw"><input type="checkbox" id="cDotOn" checked><span class="slider"></span></label>
+      </div>
+      <div class="field">
+        <label>Dot Size <span class="val" id="vDotSize"></span></label>
+        <input type="range" id="cDotSize" min="1" max="12" step="0.5" value="3">
+      </div>
+      <div class="field">
+        <label>Dot Opacity <span class="val" id="vDotOpacity"></span></label>
+        <input type="range" id="cDotOpacity" min="0.1" max="1" step="0.05" value="1">
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Outline</h2>
+      <div class="toggle-row">
+        <span>Enable outline</span>
+        <label class="sw"><input type="checkbox" id="cOutlineOn" checked><span class="slider"></span></label>
+      </div>
+      <div class="field">
+        <label>Outline Color <span class="val" id="vOutlineColor"></span></label>
+        <div class="row"><input type="color" id="cOutlineColor" value="#000000"></div>
+      </div>
+      <div class="field">
+        <label>Outline Width <span class="val" id="vOutlineWidth"></span></label>
+        <input type="range" id="cOutlineWidth" min="0.5" max="4" step="0.5" value="1">
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: preview + export -->
+  <div class="right">
+    <div class="panel" style="padding:0; overflow:hidden;">
+      <div class="preview-stage"><canvas id="canvas" width="440" height="440"></canvas></div>
+    </div>
+
+    <div class="panel">
+      <h2>Export</h2>
+      <button class="btn ghost" id="btnReset">Reset</button>
+      <button class="btn ghost" id="btnDownload">Download PNG</button>
+      <button class="btn primary" id="btnPost">Post this Crosshair</button>
+      <div class="msg" id="exportMsg"></div>
+      <p style="font-size:11.5px;color:var(--faint);margin-top:10px;">
+        Download the PNG, or post it straight to the <b>Crosshairs</b> tab so other players can grab it too.
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+const els = {
+  shape: document.getElementById('cShape'),
+  color: document.getElementById('cColor'),
+  thickness: document.getElementById('cThickness'),
+  length: document.getElementById('cLength'),
+  gap: document.getElementById('cGap'),
+  opacity: document.getElementById('cOpacity'),
+  tstyle: document.getElementById('cTStyle'),
+  dotOn: document.getElementById('cDotOn'),
+  dotSize: document.getElementById('cDotSize'),
+  dotOpacity: document.getElementById('cDotOpacity'),
+  outlineOn: document.getElementById('cOutlineOn'),
+  outlineColor: document.getElementById('cOutlineColor'),
+  outlineWidth: document.getElementById('cOutlineWidth'),
+};
+const vals = {
+  vColor: document.getElementById('vColor'),
+  vThickness: document.getElementById('vThickness'),
+  vLength: document.getElementById('vLength'),
+  vGap: document.getElementById('vGap'),
+  vOpacity: document.getElementById('vOpacity'),
+  vDotSize: document.getElementById('vDotSize'),
+  vDotOpacity: document.getElementById('vDotOpacity'),
+  vOutlineColor: document.getElementById('vOutlineColor'),
+  vOutlineWidth: document.getElementById('vOutlineWidth'),
+};
+</script>
+<script src="crosshair-render.js"></script>
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+const PRESETS = [
+  { name:'Classic Green', v:{shape:'cross',color:'#2fd06a',thickness:2.5,length:10,gap:4,opacity:1,tstyle:false,dotOn:true,dotSize:3,dotOpacity:1,outlineOn:true,outlineColor:'#000000',outlineWidth:1} },
+  { name:'Thin Cyan', v:{shape:'cross',color:'#25d5e8',thickness:1.5,length:8,gap:6,opacity:0.9,tstyle:false,dotOn:false,dotSize:2,dotOpacity:1,outlineOn:true,outlineColor:'#000000',outlineWidth:1} },
+  { name:'Dot Only', v:{shape:'cross',color:'#ffffff',thickness:2,length:0,gap:0,opacity:1,tstyle:false,dotOn:true,dotSize:4,dotOpacity:1,outlineOn:true,outlineColor:'#000000',outlineWidth:1.5} },
+  { name:'T-Style Red', v:{shape:'cross',color:'#f04545',thickness:2.5,length:12,gap:5,opacity:1,tstyle:true,dotOn:true,dotSize:2.5,dotOpacity:1,outlineOn:true,outlineColor:'#000000',outlineWidth:1} },
+  { name:'Bold Orange', v:{shape:'cross',color:'#f5a524',thickness:4,length:14,gap:3,opacity:1,tstyle:false,dotOn:false,dotSize:3,dotOpacity:1,outlineOn:false,outlineColor:'#000000',outlineWidth:1} },
+  { name:'Circle', v:{shape:'circle',color:'#2fd06a',thickness:2,length:12,gap:0,opacity:1,tstyle:false,dotOn:true,dotSize:2,dotOpacity:1,outlineOn:true,outlineColor:'#000000',outlineWidth:1} },
+  { name:'Square', v:{shape:'square',color:'#25d5e8',thickness:2,length:10,gap:0,opacity:1,tstyle:false,dotOn:false,dotSize:2,dotOpacity:1,outlineOn:true,outlineColor:'#000000',outlineWidth:1} },
+];
+
+function getState(){
+  return {
+    shape: els.shape.value,
+    color: els.color.value,
+    thickness: parseFloat(els.thickness.value),
+    length: parseFloat(els.length.value),
+    gap: parseFloat(els.gap.value),
+    opacity: parseFloat(els.opacity.value),
+    tstyle: els.tstyle.checked,
+    dotOn: els.dotOn.checked,
+    dotSize: parseFloat(els.dotSize.value),
+    dotOpacity: parseFloat(els.dotOpacity.value),
+    outlineOn: els.outlineOn.checked,
+    outlineColor: els.outlineColor.value,
+    outlineWidth: parseFloat(els.outlineWidth.value),
+  };
+}
+
+function setState(v){
+  els.shape.value = v.shape || 'cross';
+  els.color.value = v.color;
+  els.thickness.value = v.thickness;
+  els.length.value = v.length;
+  els.gap.value = v.gap;
+  els.opacity.value = v.opacity;
+  els.tstyle.checked = v.tstyle;
+  els.dotOn.checked = v.dotOn;
+  els.dotSize.value = v.dotSize;
+  els.dotOpacity.value = v.dotOpacity;
+  els.outlineOn.checked = v.outlineOn;
+  els.outlineColor.value = v.outlineColor;
+  els.outlineWidth.value = v.outlineWidth;
+  update();
+}
+
+function render(s){
+  renderCrosshairToCanvas(canvas, s);
+}
+
+function updateLabels(s){
+  vals.vColor.textContent = s.color;
+  vals.vThickness.textContent = s.thickness + 'px';
+  vals.vLength.textContent = s.length + 'px';
+  vals.vGap.textContent = s.gap + 'px';
+  vals.vOpacity.textContent = Math.round(s.opacity*100) + '%';
+  vals.vDotSize.textContent = s.dotSize + 'px';
+  vals.vDotOpacity.textContent = Math.round(s.dotOpacity*100) + '%';
+  vals.vOutlineColor.textContent = s.outlineColor;
+  vals.vOutlineWidth.textContent = s.outlineWidth + 'px';
+}
+
+function decodeCode(code){
+  return decodeCrosshairCode(code);
+}
+
+function update(){
+  const s = getState();
+  render(s);
+  updateLabels(s);
+}
+
+Object.values(els).forEach(el => { el.addEventListener('input', update); el.addEventListener('change', update); });
+
+document.getElementById('presets').innerHTML = PRESETS.map((p,i) =>
+  `<button class="preset-btn" data-i="${i}">${p.name}</button>`).join('');
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.addEventListener('click', () => setState(PRESETS[btn.dataset.i].v));
+});
+
+document.getElementById('btnReset').addEventListener('click', () => setState(PRESETS[0].v));
+
+document.getElementById('btnPost').addEventListener('click', () => {
+  try {
+    sessionStorage.setItem('pendingCrosshairImage', canvas.toDataURL('image/png'));
+  } catch(e) {
+    showMsg('error', 'Could not prepare image for posting.');
+    return;
+  }
+  window.top.location.href = 'community/crosshairs.html';
+});
+
+document.getElementById('btnDownload').addEventListener('click', () => {
+  const link = document.createElement('a');
+  link.download = 'crosshair.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+  showMsg('ok', 'PNG downloaded!');
+});
+
+function showMsg(type, text){
+  const el = document.getElementById('exportMsg');
+  el.className = 'msg show ' + type;
+  el.textContent = text;
+  setTimeout(() => { el.className = 'msg'; }, 3000);
+}
+
+// load from ?code= if opened directly with one
+const params = new URLSearchParams(window.location.search);
+if (params.get('code')){
+  const decoded = decodeCode(params.get('code'));
+  if (decoded) setState(decoded); else update();
+} else {
+  setState(PRESETS[0].v);
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="community/supabase-client.js"></script>
+<script>(async () => { try { if (await getSessionUser()) await getMyProfile(); } catch (e) {} })();</script>
+</body>
+</html>

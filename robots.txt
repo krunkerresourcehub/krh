@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# Don't index account/moderation pages — nothing useful to search engines,
+# and no point indexing private/staff-only screens.
+Disallow: /krh/community/login.html
+Disallow: /krh/community/signup.html
+Disallow: /krh/community/forgot-password.html
+Disallow: /krh/community/reset-password.html
+Disallow: /krh/community/settings.html
+Disallow: /krh/community/inbox.html
+Disallow: /krh/community/messages.html
+Disallow: /krh/community/saved.html
+Disallow: /krh/community/admin.html
+Disallow: /krh/community/developer.html
+Disallow: /krh/community/logs.html
+Disallow: /krh/community/banned.html

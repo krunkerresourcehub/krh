@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Theme Settings — Krunker Resource Hub</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+<link rel="shortcut icon" href="../assets/favicon.ico">
+<link rel="stylesheet" href="community.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="../assets/site-glow.css">
+<script>(function(){try{var v=localStorage.getItem("krh:reduceEffects");var r=v==="1"||(v!=="0"&&window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);if(r)document.documentElement.setAttribute("data-glow-effects","off");}catch(e){}})();</script>
+<script src="../assets/site-glow.js" defer></script>
+</head>
+<body>
+<div class="wrap narrow">
+  <div class="topbar">
+    <div class="brand"><a href="../index.html"><img src="../assets/logo.png" alt="Krunker Resource Hub" class="brand-logo">Krunker Resource Hub</a></div>
+    <div class="topnav" id="topnav"></div>
+  </div>
+
+  <div class="card">
+    <h1>Theme Settings</h1>
+    <p class="subtitle">Make it yours — pick an accent color, build your own gradient, and set a custom background. Changes preview live on this page; hit Save to keep them everywhere.</p>
+  </div>
+
+  <!-- Live preview -->
+  <div class="card">
+    <h2>Preview</h2>
+    <div class="theme-preview" id="previewBox">
+      <div class="pv-title">Krunker Resource Hub</div>
+      <div class="pv-sub">This is what your accent &amp; gradient look like.</div>
+      <div class="pv-btn">Sample Button</div>
+    </div>
+  </div>
+
+  <!-- Accent color -->
+  <div class="card">
+    <h2>Accent Color</h2>
+    <p class="hint" style="margin-top:0;">Used for buttons, links and the site logo.</p>
+    <div class="swatch-grid" id="accentSwatches"></div>
+    <div class="color-row">
+      <input type="color" id="fAccentColor">
+      <input type="text" id="fAccentHex" placeholder="#ff6b9d" maxlength="7">
+    </div>
+  </div>
+
+  <!-- Gradient -->
+  <div class="card">
+    <h2>Gradient</h2>
+    <div class="toggle-row">
+      <span class="toggle-label">Use a gradient instead of a flat color</span>
+      <label class="switch">
+        <input type="checkbox" id="fGradientEnabled" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div id="gradientControls">
+      <p class="hint">Presets</p>
+      <div class="preset-grid" id="gradientPresets"></div>
+
+      <p class="hint" style="margin-top:16px;">Color stops</p>
+      <div id="accentStops"></div>
+      <button class="btn ghost stop-add" id="btnAddAccentStop" type="button">+ Add Color Stop</button>
+
+      <div class="range-row">
+        <div class="range-label"><span>Angle</span><span id="accentAngleLabel">135°</span></div>
+        <input type="range" id="fAccentAngle" min="0" max="360" step="5" value="135">
+      </div>
+      <div class="gradient-bar" id="accentGradientBar"></div>
+    </div>
+  </div>
+
+  <!-- Background -->
+  <div class="card">
+    <h2>Background</h2>
+    <p class="hint" style="margin-top:0;">What shows behind every page, under the site's ambient glow.</p>
+    <div class="bg-type-grid" id="bgTypeGrid">
+      <button class="bg-type-btn" data-type="default" type="button">Default<br><span class="hint" style="margin:2px 0 0;">Site's aurora glow</span></button>
+      <button class="bg-type-btn" data-type="solid" type="button">Solid Color<br><span class="hint" style="margin:2px 0 0;">One flat color</span></button>
+      <button class="bg-type-btn" data-type="gradient" type="button">Custom Gradient<br><span class="hint" style="margin:2px 0 0;">Build your own</span></button>
+      <button class="bg-type-btn" data-type="image" type="button">Custom Image<br><span class="hint" style="margin:2px 0 0;">Upload or link one</span></button>
+    </div>
+
+    <!-- Solid -->
+    <div id="bgSolidPanel" style="display:none;">
+      <div class="color-row">
+        <input type="color" id="fBgSolid">
+        <input type="text" id="fBgSolidHex" placeholder="#120c28" maxlength="7">
+      </div>
+    </div>
+
+    <!-- Gradient -->
+    <div id="bgGradientPanel" style="display:none;">
+      <p class="hint" style="margin-top:14px;">Color stops</p>
+      <div id="bgStops"></div>
+      <button class="btn ghost stop-add" id="btnAddBgStop" type="button">+ Add Color Stop</button>
+
+      <div class="range-row">
+        <div class="range-label"><span>Angle</span><span id="bgAngleLabel">135°</span></div>
+        <input type="range" id="fBgAngle" min="0" max="360" step="5" value="135">
+      </div>
+      <div class="gradient-bar" id="bgGradientBar"></div>
+    </div>
+
+    <!-- Image -->
+    <div id="bgImagePanel" style="display:none;">
+      <div class="bg-preview-thumb" id="bgImageThumb"></div>
+      <label>Upload an image</label>
+      <input type="file" id="fBgUpload" accept="image/png,image/jpeg,image/webp,image/gif">
+      <p class="hint">PNG, JPG, WEBP or GIF. Max 5MB.</p>
+      <button class="btn ghost small" id="btnBgUpload" type="button" style="margin-top:10px;">Upload Image</button>
+
+      <label style="margin-top:18px;">Or paste an image URL</label>
+      <input type="text" id="fBgImageUrl" placeholder="https://example.com/my-wallpaper.jpg">
+
+      <div class="range-row">
+        <div class="range-label"><span>Overlay Darkness</span><span id="bgDimLabel">35%</span></div>
+        <input type="range" id="fBgDim" min="0" max="80" step="5" value="35">
+      </div>
+      <p class="hint">Darkens the image a bit so text stays readable.</p>
+    </div>
+
+    <div class="msg" id="bgMsg"></div>
+  </div>
+
+  <!-- Display -->
+  <div class="card">
+    <h2>Display</h2>
+    <p class="hint" style="margin-top:0;">Adjust the overall UI scale, color saturation, and hue — affects the whole site, not just accent colors.</p>
+
+    <div class="range-row" style="margin-top:6px;">
+      <div class="range-label"><span>UI Scale</span><span id="uiScaleLabel">100%</span></div>
+      <input type="range" id="fUiScale" min="80" max="130" step="5" value="100">
+    </div>
+
+    <div class="range-row">
+      <div class="range-label"><span>Saturation</span><span id="uiSaturationLabel">100%</span></div>
+      <input type="range" id="fUiSaturation" min="0" max="200" step="10" value="100">
+    </div>
+
+    <div class="range-row">
+      <div class="range-label"><span>Color Hue</span><span id="uiHueLabel">0°</span></div>
+      <input type="range" id="fUiHue" min="0" max="360" step="5" value="0">
+    </div>
+  </div>
+
+  <div class="card">
+    <button class="btn" id="btnSaveTheme">Save Theme</button>
+    <button class="btn ghost" id="btnResetTheme">Reset to Default</button>
+    <div class="msg" id="themeMsg"></div>
+  </div>
+</div>
+
+<script src="supabase-client.js"></script>
+<script>
+let me = null;
+let myProfile = null;
+
+const ACCENT_PRESETS = ["#ff6b9d","#b895ff","#3fe0d8","#5b9dff","#4ade9a","#ffb454","#ff9a7d","#ffe08a","#6be6e0","#ff9fc6"];
+
+const GRADIENT_PRESETS = [
+  { name: "Aurora",     angle: 135, stops: ["#ff6b9d","#b895ff","#3fe0d8"] },
+  { name: "Sunset",     angle: 120, stops: ["#ffb454","#ff6b9d","#b895ff"] },
+  { name: "Ocean",      angle: 90,  stops: ["#5b9dff","#3fe0d8","#4ade9a"] },
+  { name: "Candy",      angle: 100, stops: ["#ff9fc6","#ffe08a","#6be6e0"] },
+  { name: "Blaze",      angle: 135, stops: ["#ff6b9d","#ffb454"] },
+];
+
+// Working copy of the theme being edited. Starts from defaults and gets
+// merged with whatever the user already saved.
+let draft = JSON.parse(JSON.stringify(DEFAULT_THEME));
+
+function clampStops(stops) {
+  // keep between 2 and 4 stops
+  const s = (stops || []).slice(0, 4);
+  while (s.length < 2) s.push(s[s.length - 1] || "#ff6b9d");
+  return s;
+}
+
+function mergeTheme(base, saved) {
+  const merged = JSON.parse(JSON.stringify(base));
+  if (!saved) return merged;
+  if (saved.accent) merged.accent = saved.accent;
+  if (saved.gradient) {
+    merged.gradient.enabled = saved.gradient.enabled !== false;
+    if (saved.gradient.angle != null) merged.gradient.angle = saved.gradient.angle;
+    if (saved.gradient.stops) merged.gradient.stops = clampStops(saved.gradient.stops);
+  }
+  if (saved.background) {
+    merged.background.type = saved.background.type || "default";
+    if (saved.background.solid) merged.background.solid = saved.background.solid;
+    if (saved.background.gradient) {
+      if (saved.background.gradient.angle != null) merged.background.gradient.angle = saved.background.gradient.angle;
+      if (saved.background.gradient.stops) merged.background.gradient.stops = clampStops(saved.background.gradient.stops);
+    }
+    merged.background.image_url = saved.background.image_url || null;
+    if (saved.background.dim != null) merged.background.dim = saved.background.dim;
+  }
+  if (saved.ui) {
+    if (saved.ui.scale != null) merged.ui.scale = saved.ui.scale;
+    if (saved.ui.saturation != null) merged.ui.saturation = saved.ui.saturation;
+    if (saved.ui.hue != null) merged.ui.hue = saved.ui.hue;
+  }
+  return merged;
+}
+
+async function boot() {
+  me = await requireLogin("login.html");
+  myProfile = await getMyProfile();
+  if (!myProfile) { window.location.href = "login.html"; return; }
+
+  const nav = document.getElementById("topnav");
+  let links = "";
+  if (myProfile.role === "admin" || myProfile.role === "developer") links += `<a href="admin.html">Admin Panel</a>`;
+  if (myProfile.role === "developer") links += `<a href="developer.html">Developer Panel</a>`;
+  links += `<a href="account-settings.html" style="margin-left:6px;">Account</a>`;
+  nav.innerHTML = links;
+
+  draft = mergeTheme(DEFAULT_THEME, myProfile.theme_settings);
+  renderAccentSwatches();
+  renderGradientPresets();
+  renderAll();
+}
+
+// ---------- Rendering ----------
+function renderAll() {
+  // Accent
+  document.getElementById("fAccentColor").value = draft.accent;
+  document.getElementById("fAccentHex").value = draft.accent;
+  highlightActive("#accentSwatches .swatch", draft.accent);
+  highlightActivePreset();
+
+  // Gradient toggle
+  document.getElementById("fGradientEnabled").checked = draft.gradient.enabled;
+  document.getElementById("gradientControls").style.opacity = draft.gradient.enabled ? "1" : ".45";
+  document.getElementById("gradientControls").style.pointerEvents = draft.gradient.enabled ? "auto" : "none";
+
+  renderStops("accentStops", draft.gradient.stops, (stops) => { draft.gradient.stops = stops; applyLive(); }, "fAccentAngle");
+  document.getElementById("fAccentAngle").value = draft.gradient.angle;
+  document.getElementById("accentAngleLabel").textContent = draft.gradient.angle + "°";
+  document.getElementById("accentGradientBar").style.background = gradientCss(draft.gradient.stops, draft.gradient.angle);
+
+  // Background type buttons
+  document.querySelectorAll("#bgTypeGrid .bg-type-btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.type === draft.background.type);
+  });
+  document.getElementById("bgSolidPanel").style.display = draft.background.type === "solid" ? "block" : "none";
+  document.getElementById("bgGradientPanel").style.display = draft.background.type === "gradient" ? "block" : "none";
+  document.getElementById("bgImagePanel").style.display = draft.background.type === "image" ? "block" : "none";
+
+  document.getElementById("fBgSolid").value = draft.background.solid;
+  document.getElementById("fBgSolidHex").value = draft.background.solid;
+
+  renderStops("bgStops", draft.background.gradient.stops, (stops) => { draft.background.gradient.stops = stops; applyLive(); }, "fBgAngle");
+  document.getElementById("fBgAngle").value = draft.background.gradient.angle;
+  document.getElementById("bgAngleLabel").textContent = draft.background.gradient.angle + "°";
+  document.getElementById("bgGradientBar").style.background = gradientCss(draft.background.gradient.stops, draft.background.gradient.angle);
+
+  const thumb = document.getElementById("bgImageThumb");
+  thumb.style.backgroundImage = draft.background.image_url ? `url("${draft.background.image_url}")` : "none";
+  document.getElementById("fBgImageUrl").value = draft.background.image_url || "";
+  document.getElementById("fBgDim").value = Math.round(draft.background.dim * 100);
+  document.getElementById("bgDimLabel").textContent = Math.round(draft.background.dim * 100) + "%";
+
+  // Display
+  document.getElementById("fUiScale").value = draft.ui.scale;
+  document.getElementById("uiScaleLabel").textContent = draft.ui.scale + "%";
+  document.getElementById("fUiSaturation").value = draft.ui.saturation;
+  document.getElementById("uiSaturationLabel").textContent = draft.ui.saturation + "%";
+  document.getElementById("fUiHue").value = draft.ui.hue;
+  document.getElementById("uiHueLabel").textContent = draft.ui.hue + "°";
+}
+
+function gradientCss(stops, angle) {
+  return `linear-gradient(${angle}deg, ${stops.join(", ")})`;
+}
+
+function highlightActive(selector, color) {
+  document.querySelectorAll(selector).forEach(el => {
+    el.classList.toggle("active", el.dataset.color?.toLowerCase() === color?.toLowerCase());
+  });
+}
+
+function highlightActivePreset() {
+  const stopsKey = JSON.stringify(draft.gradient.stops) + "|" + draft.gradient.angle;
+  document.querySelectorAll("#gradientPresets .preset-swatch").forEach(el => {
+    el.classList.toggle("active", el.dataset.key === stopsKey);
+  });
+}
+
+function renderAccentSwatches() {
+  const wrap = document.getElementById("accentSwatches");
+  wrap.innerHTML = ACCENT_PRESETS.map(c =>
+    `<button type="button" class="swatch" data-color="${c}" style="background:${c};" title="${c}"></button>`
+  ).join("");
+  wrap.querySelectorAll(".swatch").forEach(btn => {
+    btn.addEventListener("click", () => {
+      draft.accent = btn.dataset.color;
+      renderAll();
+      applyLive();
+    });
+  });
+}
+
+function renderGradientPresets() {
+  const wrap = document.getElementById("gradientPresets");
+  wrap.innerHTML = GRADIENT_PRESETS.map(p => {
+    const key = JSON.stringify(p.stops) + "|" + p.angle;
+    return `<button type="button" class="preset-swatch" data-key="${key}" title="${p.name}" style="background:${gradientCss(p.stops, p.angle)};"></button>`;
+  }).join("");
+  wrap.querySelectorAll(".preset-swatch").forEach((btn, i) => {
+    btn.addEventListener("click", () => {
+      const p = GRADIENT_PRESETS[i];
+      draft.gradient.stops = clampStops(p.stops);
+      draft.gradient.angle = p.angle;
+      renderAll();
+      applyLive();
+    });
+  });
+}
+
+// Renders a stack of color-stop rows into `containerId`. `onChange(stops)`
+// is called with the updated stops array whenever a stop is edited,
+// added, or removed.
+function renderStops(containerId, stops, onChange, angleInputId) {
+  const wrap = document.getElementById(containerId);
+  wrap.innerHTML = stops.map((c, i) => `
+    <div class="stop-row" data-i="${i}">
+      <input type="color" value="${c}">
+      <button type="button" class="stop-remove" ${stops.length <= 2 ? "disabled" : ""}>&times;</button>
+    </div>
+  `).join("");
+
+  wrap.querySelectorAll(".stop-row").forEach((row) => {
+    const i = Number(row.dataset.i);
+    row.querySelector("input[type=color]").addEventListener("input", (e) => {
+      const next = stops.slice();
+      next[i] = e.target.value;
+      onChange(next);
+      // update the little gradient bar without a full re-render of the row
+      const barId = angleInputId === "fAccentAngle" ? "accentGradientBar" : "bgGradientBar";
+      const angle = document.getElementById(angleInputId).value;
+      document.getElementById(barId).style.background = gradientCss(next, angle);
+    });
+    row.querySelector(".stop-remove").addEventListener("click", () => {
+      if (stops.length <= 2) return;
+      const next = stops.slice(0, i).concat(stops.slice(i + 1));
+      onChange(next);
+      renderAll();
+    });
+  });
+}
+
+function applyLive() {
+  applyUserTheme(draft);
+}
+
+// ---------- Accent color inputs ----------
+document.getElementById("fAccentColor").addEventListener("input", (e) => {
+  draft.accent = e.target.value;
+  document.getElementById("fAccentHex").value = e.target.value;
+  highlightActive("#accentSwatches .swatch", draft.accent);
+  applyLive();
+});
+document.getElementById("fAccentHex").addEventListener("input", (e) => {
+  const v = e.target.value.trim();
+  if (/^#[0-9a-fA-F]{6}$/.test(v)) {
+    draft.accent = v;
+    document.getElementById("fAccentColor").value = v;
+    highlightActive("#accentSwatches .swatch", draft.accent);
+    applyLive();
+  }
+});
+
+// ---------- Gradient toggle / angle / add stop ----------
+document.getElementById("fGradientEnabled").addEventListener("change", (e) => {
+  draft.gradient.enabled = e.target.checked;
+  renderAll();
+  applyLive();
+});
+document.getElementById("fAccentAngle").addEventListener("input", (e) => {
+  draft.gradient.angle = Number(e.target.value);
+  document.getElementById("accentAngleLabel").textContent = draft.gradient.angle + "°";
+  document.getElementById("accentGradientBar").style.background = gradientCss(draft.gradient.stops, draft.gradient.angle);
+  applyLive();
+});
+document.getElementById("btnAddAccentStop").addEventListener("click", () => {
+  if (draft.gradient.stops.length >= 4) return;
+  draft.gradient.stops = draft.gradient.stops.concat(["#ffffff"]);
+  renderAll();
+  applyLive();
+});
+
+// ---------- Background type ----------
+document.getElementById("bgTypeGrid").addEventListener("click", (e) => {
+  const btn = e.target.closest(".bg-type-btn");
+  if (!btn) return;
+  draft.background.type = btn.dataset.type;
+  renderAll();
+  applyLive();
+});
+
+document.getElementById("fBgSolid").addEventListener("input", (e) => {
+  draft.background.solid = e.target.value;
+  document.getElementById("fBgSolidHex").value = e.target.value;
+  applyLive();
+});
+document.getElementById("fBgSolidHex").addEventListener("input", (e) => {
+  const v = e.target.value.trim();
+  if (/^#[0-9a-fA-F]{6}$/.test(v)) {
+    draft.background.solid = v;
+    document.getElementById("fBgSolid").value = v;
+    applyLive();
+  }
+});
+
+document.getElementById("fBgAngle").addEventListener("input", (e) => {
+  draft.background.gradient.angle = Number(e.target.value);
+  document.getElementById("bgAngleLabel").textContent = draft.background.gradient.angle + "°";
+  document.getElementById("bgGradientBar").style.background = gradientCss(draft.background.gradient.stops, draft.background.gradient.angle);
+  applyLive();
+});
+document.getElementById("btnAddBgStop").addEventListener("click", () => {
+  if (draft.background.gradient.stops.length >= 4) return;
+  draft.background.gradient.stops = draft.background.gradient.stops.concat(["#ffffff"]);
+  renderAll();
+  applyLive();
+});
+
+document.getElementById("fBgImageUrl").addEventListener("input", (e) => {
+  draft.background.image_url = e.target.value.trim() || null;
+  document.getElementById("bgImageThumb").style.backgroundImage = draft.background.image_url ? `url("${draft.background.image_url}")` : "none";
+  applyLive();
+});
+document.getElementById("fBgDim").addEventListener("input", (e) => {
+  draft.background.dim = Number(e.target.value) / 100;
+  document.getElementById("bgDimLabel").textContent = e.target.value + "%";
+  applyLive();
+});
+
+// ---------- Display: scale / saturation / hue ----------
+document.getElementById("fUiScale").addEventListener("input", (e) => {
+  draft.ui.scale = Number(e.target.value);
+  document.getElementById("uiScaleLabel").textContent = e.target.value + "%";
+  applyLive();
+});
+document.getElementById("fUiSaturation").addEventListener("input", (e) => {
+  draft.ui.saturation = Number(e.target.value);
+  document.getElementById("uiSaturationLabel").textContent = e.target.value + "%";
+  applyLive();
+});
+document.getElementById("fUiHue").addEventListener("input", (e) => {
+  draft.ui.hue = Number(e.target.value);
+  document.getElementById("uiHueLabel").textContent = e.target.value + "°";
+  applyLive();
+});
+
+// ---------- Background image upload ----------
+document.getElementById("btnBgUpload").addEventListener("click", async () => {
+  const msg = document.getElementById("bgMsg");
+  msg.className = "msg"; msg.textContent = "";
+  const file = document.getElementById("fBgUpload").files[0];
+  if (!file) {
+    msg.className = "msg error show"; msg.textContent = "Choose an image file first.";
+    return;
+  }
+  const sizeError = checkUploadSize(file);
+  if (sizeError) {
+    msg.className = "msg error show"; msg.textContent = sizeError;
+    return;
+  }
+
+  const btn = document.getElementById("btnBgUpload");
+  btn.disabled = true; btn.textContent = "Uploading...";
+
+  const ext = file.name.split(".").pop();
+  const path = `${me.id}/background.${ext}`;
+
+  const { error: uploadError } = await sb.storage
+    .from("backgrounds")
+    .upload(path, file, { upsert: true, cacheControl: "3600" });
+
+  btn.disabled = false; btn.textContent = "Upload Image";
+
+  if (uploadError) {
+    msg.className = "msg error show"; msg.textContent = uploadError.message;
+    return;
+  }
+
+  const { data: publicData } = sb.storage.from("backgrounds").getPublicUrl(path);
+  draft.background.image_url = publicData.publicUrl + "?t=" + Date.now();
+  draft.background.type = "image";
+  renderAll();
+  applyLive();
+  msg.className = "msg ok show"; msg.textContent = "Image uploaded! Don't forget to Save.";
+});
+
+// ---------- Save / Reset ----------
+document.getElementById("btnSaveTheme").addEventListener("click", async () => {
+  const msg = document.getElementById("themeMsg");
+  msg.className = "msg"; msg.textContent = "";
+  const btn = document.getElementById("btnSaveTheme");
+  btn.disabled = true; btn.textContent = "Saving...";
+
+  const { error } = await sb.from("profiles").update({ theme_settings: draft }).eq("id", me.id);
+
+  btn.disabled = false; btn.textContent = "Save Theme";
+
+  if (error) {
+    msg.className = "msg error show"; msg.textContent = error.message;
+    return;
+  }
+  myProfile.theme_settings = draft;
+  msg.className = "msg ok show"; msg.textContent = "Theme saved!";
+});
+
+document.getElementById("btnResetTheme").addEventListener("click", () => {
+  if (!confirm("Reset the preview back to the default theme? This won't save until you click Save Theme.")) return;
+  draft = JSON.parse(JSON.stringify(DEFAULT_THEME));
+  renderAll();
+  applyLive();
+});
+
+boot();
+</script>
+</body>
+</html>

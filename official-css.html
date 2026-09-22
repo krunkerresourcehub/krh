@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Official CSS — Krunker Resource Hub</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+<link rel="shortcut icon" href="assets/favicon.ico">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#120c28">
+<meta name="description" content="Browse official, ready-to-use Krunker CSS files.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Krunker Resource Hub">
+<meta property="og:title" content="Official CSS — Krunker Resource Hub">
+<meta property="og:description" content="Browse official, ready-to-use Krunker CSS files.">
+<meta property="og:image" content="assets/logo.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Official CSS — Krunker Resource Hub">
+<meta name="twitter:description" content="Browse official, ready-to-use Krunker CSS files.">
+<meta name="twitter:image" content="assets/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{ --bg:#120c28; --panel:#1e1642; --border:rgba(255,255,255,.14); --text0:#fdfbff; --text1:#c3b8e8; --green:#4ade9a; }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; background:transparent; font-family:'Plus Jakarta Sans',sans-serif; color:var(--text0); }
+  .wrap{ padding:0; }
+  .head{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
+  .head h2{ font-family:'Baloo 2',sans-serif; }
+  .head p{ margin:4px 0 0; color:var(--text1); font-size:14px; }
+  .btn{
+    display:inline-block; padding:11px 22px; border-radius:999px; border:1px solid var(--border);
+    background:linear-gradient(135deg, var(--green), #3fe0d8); color:#12081f; font-weight:700; text-decoration:none;
+    cursor:pointer; font-family:inherit; font-size:14px; transition:.2s ease;
+  }
+  .btn:hover{ filter:brightness(1.08); transform:translateY(-2px); }
+  pre{
+    margin:0; max-height:640px; overflow:auto; background:rgba(0,0,0,.25); border:1px solid var(--border);
+    border-radius:22px; padding:20px; font-size:12.5px; line-height:1.55;
+    font-family:'Fira Code','Consolas',monospace; color:#c7d0f5; white-space:pre;
+  }
+  .meta{ font-size:12.5px; color:var(--text1); margin-top:10px; }
+</style>
+<link rel="stylesheet" href="assets/site-glow.css">
+<script>(function(){try{var v=localStorage.getItem("krh:reduceEffects");var r=v==="1"||(v!=="0"&&window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);if(r)document.documentElement.setAttribute("data-glow-effects","off");}catch(e){}})();</script>
+<script src="assets/site-glow.js" defer></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div>
+      <h2 style="margin:0 0 4px;">Official / Original CSS</h2>
+      <p>The stock Krunker.io game-client stylesheet, kept here as a reference for anyone building custom CSS.</p>
+    </div>
+    <a class="btn" id="btnDownload" href="official.css" download="official.css">Download official.css</a>
+  </div>
+  <pre id="cssBox">Loading...</pre>
+  <div class="meta" id="meta"></div>
+</div>
+<script>
+fetch('official.css')
+  .then(r => r.text())
+  .then(text => {
+    document.getElementById('cssBox').textContent = text;
+    const lines = text.split('\n').length;
+    const kb = Math.round(text.length / 1024);
+    document.getElementById('meta').textContent = `${lines.toLocaleString()} lines · ~${kb} KB`;
+  })
+  .catch(() => {
+    document.getElementById('cssBox').textContent = 'Failed to load official.css';
+  });
+</script>
+</body>
+</html>

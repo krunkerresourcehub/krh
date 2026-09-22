@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Developer Panel — Krunker Resource Hub</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+<link rel="shortcut icon" href="../assets/favicon.ico">
+<link rel="stylesheet" href="community.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="../assets/site-glow.css">
+<script>(function(){try{var v=localStorage.getItem("krh:reduceEffects");var r=v==="1"||(v!=="0"&&window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);if(r)document.documentElement.setAttribute("data-glow-effects","off");}catch(e){}})();</script>
+<script src="../assets/site-glow.js" defer></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand"><a href="../index.html"><img src="../assets/logo.png" alt="Krunker Resource Hub" class="brand-logo">Krunker Resource Hub</a></div>
+    <div class="topnav" id="topnav"></div>
+  </div>
+
+  <div class="card">
+    <h1>Developer Panel</h1>
+    <p class="subtitle">Promote or demote Admins. The Developer role itself can only be changed via SQL (see sql/schema.sql).</p>
+  </div>
+
+  <div class="card">
+    <h2>Ban Appeals <span id="appealCount"></span></h2>
+    <p class="subtitle">Tickets opened by banned accounts asking to be unbanned.</p>
+    <div id="appealFilters" class="row2" style="margin-bottom:16px;">
+      <select id="filterAppealStatus">
+        <option value="pending">Pending only</option>
+        <option value="all">All statuses</option>
+        <option value="rejected">Rejected only</option>
+        <option value="approved">Approved only</option>
+      </select>
+      <span></span>
+    </div>
+    <div id="appealList"><div class="empty">Loading...</div></div>
+  </div>
+
+  <div class="card">
+    <h2>All Users</h2>
+    <input type="text" id="search" placeholder="Search username / name..." style="margin-bottom:16px;">
+    <div id="userList"><div class="empty">Loading...</div></div>
+  </div>
+
+  <div class="card">
+    <button class="btn logout-btn" id="btnLogout">Logout</button>
+  </div>
+</div>
+
+<script src="supabase-client.js"></script>
+<script>
+let allUsers = [];
+
+// Appeal proof_files are user-submitted JSON (banned users can file an
+// appeal with arbitrary proof_files content), so before turning one into
+// a clickable <a href>, make sure it's actually an http(s) link and not
+// e.g. "javascript:..." — escapeHtml() alone doesn't block that scheme.
+function safeHttpUrl(url) {
+  try {
+    const u = new URL(url, window.location.href);
+    return (u.protocol === "http:" || u.protocol === "https:") ? u.href : null;
+  } catch (e) { return null; }
+}
+
+async function boot() {
+  const profile = await requireRole(["developer"]);
+  if (!profile) return;
+
+  const nav = document.getElementById("topnav");
+  nav.innerHTML = `
+    <a href="profile.html?user=${encodeURIComponent(profile.username)}">My Profile</a>
+    <a href="admin.html">Admin Panel</a>
+    <a href="logs.html">History Logs</a>
+    <span style="color:var(--text-1); font-size:13.5px; margin-left:4px;">${escapeHtml(profile.display_name)} ${roleBadge(profile.role)}</span>
+    <a href="account-settings.html" style="margin-left:6px;">Account</a>
+    <a href="settings.html" style="margin-left:6px;">Theme</a>
+  `;
+  document.getElementById("btnLogout").addEventListener("click", async (e) => {
+    e.preventDefault();
+    if (!confirm("Are you sure you want to log out?")) return;
+    await sb.auth.signOut(); window.location.href = "../index.html";
+  });
+
+  loadUsers();
+  document.getElementById("search").addEventListener("input", render);
+
+  loadAppeals();
+  document.getElementById("filterAppealStatus").addEventListener("change", renderAppeals);
+}
+
+let allAppeals = [];
+
+async function loadAppeals() {
+  const { data, error } = await sb
+    .from("ban_appeals")
+    .select("*, profiles!ban_appeals_user_id_fkey(username,display_name,avatar_url,banned)")
+    .order("created_at", { ascending: false });
+  const el = document.getElementById("appealList");
+  if (error) { el.innerHTML = `<div class="empty">Failed to load: ${escapeHtml(error.message)}</div>`; return; }
+  allAppeals = data;
+  renderAppeals();
+}
+
+function renderAppeals() {
+  const status = document.getElementById("filterAppealStatus").value;
+  const el = document.getElementById("appealList");
+  const countEl = document.getElementById("appealCount");
+  const pendingCount = allAppeals.filter(a => a.status === "pending").length;
+  countEl.innerHTML = pendingCount ? unreadBadgeHtml(pendingCount) : "";
+
+  let rows = allAppeals;
+  if (status !== "all") rows = rows.filter(a => a.status === status);
+  if (!rows.length) { el.innerHTML = `<div class="empty">No matching appeals.</div>`; return; }
+
+  const statusColor = { pending: "var(--orange)", approved: "var(--green)", rejected: "var(--red)" };
+
+  el.innerHTML = rows.map(a => `
+    <div class="post-item">
+      <div class="title">
+        ${escapeHtml(a.username)}
+        <span class="role-badge" style="background:rgba(0,0,0,0); border:1px solid ${statusColor[a.status]}; color:${statusColor[a.status]};">${a.status}</span>
+      </div>
+      <div class="meta">
+        <span>Opened ${formatDate(a.created_at)}</span>
+        ${a.krunker_username ? `<span>Krunker: ${escapeHtml(a.krunker_username)}</span>` : ""}
+        ${a.discord_username ? `<span>Discord: ${escapeHtml(a.discord_username)}</span>` : ""}
+        ${a.discord_id ? `<span>Discord ID: ${escapeHtml(a.discord_id)}</span>` : ""}
+      </div>
+      <div class="content"><strong>Ban reason (as stated by user):</strong> ${escapeHtml(a.ban_reason)}</div>
+      <div class="content"><strong>Why they think it should be revoked:</strong> ${escapeHtml(a.message)}</div>
+      ${a.proof_files && a.proof_files.length ? `
+        <div class="hint" style="margin-top:8px;">Proof:</div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;">
+          ${a.proof_files.map(f => {
+            const safeUrl = safeHttpUrl(f.url);
+            return safeUrl
+              ? `<a href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener" class="btn small ghost" style="margin-top:0;">${escapeHtml(f.name || "file")}</a>`
+              : `<span class="btn small ghost" style="margin-top:0; opacity:.6; cursor:not-allowed;" title="Not a valid link">${escapeHtml(f.name || "file")} (invalid link)</span>`;
+          }).join("")}
+        </div>` : ""}
+      ${a.status !== "pending" && a.reviewer_note ? `<div class="hint" style="margin-top:6px;">Reviewer note: ${escapeHtml(a.reviewer_note)}</div>` : ""}
+      ${a.status === "pending" ? `
+        <div class="post-actions">
+          <button class="btn small green" onclick="approveAppeal('${a.id}','${a.user_id}')">Approve &amp; Unban</button>
+          <button class="btn small danger" onclick="rejectAppeal('${a.id}','${a.user_id}')">Reject</button>
+        </div>` : ""}
+    </div>
+  `).join("");
+}
+
+async function approveAppeal(appealId, userId) {
+  const appeal = allAppeals.find(a => a.id === appealId);
+  if (!confirm(`Approve this appeal and unban ${appeal ? appeal.username : "this user"}?`)) return;
+
+  const me2 = await getSessionUser();
+
+  const { error: unbanErr } = await sb.from("profiles").update({ banned: false }).eq("id", userId);
+  if (unbanErr) { alert("Failed: " + unbanErr.message); return; }
+
+  const { error: privError } = await sb.from("profile_private").upsert({
+    id: userId, ban_reason: null, banned_at: null, banned_by: null,
+  });
+  if (privError) { alert("Unbanned, but failed to clear the ban reason: " + privError.message); }
+
+  await sb.from("notifications").insert({
+    user_id: userId, type: "unbanned", actor_id: me2 ? me2.id : null,
+  });
+
+  const { error } = await sb.from("ban_appeals").update({
+    status: "approved", reviewed_by: me2 ? me2.id : null, reviewed_at: new Date().toISOString(),
+  }).eq("id", appealId);
+  if (error) { alert("Unbanned, but failed to update the ticket: " + error.message); }
+
+  /* logAction is DELIBERATELY not awaited: the action itself already
+     succeeded, so the UI can refresh right away while the log is
+     written in the background.
+     (In post.html it's still awaited because the page navigates away
+     immediately — if not awaited, the browser cancels the request.) */
+  logAction("appeal_approve", {
+    targetType: "appeal", targetId: appealId,
+    targetLabel: appeal ? appeal.username : null, targetUserId: userId,
+    meta: { unbanned: true },
+  });
+
+  loadAppeals();
+  loadUsers();
+}
+
+async function rejectAppeal(appealId, userId) {
+  const noteInput = prompt("Reject this appeal. Optional note to the user (they'll see this):", "");
+  if (noteInput === null) return;
+  const note = noteInput.trim();
+
+  const me2 = await getSessionUser();
+  const { error } = await sb.from("ban_appeals").update({
+    status: "rejected", reviewed_by: me2 ? me2.id : null, reviewed_at: new Date().toISOString(),
+    reviewer_note: note || null,
+  }).eq("id", appealId);
+  if (error) { alert("Failed: " + error.message); return; }
+
+  await sb.from("notifications").insert({
+    user_id: userId, type: "appeal_rejected", actor_id: me2 ? me2.id : null, reason: note || null,
+  });
+
+  const rejected = allAppeals.find(a => a.id === appealId);
+  logAction("appeal_reject", {
+    targetType: "appeal", targetId: appealId,
+    targetLabel: rejected ? rejected.username : null, targetUserId: userId,
+    reason: note || null,
+  });
+
+  loadAppeals();
+}
+
+async function loadUsers() {
+  // profile_private (birthdate/gender/discord/ban details) only comes
+  // back here because this page is developer-gated and RLS on that
+  // table separately allows staff to read every row.
+  //
+  // profile_private has TWO foreign keys to profiles (id -> profiles.id,
+  // and banned_by -> profiles.id), so a single embedded query like
+  // "profiles.select('*, profile_private(*)')" is ambiguous to
+  // PostgREST ("more than one relationship was found") — it can't tell
+  // which of the two FKs to embed on. Sidestep it entirely: fetch both
+  // tables separately and merge them here instead of embedding.
+  const [{ data: profiles, error }, { data: privates, error: privError }] = await Promise.all([
+    sb.from("profiles").select("*").order("created_at", { ascending: false }),
+    sb.from("profile_private").select("*"),
+  ]);
+
+  const el = document.getElementById("userList");
+  if (error) { el.innerHTML = `<div class="empty">Failed to load: ${escapeHtml(error.message)}</div>`; return; }
+  if (privError) { el.innerHTML = `<div class="empty">Failed to load: ${escapeHtml(privError.message)}</div>`; return; }
+
+  const privById = {};
+  (privates || []).forEach(p => { privById[p.id] = p; });
+  allUsers = (profiles || []).map(u => ({ ...u, profile_private: privById[u.id] || null }));
+  render();
+}
+
+function render() {
+  const q = document.getElementById("search").value.toLowerCase();
+  const el = document.getElementById("userList");
+  let rows = allUsers;
+  if (q) rows = rows.filter(u => u.username.toLowerCase().includes(q) || u.display_name.toLowerCase().includes(q));
+  if (!rows.length) { el.innerHTML = `<div class="empty">No matching users.</div>`; return; }
+
+  el.innerHTML = rows.map(u => `
+    <div class="post-item">
+      <div class="title">${escapeHtml(u.display_name)} <span style="color:var(--text-2); font-weight:500;">@${escapeHtml(u.username)}</span></div>
+      <div class="meta">
+        ${roleBadge(u.role)}
+        ${u.banned ? `<span class="role-badge" style="background:rgba(240,69,69,.15); color:var(--red);">Banned</span>` : ''}
+        ${u.profile_private?.discord_username ? `<span>Discord: ${escapeHtml(u.profile_private.discord_username)}</span>` : ""}
+        ${u.krunker_username ? `<span>Krunker: ${escapeHtml(u.krunker_username)}</span>` : ""}
+        <span>Joined ${formatDate(u.created_at)}</span>
+      </div>
+      ${u.banned && u.profile_private?.ban_reason ? `<div class="hint" style="margin-top:4px;">Ban reason: ${escapeHtml(u.profile_private.ban_reason)}</div>` : ''}
+      <div class="post-actions">
+        ${u.role === 'developer' ? `<span class="hint">Developer role can only be changed via SQL.</span>` : ""}
+        ${u.role === 'user' ? `<button class="btn small green" onclick="setRole('${u.id}','admin')">Make Admin</button>` : ""}
+        ${u.role === 'admin' ? `<button class="btn small danger" onclick="setRole('${u.id}','user')">Revoke Admin</button>` : ""}
+        ${u.role !== 'developer' ? (u.banned
+          ? `<button class="btn small green" onclick="unbanUser('${u.id}')">Unban</button>`
+          : `<button class="btn small danger" onclick="banUser('${u.id}')">Ban</button>`) : ""}
+      </div>
+    </div>
+  `).join("");
+}
+
+async function setRole(id, role) {
+  const target = allUsers.find(u => u.id === id);
+  const { error } = await sb.from("profiles").update({ role }).eq("id", id);
+  if (error) { alert("Failed: " + error.message); return; }
+
+  logAction(role === "admin" ? "role_grant_admin" : "role_revoke_admin", {
+    targetType: "user", targetId: id,
+    targetLabel: target ? target.username : null, targetUserId: id,
+    meta: { from: target ? target.role : null, to: role },
+  });
+
+  loadUsers();
+}
+
+async function banUser(id) {
+  const user = allUsers.find(u => u.id === id);
+  const reasonInput = prompt(`Ban ${user ? user.display_name : 'this user'}. Enter a reason (required):`, "");
+  if (reasonInput === null) return;
+  const reason = reasonInput.trim();
+  if (!reason) { alert("A reason is required to ban a user."); return; }
+  if (!confirm(`Ban ${user ? user.display_name : 'this user'}?\n\nReason: ${reason}\n\nThey will be immediately signed out and lose all access. Confirm?`)) return;
+
+  const me = await getSessionUser();
+  const { error } = await sb.from("profiles").update({ banned: true }).eq("id", id);
+  if (error) { alert("Failed: " + error.message); return; }
+
+  // Ban detail fields (reason/when/who) live in profile_private now.
+  const { error: privError } = await sb.from("profile_private").upsert({
+    id, ban_reason: reason, banned_at: new Date().toISOString(), banned_by: me ? me.id : null,
+  });
+  if (privError) { alert("Banned, but failed to save the ban reason: " + privError.message); }
+
+  await sb.from("notifications").insert({
+    user_id: id, type: "banned", actor_id: me ? me.id : null, reason: reason,
+  });
+
+  logAction("user_ban", {
+    targetType: "user", targetId: id,
+    targetLabel: user ? user.username : null, targetUserId: id,
+    reason,
+  });
+
+  loadUsers();
+}
+
+async function unbanUser(id) {
+  const user = allUsers.find(u => u.id === id);
+  if (!confirm(`Unban ${user ? user.display_name : 'this user'}? They'll regain full access immediately.`)) return;
+
+  const { error } = await sb.from("profiles").update({ banned: false }).eq("id", id);
+  if (error) { alert("Failed: " + error.message); return; }
+
+  const { error: privError } = await sb.from("profile_private").upsert({
+    id, ban_reason: null, banned_at: null, banned_by: null,
+  });
+  if (privError) { alert("Unbanned, but failed to clear the ban reason: " + privError.message); }
+
+  const me = await getSessionUser();
+  await sb.from("notifications").insert({
+    user_id: id, type: "unbanned", actor_id: me ? me.id : null,
+  });
+
+  logAction("user_unban", {
+    targetType: "user", targetId: id,
+    targetLabel: user ? user.username : null, targetUserId: id,
+  });
+
+  loadUsers();
+}
+
+boot();
+</script>
+</body>
+</html>

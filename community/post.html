@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Post — Krunker Resource Hub</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+<link rel="shortcut icon" href="../assets/favicon.ico">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#120c28">
+<meta name="description" content="A community post on Krunker Resource Hub.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Krunker Resource Hub">
+<meta property="og:title" content="Post — Krunker Resource Hub">
+<meta property="og:description" content="A community post on Krunker Resource Hub.">
+<meta property="og:image" content="../assets/logo.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Post — Krunker Resource Hub">
+<meta name="twitter:description" content="A community post on Krunker Resource Hub.">
+<meta name="twitter:image" content="../assets/logo.png">
+<link rel="stylesheet" href="community.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  .post-hero{ display:flex; gap:24px; flex-wrap:wrap; }
+  .post-hero-media{
+    flex:0 0 260px; width:260px; max-width:100%; border-radius:14px; overflow:hidden;
+    border:1px solid var(--border); background:var(--bg-1);
+    display:flex; align-items:center; justify-content:center; aspect-ratio:1/1;
+  }
+  .post-hero-media img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .post-hero-media .file-fallback{ font-size:56px; }
+  .post-hero-body{ flex:1; min-width:240px; }
+  .post-cat-badge{
+    display:inline-block; padding:4px 11px; border-radius:20px; font-size:11.5px; font-weight:700;
+    letter-spacing:.3px; background:rgba(96,165,250,.14); color:var(--blue-glow); margin-bottom:12px;
+  }
+  .post-title{ font-family:'Baloo 2',sans-serif; font-size:26px; margin-bottom:8px; line-height:1.25; }
+  .post-byline{ display:flex; align-items:center; gap:9px; color:var(--text-2); font-size:13px; margin-bottom:18px; }
+  .post-desc{ color:var(--text-1); font-size:14.5px; line-height:1.6; white-space:pre-wrap; margin-bottom:20px; }
+  .post-files{ display:flex; flex-direction:column; gap:8px; margin-bottom:6px; }
+  .post-file-row{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    border:1px solid var(--border); border-radius:18px; padding:10px 14px; background:var(--surface-2);
+  }
+  .post-file-name{ font-size:13.5px; color:var(--text-0); font-weight:600; word-break:break-all; }
+  .post-owner-actions{ display:flex; gap:8px; margin-top:18px; flex-wrap:wrap; }
+  .preview-strip{ display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
+  .preview-strip img{
+    width:64px; height:64px; object-fit:cover; border-radius:16px; border:1px solid var(--border); cursor:pointer;
+  }
+  .preview-strip img.active{ border-color:var(--blue-glow); }
+
+  .comment-item{ display:flex; gap:12px; padding:14px 0; border-bottom:1px solid var(--border); }
+  .comment-item:last-child{ border-bottom:none; }
+  .comment-body{ flex:1; min-width:0; }
+  .comment-head{ display:flex; align-items:center; gap:8px; margin-bottom:4px; flex-wrap:wrap; }
+  .comment-author{ font-weight:700; font-size:13.5px; color:var(--text-0); }
+  .comment-date{ font-size:11.5px; color:var(--text-2); }
+  .comment-text{ font-size:14px; color:var(--text-1); line-height:1.55; white-space:pre-wrap; word-break:break-word; }
+  .comment-del{
+    background:none; border:none; color:var(--text-2); font-size:12px; cursor:pointer; padding:2px 0;
+  }
+  .comment-del:hover{ color:#ff8b8b; }
+  .comment-actions{ display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+  .comment-action-btn{
+    font-family:'Plus Jakarta Sans',sans-serif; font-size:12px; font-weight:600; padding:5px 10px;
+    border-radius:15px; border:1px solid var(--border-strong); background:rgba(255,255,255,.03);
+    color:var(--text-2); cursor:pointer; transition:.15s ease;
+  }
+  .comment-action-btn:hover{ color:var(--text-0); background:rgba(255,255,255,.07); }
+  .comment-action-btn.active-like{ color:var(--green); border-color:var(--green); }
+  .comment-action-btn.active-dislike{ color:var(--red); border-color:var(--red); }
+  .comment-action-btn.comment-del{ border:none; background:none; padding:5px 4px; }
+  .comment-action-btn.comment-del:hover{ color:#ff8b8b; }
+
+  .post-reaction-btn{
+    font-family:'Plus Jakarta Sans',sans-serif; font-size:14px; font-weight:700; padding:9px 16px;
+    border-radius:17px; border:1px solid var(--border-strong); background:rgba(255,255,255,.04);
+    color:var(--text-1); cursor:pointer; transition:.15s ease;
+  }
+  .post-reaction-btn:hover{ color:var(--text-0); background:rgba(255,255,255,.08); }
+  .post-reaction-btn.active-like{ color:var(--green); border-color:var(--green); background:rgba(47,208,106,.12); }
+  .post-reaction-btn.active-dislike{ color:var(--red); border-color:var(--red); background:rgba(240,69,69,.12); }
+  .post-reaction-btn.active-save{ color:var(--orange); border-color:var(--orange); background:rgba(245,165,36,.12); }
+</style>
+<link rel="stylesheet" href="../assets/site-glow.css">
+<script>(function(){try{var v=localStorage.getItem("krh:reduceEffects");var r=v==="1"||(v!=="0"&&window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);if(r)document.documentElement.setAttribute("data-glow-effects","off");}catch(e){}})();</script>
+<script src="../assets/site-glow.js" defer></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand"><a href="../index.html"><img src="../assets/logo.png" alt="Krunker Resource Hub" class="brand-logo">Krunker Resource Hub</a></div>
+    <div class="topnav" id="topnav"></div>
+  </div>
+
+  <div class="card" id="loadingCard"><p class="subtitle" style="margin:0;">Loading post...</p></div>
+
+  <div class="card" id="notFoundCard" style="display:none;">
+    <h1>Post not found</h1>
+    <p class="subtitle" style="margin-bottom:0;">This post may have been removed, or the link is incorrect.</p>
+  </div>
+
+  <div class="card" id="postCard" style="display:none;">
+    <div class="post-hero">
+      <div class="post-hero-media" id="postMedia"></div>
+      <div class="post-hero-body">
+        <span class="post-cat-badge" id="postCatBadge"></span>
+        <h1 class="post-title" id="postTitle"></h1>
+        <div class="post-byline" id="postByline"></div>
+        <div class="post-reactions" id="postReactions" style="display:flex; gap:8px; margin-bottom:18px;"></div>
+        <div class="post-desc" id="postDesc"></div>
+        <div class="post-files" id="postFiles"></div>
+        <div class="post-owner-actions" id="postOwnerActions" style="display:none;">
+          <button class="btn-ghost" id="btnEditPost">Edit</button>
+          <button class="btn-ghost" id="btnDeletePost">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="commentsCard" style="display:none;">
+    <h2>Comments</h2>
+
+    <div id="commentFormWrap" style="display:none; margin-bottom:22px;">
+      <textarea id="cContent" placeholder="Write a comment..." style="min-height:90px;"></textarea>
+      <button class="btn" id="btnPostComment" style="margin-top:10px;">Post Comment</button>
+      <div class="msg" id="commentMsg"></div>
+    </div>
+    <div id="commentLoginPrompt" style="display:none; margin-bottom:22px;">
+      <p class="subtitle" style="margin-bottom:12px;">Log in to leave a comment.</p>
+      <a href="login.html" class="btn ghost" style="display:inline-flex; width:auto; padding:10px 20px;">Login</a>
+    </div>
+
+    <div id="commentList"><p class="empty">Loading comments...</p></div>
+  </div>
+</div>
+
+<script src="supabase-client.js"></script>
+<script src="../crosshair-render.js"></script>
+<script>
+const CATEGORY_LABELS = {
+  'crosshair': 'Crosshair',
+  'crosshair-scope': 'Crosshair Scope',
+  'crosshair-hitmarker': 'Crosshair Hitmarker',
+  'crosshair-overlay-damage': 'Damage Overlay',
+  'crosshair-overlay-game': 'Game Overlay',
+  'crosshair-icons-kill': 'Kill Icon',
+  'crosshair-icons-death': 'Death Icon',
+  'crosshair-icons-ammo': 'Ammo Icon',
+  'crosshair-icons-streak': 'Streak Counter Icon',
+  'settings-ready': 'Ready Settings',
+  'css-ready': 'Ready CSS',
+  'maps-official-infected': 'Infected (Custom Maps)',
+  'maps-official-tdm': 'TDM (Custom Maps)',
+  'maps-custom-parkour': 'Parkour (Custom Maps)',
+  'mods-files': 'Mods Files',
+  'scripts-userscript-legal': 'Legal Script',
+  'scripts-userscript-hack': 'Hack Script',
+  'scripts-krunkscript-usable': 'Usable KrunkScripts',
+};
+const IMAGE_CATEGORIES = ['crosshair', 'crosshair-scope', 'crosshair-hitmarker',
+  'crosshair-overlay-damage', 'crosshair-overlay-game',
+  'crosshair-icons-kill', 'crosshair-icons-death', 'crosshair-icons-ammo', 'crosshair-icons-streak'];
+
+const params = new URLSearchParams(window.location.search);
+const POST_ID = params.get('id');
+
+let me = null;
+let myProfile = null;
+let currentPost = null;
+
+/* Cross-origin files (Supabase Storage) ignore <a download>, so fetch as a
+   blob and trigger the download from a same-origin blob: URL instead. */
+async function downloadFileByUrl(url, filename, btn) {
+  const originalText = btn ? btn.textContent : null;
+  if (btn) { btn.disabled = true; btn.textContent = 'Downloading...'; }
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Download failed (' + res.status + ')');
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 4000);
+  } catch (e) {
+    alert('Could not download the file automatically. Opening it in a new tab instead — use "Save As" there.');
+    window.open(url, '_blank', 'noopener');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = originalText; }
+  }
+}
+
+function safeFilename(name, url) {
+  const urlExt = (url || '').split('.').pop().split(/[?#]/)[0];
+  const safeExt = /^[a-z0-9]{1,8}$/i.test(urlExt) ? urlExt.toLowerCase() : '';
+  const base = (name ? name.replace(/\.[a-z0-9]{1,8}$/i, '') : 'file').replace(/[^a-z0-9-_]+/gi, '_').toLowerCase();
+  return safeExt ? `${base}.${safeExt}` : base;
+}
+
+/* Fires a notification into someone's inbox. Silently skips notifying
+   yourself (liking/commenting on your own stuff shouldn't ping you), and
+   never throws — a failed notification insert shouldn't block the action
+   that triggered it. */
+async function sendNotification({ userId, type, postId, postTitle, commentId, reason }) {
+  if (!me || !userId || userId === me.id) return;
+  try {
+    await sb.from('notifications').insert({
+      user_id: userId,
+      type,
+      actor_id: me.id,
+      post_id: postId || null,
+      post_title: postTitle || null,
+      comment_id: commentId || null,
+      reason: reason || null,
+    });
+  } catch (e) { /* best-effort */ }
+}
+
+async function renderReactions() {
+  const wrap = document.getElementById('postReactions');
+
+  const { data: reactions } = await sb.from('post_reactions').select('user_id,type').eq('post_id', POST_ID);
+  const counts = { like: 0, dislike: 0 };
+  let myReaction = null;
+  (reactions || []).forEach(r => {
+    counts[r.type]++;
+    if (me && r.user_id === me.id) myReaction = r.type;
+  });
+
+  let isSaved = false;
+  if (me) {
+    const { data: save } = await sb.from('post_saves').select('id').eq('post_id', POST_ID).eq('user_id', me.id).maybeSingle();
+    isSaved = !!save;
+  }
+
+  wrap.innerHTML = `
+    <button class="post-reaction-btn${myReaction === 'like' ? ' active-like' : ''}" id="btnLike">\u{1F44D} ${counts.like}</button>
+    <button class="post-reaction-btn${myReaction === 'dislike' ? ' active-dislike' : ''}" id="btnDislike">\u{1F44E} ${counts.dislike}</button>
+    <button class="post-reaction-btn${isSaved ? ' active-save' : ''}" id="btnSave">${isSaved ? '\u2605' : '\u2606'} ${isSaved ? 'Saved' : 'Save'}</button>
+  `;
+
+  document.getElementById('btnLike').addEventListener('click', () => handleReaction('like'));
+  document.getElementById('btnDislike').addEventListener('click', () => handleReaction('dislike'));
+  document.getElementById('btnSave').addEventListener('click', handleSave);
+}
+
+async function handleReaction(type) {
+  if (!me) { alert('Log in to like or dislike posts.'); return; }
+  const { data: existing } = await sb.from('post_reactions').select('id,type').eq('post_id', POST_ID).eq('user_id', me.id).maybeSingle();
+  if (existing && existing.type === type) {
+    await sb.from('post_reactions').delete().eq('id', existing.id);
+  } else if (existing) {
+    await sb.from('post_reactions').update({ type }).eq('id', existing.id);
+    sendNotification({ userId: currentPost.author_id, type: type === 'like' ? 'post_like' : 'post_dislike', postId: POST_ID, postTitle: currentPost.title });
+  } else {
+    await sb.from('post_reactions').insert({ post_id: POST_ID, user_id: me.id, type });
+    sendNotification({ userId: currentPost.author_id, type: type === 'like' ? 'post_like' : 'post_dislike', postId: POST_ID, postTitle: currentPost.title });
+  }
+  renderReactions();
+}
+
+async function handleSave() {
+  if (!me) { alert('Log in to save posts.'); return; }
+  const { data: existing } = await sb.from('post_saves').select('id').eq('post_id', POST_ID).eq('user_id', me.id).maybeSingle();
+  if (existing) {
+    await sb.from('post_saves').delete().eq('id', existing.id);
+  } else {
+    await sb.from('post_saves').insert({ post_id: POST_ID, user_id: me.id });
+  }
+  renderReactions();
+}
+
+async function boot() {
+  myProfile = await getMyProfile(); // null if logged out (or banned — getMyProfile handles that)
+  me = myProfile ? { id: myProfile.id } : null;
+
+  const nav = document.getElementById('topnav');
+  nav.innerHTML = '';
+  if (me) {
+    const [unreadCount, unreadMsgCount] = await Promise.all([
+      getUnreadNotificationCount(me.id),
+      getUnreadMessageCount(me.id),
+    ]);
+    nav.innerHTML = `<a href="inbox.html">Inbox${unreadBadgeHtml(unreadCount)}</a><a href="messages.html">Messages${unreadBadgeHtml(unreadMsgCount)}</a><a href="profile.html?user=${encodeURIComponent(myProfile.username)}" style="margin-left:6px;">My Profile</a>`;
+  } else {
+    nav.innerHTML = `<a href="login.html">Login</a><a href="signup.html">Sign Up</a>`;
+  }
+
+  if (!POST_ID) { showNotFound(); return; }
+
+  const { data: post, error } = await sb
+    .from('posts')
+    .select('*, profiles!posts_author_id_fkey(username,display_name,avatar_url,role)')
+    .eq('id', POST_ID)
+    .maybeSingle();
+
+  if (error || !post) { showNotFound(); return; }
+
+  const isOwner = me && post.author_id === me.id;
+  const isStaff = myProfile && (myProfile.role === 'admin' || myProfile.role === 'developer');
+  if (post.status !== 'published' && !isOwner && !isStaff) { showNotFound(); return; }
+
+  currentPost = post;
+  renderPost(post, isOwner, isStaff);
+  renderReactions();
+  loadComments();
+}
+
+function showNotFound() {
+  document.getElementById('loadingCard').style.display = 'none';
+  document.getElementById('notFoundCard').style.display = 'block';
+}
+
+function parseContent(post) {
+  let parsed = null;
+  try { parsed = JSON.parse(post.content); } catch (e) { /* legacy plain content */ }
+
+  if (parsed && typeof parsed === 'object') {
+    if (Array.isArray(parsed.files) && parsed.files.length) {
+      return { files: parsed.files, description: parsed.description || '', previews: [] };
+    }
+    if (parsed.file_url) {
+      return {
+        files: [{ file_url: parsed.file_url, file_name: parsed.file_name || '' }],
+        description: parsed.description || '',
+        previews: parsed.previews || [],
+      };
+    }
+  }
+  if (/^https?:\/\//.test(post.content)) {
+    return { files: [{ file_url: post.content, file_name: '' }], description: '', previews: [] };
+  }
+  /* Legacy crosshair code string (crosshair category only) */
+  return { files: [], description: '', previews: [], crosshairCode: post.content };
+}
+
+function renderPost(post, isOwner, isStaff) {
+  document.getElementById('loadingCard').style.display = 'none';
+  document.getElementById('postCard').style.display = 'block';
+  document.getElementById('commentsCard').style.display = 'block';
+
+  const c = parseContent(post);
+  const isImageCat = IMAGE_CATEGORIES.includes(post.category);
+  const mainImage = isImageCat ? (c.files[0]?.file_url || c.previews[0] || null) : (c.previews[0] || null);
+
+  document.title = `${post.title} — Krunker Resource Hub`;
+  document.getElementById('postCatBadge').textContent = CATEGORY_LABELS[post.category] || post.category;
+  document.getElementById('postTitle').textContent = post.title;
+
+  const author = post.profiles;
+  document.getElementById('postByline').innerHTML = `
+    <a href="profile.html?user=${encodeURIComponent(author?.username || '')}" style="display:inline-flex; align-items:center; gap:9px; text-decoration:none; color:inherit;">
+      ${avatarHtml(author, 26)}
+      <span>${escapeHtml(author?.display_name || '?')}</span>
+    </a>
+    <span>·</span>
+    <span>${formatDate(post.created_at)}</span>
+    ${post.status !== 'published' ? `<span class="status-pill status-draft">Draft</span>` : ''}
+  `;
+
+  document.getElementById('postDesc').textContent = c.description || (c.files.length || c.crosshairCode ? '' : 'No description provided.');
+  if (!c.description) document.getElementById('postDesc').style.display = 'none';
+
+  const media = document.getElementById('postMedia');
+  if (mainImage) {
+    media.innerHTML = `<img id="heroImg" src="${escapeHtml(mainImage)}" alt="${escapeHtml(post.title)}">`;
+  } else if (c.crosshairCode) {
+    media.innerHTML = `<canvas id="heroCanvas" width="220" height="220"></canvas>`;
+    const state = typeof decodeCrosshairCode === 'function' ? decodeCrosshairCode(c.crosshairCode) : null;
+    if (state) {
+      renderCrosshairToCanvas(document.getElementById('heroCanvas'), state);
+    }
+  } else {
+    media.innerHTML = `<div class="file-fallback">📄</div>`;
+  }
+
+  if (c.previews && c.previews.length > 1) {
+    const strip = document.createElement('div');
+    strip.className = 'preview-strip';
+    strip.innerHTML = c.previews.map((url, i) => `<img src="${escapeHtml(url)}" class="${i === 0 ? 'active' : ''}" data-src="${encodeURIComponent(url)}">`).join('');
+    document.getElementById('postMedia').insertAdjacentElement('afterend', strip);
+    strip.querySelectorAll('img').forEach(thumb => {
+      thumb.addEventListener('click', () => {
+        document.getElementById('heroImg').src = decodeURIComponent(thumb.getAttribute('data-src'));
+        strip.querySelectorAll('img').forEach(t => t.classList.remove('active'));
+        thumb.classList.add('active');
+      });
+    });
+  }
+
+  const filesWrap = document.getElementById('postFiles');
+  if (!isImageCat && c.files.length) {
+    filesWrap.innerHTML = c.files.map((f, i) => `
+      <div class="post-file-row">
+        <span class="post-file-name">${escapeHtml(f.file_name || `File ${i + 1}`)}</span>
+        <button class="btn-ghost" data-dl-url="${encodeURIComponent(f.file_url)}" data-dl-name="${encodeURIComponent(safeFilename(f.file_name, f.file_url))}">Download</button>
+      </div>
+    `).join('');
+    filesWrap.querySelectorAll('[data-dl-url]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        downloadFileByUrl(decodeURIComponent(btn.getAttribute('data-dl-url')), decodeURIComponent(btn.getAttribute('data-dl-name')), btn);
+      });
+    });
+  } else if (isImageCat && c.previews.length > 1) {
+    /* Multi-image posts (e.g. Overlay) get one download row per image. */
+    const base = safeFilename(post.title, c.previews[0]);
+    filesWrap.innerHTML = c.previews.map((url, i) => {
+      const ext = (url.split('?')[0].split('.').pop() || 'png').toLowerCase();
+      const name = `${base}-${i + 1}.${ext}`;
+      return `
+      <div class="post-file-row">
+        <span class="post-file-name">${i === 0 ? 'Main image' : 'Image ' + (i + 1)}</span>
+        <button class="btn-ghost" data-dl-url="${encodeURIComponent(url)}" data-dl-name="${encodeURIComponent(name)}">Download</button>
+      </div>`;
+    }).join('');
+    filesWrap.querySelectorAll('[data-dl-url]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        downloadFileByUrl(decodeURIComponent(btn.getAttribute('data-dl-url')), decodeURIComponent(btn.getAttribute('data-dl-name')), btn);
+      });
+    });
+  } else if (isImageCat && (c.files[0] || c.previews[0])) {
+    const only = c.files[0]?.file_url || c.previews[0];
+    filesWrap.innerHTML = `
+      <div class="post-file-row">
+        <span class="post-file-name">Image (PNG)</span>
+        <button class="btn-ghost" data-dl-url="${encodeURIComponent(only)}" data-dl-name="${encodeURIComponent(safeFilename(post.title, only) + '.png')}">Download PNG</button>
+      </div>
+    `;
+    filesWrap.querySelector('[data-dl-url]').addEventListener('click', (e) => {
+      const btn = e.currentTarget;
+      downloadFileByUrl(decodeURIComponent(btn.getAttribute('data-dl-url')), decodeURIComponent(btn.getAttribute('data-dl-name')), btn);
+    });
+  } else if (c.crosshairCode) {
+    filesWrap.innerHTML = `<div class="post-file-row"><span class="post-file-name">Legacy crosshair code</span></div>`;
+  }
+
+  if (isOwner || isStaff) {
+    const actionsWrap = document.getElementById('postOwnerActions');
+    actionsWrap.style.display = 'flex';
+    const staffActingOnOthers = isStaff && !isOwner;
+    actionsWrap.innerHTML = `
+      <button class="btn-ghost" id="btnEditPost">Edit</button>
+      <button class="btn-ghost" id="btnDeletePost">Delete</button>
+      ${staffActingOnOthers ? `<button class="btn-ghost" id="btnWarnUser">Warn User</button>` : ''}
+    `;
+    document.getElementById('btnEditPost').addEventListener('click', () => editPost(post, c, staffActingOnOthers));
+    document.getElementById('btnDeletePost').addEventListener('click', () => deletePost(post, staffActingOnOthers));
+    if (staffActingOnOthers) {
+      document.getElementById('btnWarnUser').addEventListener('click', () => warnUser(post));
+    }
+  }
+}
+
+async function editPost(post, parsedContent, staffActingOnOthers) {
+  const newTitle = prompt('Edit title:', post.title);
+  if (newTitle === null) return;
+  const trimmedTitle = newTitle.trim();
+  if (!trimmedTitle) { alert('Title cannot be empty.'); return; }
+
+  const updatePayload = { title: trimmedTitle };
+
+  /* Only offer to edit the description for posts stored as JSON (i.e. that
+     actually have a description field to begin with). */
+  let parsedOriginal = null;
+  try { parsedOriginal = JSON.parse(post.content); } catch (e) { /* legacy */ }
+  if (parsedOriginal && typeof parsedOriginal === 'object') {
+    const newDesc = prompt('Edit description:', parsedContent.description || '');
+    if (newDesc === null) return;
+    const rebuilt = { ...parsedOriginal, description: newDesc.trim() };
+    updatePayload.content = JSON.stringify(rebuilt);
+  }
+
+  let reason = '';
+  if (staffActingOnOthers) {
+    const reasonInput = prompt('This is not your post. Enter a reason for this edit (required):', '');
+    if (reasonInput === null) return;
+    reason = reasonInput.trim();
+    if (!reason) { alert('A reason is required to edit someone else\u2019s post.'); return; }
+    if (!confirm(`Edit "${post.title}" by ${post.profiles?.display_name || 'this user'}?\n\nReason: ${reason}\n\nConfirm this edit?`)) return;
+  }
+
+  const { error } = await sb.from('posts').update(updatePayload).eq('id', post.id);
+  if (error) { alert('Failed to update: ' + error.message); return; }
+
+  if (staffActingOnOthers) {
+    sendNotification({
+      userId: post.author_id, type: 'post_edited', postId: post.id,
+      postTitle: trimmedTitle, reason,
+    });
+    await logAction('post_edit', {
+      targetType: 'post', targetId: post.id, targetLabel: trimmedTitle,
+      targetUserId: post.author_id, reason,
+    });
+  }
+  window.location.reload();
+}
+
+async function deletePost(post, staffActingOnOthers) {
+  let reason = '';
+  if (staffActingOnOthers) {
+    const reasonInput = prompt('This is not your post. Enter a reason for this deletion (required):', '');
+    if (reasonInput === null) return;
+    reason = reasonInput.trim();
+    if (!reason) { alert('A reason is required to delete someone else\u2019s post.'); return; }
+    if (!confirm(`Delete "${post.title}" by ${post.profiles?.display_name || 'this user'}? This cannot be undone.\n\nReason: ${reason}\n\nConfirm this deletion?`)) return;
+  } else {
+    if (!confirm('Delete this post? This cannot be undone.')) return;
+  }
+
+  if (staffActingOnOthers) {
+    /* Send the notification BEFORE deleting — post_id uses ON DELETE SET
+       NULL so the notification survives, and post_title is snapshotted
+       here in case post_id later goes null. */
+    await sendNotification({
+      userId: post.author_id, type: 'post_deleted', postId: post.id,
+      postTitle: post.title, reason,
+    });
+  }
+
+  const { error } = await sb.from('posts').delete().eq('id', post.id);
+  if (error) { alert('Failed to delete: ' + error.message); return; }
+
+  if (staffActingOnOthers) {
+    await logAction('post_delete', {
+      targetType: 'post', targetId: post.id, targetLabel: post.title,
+      targetUserId: post.author_id, reason,
+      meta: { author: post.profiles?.username || null },
+    });
+  }
+  window.location.href = '../index.html';
+}
+
+async function warnUser(post) {
+  const targetName = post.profiles?.display_name || 'this user';
+  const messageInput = prompt(`Warn ${targetName}. Enter the warning message (required):`, '');
+  if (messageInput === null) return;
+  const message = messageInput.trim();
+  if (!message) { alert('A warning message is required.'); return; }
+  if (!confirm(`Send this warning to ${targetName}?\n\n"${message}"`)) return;
+
+  await sendNotification({
+    userId: post.author_id, type: 'warned', postId: post.id,
+    postTitle: post.title, reason: message,
+  });
+  await logAction('user_warn', {
+    targetType: 'user', targetId: post.author_id,
+    targetLabel: post.profiles?.username || null, targetUserId: post.author_id,
+    reason: message,
+    meta: { post_id: post.id, post_title: post.title },
+  });
+  alert('Warning sent.');
+}
+
+async function fetchCommentReactionData(commentIds) {
+  const counts = {}, mine = {};
+  commentIds.forEach(id => { counts[id] = { like: 0, dislike: 0 }; });
+  if (!commentIds.length) return { counts, mine };
+  const { data } = await sb.from('comment_reactions').select('comment_id,user_id,type').in('comment_id', commentIds);
+  (data || []).forEach(r => {
+    if (counts[r.comment_id]) counts[r.comment_id][r.type]++;
+    if (me && r.user_id === me.id) mine[r.comment_id] = r.type;
+  });
+  return { counts, mine };
+}
+
+async function loadComments() {
+  const listEl = document.getElementById('commentList');
+
+  if (me) {
+    document.getElementById('commentFormWrap').style.display = 'block';
+  } else {
+    document.getElementById('commentLoginPrompt').style.display = 'block';
+  }
+
+  const { data, error } = await sb
+    .from('comments')
+    .select('*, profiles!comments_author_id_fkey(username,display_name,avatar_url)')
+    .eq('post_id', POST_ID)
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    listEl.innerHTML = `<p class="empty">Failed to load comments.</p>`;
+    return;
+  }
+  if (!data.length) {
+    listEl.innerHTML = `<p class="empty">No comments yet. Be the first!</p>`;
+    return;
+  }
+
+  const { counts: reactionCounts, mine: myReactions } = await fetchCommentReactionData(data.map(c => c.id));
+
+  const byId = {};
+  data.forEach(c => { byId[c.id] = { ...c, children: [] }; });
+  const roots = [];
+  data.forEach(c => {
+    if (c.parent_id && byId[c.parent_id]) {
+      byId[c.parent_id].children.push(byId[c.id]);
+    } else {
+      roots.push(byId[c.id]);
+    }
+  });
+
+  function renderNode(c, depth) {
+    const isOwner = me && c.author_id === me.id;
+    const isStaff = myProfile && (myProfile.role === 'admin' || myProfile.role === 'developer');
+    const cCounts = reactionCounts[c.id] || { like: 0, dislike: 0 };
+    const myR = myReactions[c.id];
+    const indent = Math.min(depth, 4) * 26;
+    return `
+    <div class="comment-item" style="margin-left:${indent}px;">
+      <a href="profile.html?user=${encodeURIComponent(c.profiles?.username || '')}">${avatarHtml(c.profiles, 34)}</a>
+      <div class="comment-body">
+        <div class="comment-head">
+          <a class="comment-author" href="profile.html?user=${encodeURIComponent(c.profiles?.username || '')}" style="text-decoration:none;">${escapeHtml(c.profiles?.display_name || '?')}</a>
+          <span class="comment-date">${formatDate(c.created_at)}</span>
+        </div>
+        <div class="comment-text">${escapeHtml(c.content)}</div>
+        <div class="comment-actions">
+          <button class="comment-action-btn${myR === 'like' ? ' active-like' : ''}" data-c-reaction="like" data-c-id="${c.id}">\u{1F44D} ${cCounts.like}</button>
+          <button class="comment-action-btn${myR === 'dislike' ? ' active-dislike' : ''}" data-c-reaction="dislike" data-c-id="${c.id}">\u{1F44E} ${cCounts.dislike}</button>
+          <button class="comment-action-btn" data-c-reply="${c.id}">Reply</button>
+          ${(isOwner || isStaff) ? `<button class="comment-action-btn comment-del" data-id="${c.id}">Delete</button>` : ''}
+        </div>
+        <div class="reply-form-wrap" id="replyForm-${c.id}" style="display:none; margin-top:10px;">
+          <textarea id="replyText-${c.id}" placeholder="Write a reply..." style="min-height:60px;"></textarea>
+          <div style="margin-top:6px; display:flex; gap:8px;">
+            <button class="btn" style="width:auto; padding:7px 16px; margin-top:0;" data-c-submit-reply="${c.id}">Reply</button>
+            <button class="btn-ghost" data-c-cancel-reply="${c.id}">Cancel</button>
+          </div>
+        </div>
+        ${(c.children && c.children.length) ? c.children.map(child => renderNode(child, depth + 1)).join('') : ''}
+      </div>
+    </div>
+    `;
+  }
+
+  listEl.innerHTML = roots.map(c => renderNode(c, 0)).join('');
+
+  listEl.querySelectorAll('[data-c-reaction]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!me) { alert('Log in to like or dislike comments.'); return; }
+      btn.disabled = true;
+      await toggleCommentReaction(btn.getAttribute('data-c-id'), btn.getAttribute('data-c-reaction'));
+      loadComments();
+    });
+  });
+
+  listEl.querySelectorAll('[data-c-reply]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const form = document.getElementById(`replyForm-${btn.getAttribute('data-c-reply')}`);
+      if (form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    });
+  });
+
+  listEl.querySelectorAll('[data-c-cancel-reply]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const form = document.getElementById(`replyForm-${btn.getAttribute('data-c-cancel-reply')}`);
+      if (form) form.style.display = 'none';
+    });
+  });
+
+  listEl.querySelectorAll('[data-c-submit-reply]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!me) { alert('Log in to reply.'); return; }
+      const parentId = btn.getAttribute('data-c-submit-reply');
+      const textarea = document.getElementById(`replyText-${parentId}`);
+      const content = textarea.value.trim();
+      if (!content) return;
+      btn.disabled = true;
+
+      const { data: parentComment } = await sb.from('comments').select('author_id').eq('id', parentId).maybeSingle();
+      const { error } = await sb.from('comments').insert({ post_id: POST_ID, author_id: me.id, content, parent_id: parentId });
+      btn.disabled = false;
+      if (error) { alert('Failed to post reply: ' + error.message); return; }
+
+      if (parentComment) {
+        sendNotification({ userId: parentComment.author_id, type: 'comment_reply', postId: POST_ID, postTitle: currentPost.title, commentId: parentId });
+      }
+      loadComments();
+    });
+  });
+
+  listEl.querySelectorAll('.comment-del').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const commentId = btn.getAttribute('data-id');
+      const target = data.find(c => c.id === commentId);
+      const iAmStaff = myProfile && (myProfile.role === 'admin' || myProfile.role === 'developer');
+      const staffActingOnOthers = iAmStaff && target && me && target.author_id !== me.id;
+
+      let reason = '';
+      if (staffActingOnOthers) {
+        const reasonInput = prompt('This is not your comment. Enter a reason for deleting it (required):', '');
+        if (reasonInput === null) return;
+        reason = reasonInput.trim();
+        if (!reason) { alert('A reason is required to delete someone else\u2019s comment.'); return; }
+      } else if (!confirm('Delete this comment?')) return;
+
+      const { error } = await sb.from('comments').delete().eq('id', commentId);
+      if (error) { alert('Failed to delete: ' + error.message); return; }
+
+      if (staffActingOnOthers) {
+        await logAction('comment_delete', {
+          targetType: 'comment', targetId: commentId,
+          targetLabel: target.profiles?.username || null, targetUserId: target.author_id,
+          reason,
+          meta: { post_id: POST_ID, post_title: currentPost?.title || null },
+        });
+      }
+      loadComments();
+    });
+  });
+}
+
+async function toggleCommentReaction(commentId, type) {
+  const { data: existing } = await sb.from('comment_reactions').select('id,type').eq('comment_id', commentId).eq('user_id', me.id).maybeSingle();
+  const { data: c } = await sb.from('comments').select('author_id').eq('id', commentId).maybeSingle();
+  const commentAuthorId = c ? c.author_id : null;
+
+  if (existing && existing.type === type) {
+    await sb.from('comment_reactions').delete().eq('id', existing.id);
+    return;
+  }
+  if (existing) {
+    await sb.from('comment_reactions').update({ type }).eq('id', existing.id);
+  } else {
+    await sb.from('comment_reactions').insert({ comment_id: commentId, user_id: me.id, type });
+  }
+  if (commentAuthorId) {
+    sendNotification({ userId: commentAuthorId, type: type === 'like' ? 'comment_like' : 'comment_dislike', postId: POST_ID, postTitle: currentPost.title, commentId });
+  }
+}
+
+document.getElementById('btnPostComment')?.addEventListener('click', async () => {
+  const msg = document.getElementById('commentMsg');
+  const textarea = document.getElementById('cContent');
+  const content = textarea.value.trim();
+  if (!content) {
+    msg.className = 'msg error show'; msg.textContent = 'Write something before posting.';
+    return;
+  }
+  const btn = document.getElementById('btnPostComment');
+  btn.disabled = true; btn.textContent = 'Posting...';
+
+  const { error } = await sb.from('comments').insert({
+    post_id: POST_ID, author_id: me.id, content,
+  });
+
+  btn.disabled = false; btn.textContent = 'Post Comment';
+  if (error) {
+    msg.className = 'msg error show'; msg.textContent = error.message;
+    return;
+  }
+  msg.className = ''; msg.textContent = '';
+  textarea.value = '';
+  sendNotification({ userId: currentPost.author_id, type: 'post_comment', postId: POST_ID, postTitle: currentPost.title });
+  loadComments();
+});
+
+boot();
+</script>
+</body>
+</html>

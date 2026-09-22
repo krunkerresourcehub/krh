@@ -1,0 +1,1771 @@
+/* ================================================================
+   Krunker Custom UI
+   Cleaned & reorganized. Rule ORDER is preserved on purpose: several
+   selectors are declared more than once further down the file, and
+   in CSS the later declaration wins for any property it repeats.
+   Reordering blocks would silently change how things render, so
+   this pass only fixes formatting (indentation, quotes, tabs->spaces)
+   and groups things under clearer section headers.
+   ================================================================ */
+
+/* ============================== VARIABLES & FONTS ============================== */
+
+/* @MOD:core */
+:root {
+    --Name: "@@NAME@@";
+    --Name2: "@@NAME2@@";
+    --Clan: "@@CLAN@@";
+    /* Neon-glow controls — accent color (as r,g,b) + intensity multiplier.
+       Used by the Glassmorphism module's glow shadows/borders and by the
+       custom-logo glow below. Always defined so intensity 0 = no glow. */
+    --glow-rgb: @@GLOW_R@@, @@GLOW_G@@, @@GLOW_B@@;
+    --glow-i: @@GLOW_I@@;
+}
+
+/* @ENDMOD */
+
+/* @MOD:font */
+@import url('@@FONT_IMPORT@@');
+
+/* Global font — Pacifico applied to everything */
+* {
+    font-family: '@@FONT_FAMILY@@', @@FONT_FALLBACK@@ !important;
+    font-weight: 700 !important;
+    -webkit-text-stroke: 0.5px currentColor;
+}
+
+/* Menu/nav icons (email, settings, flag, public, etc.) are actual text
+   rendered as symbols via the Material Icons font — the universal rule
+   above breaks them since it uses !important too. This more specific
+   selector (also !important) wins the cascade and restores the icons. */
+.material-icons,
+.material-icons-outlined,
+[class*="material-icons"] {
+    font-family: 'Material Icons' !important;
+    font-weight: normal !important;
+    -webkit-text-stroke: 0 !important;
+}
+
+/* @ENDMOD */
+
+/* ============================== ANIMATIONS ============================== */
+
+/* @MOD:rgb */
+@keyframes rgbText {
+    0%   { color: #ff0000; }
+    16%  { color: #ff8800; }
+    33%  { color: #ffff00; }
+    50%  { color: #00ff00; }
+    66%  { color: #0088ff; }
+    83%  { color: #aa00ff; }
+    100% { color: #ff0000; }
+}
+/* @ENDMOD */
+
+/* ============================== HUD BASE — STRIP BACKGROUNDS ============================== */
+
+/* @MOD:core */
+
+.weapItem,
+.weapItemInner,
+.greyInner,
+#leaderContainer,
+#leaderboardHolder,
+.statIcon,
+.killStreakItem,
+.killStreakItemInner,
+#timerInner,
+#timerHolder,
+#teamScores,
+.nHealthBarSeg,
+#bottomLeftPlayerRight,
+#bottomLeftPlayerLeft,
+#bottomLeftPlayer,
+#chatInputHolder,
+.greyInlineInnerMid {
+    background: 0 !important;
+}
+
+#livesDisp,
+#livesVal,
+#livesIcon,
+#aHolder,
+#topLeftAdHolder {
+    display: none !important;
+}
+
+.statIcon #scoreZoneVal {
+    display: none !important;
+}
+
+/* Hide the whole glass card for the 2 already-hidden stat icons (lives, scoreZone) */
+.statIcon:has(#livesVal),
+.statIcon:has(#livesDisp),
+.statIcon:has(#livesIcon),
+.statIcon:has(#scoreZoneVal) {
+    display: none !important;
+}
+
+.weapStreakHolder,
+.weapStreakInner {
+    background: none !important;
+    background-color: transparent !important;
+}
+
+#headerRight,
+.weapKey,
+.weapSkin,
+#timerIcon,
+#endAHolder,
+#spectButton > span,
+#customizeButton > span,
+.endAHolder {
+    display: none !important;
+}
+
+/* @ENDMOD */
+
+/* ============================== CUSTOM LOGO ============================== */
+
+/* @MOD:logo */
+/* Replace KRUNKER ETERNO logo with "3000" / "Auras" text */
+
+#mainLogo,
+#mainLogoFace,
+#seasonLabel {
+    display: none !important;
+}
+
+#gameNameHolder {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    top: 175px !important;
+}
+
+#gameNameHolder::before {
+    content: "@@LOGO_TOP@@" !important;
+    font-size: @@LOGO_TOP_SIZE@@px !important;
+    font-family: '@@FONT_FAMILY@@', @@FONT_FALLBACK@@ !important;
+    line-height: 1 !important;
+    text-shadow:
+        0 0 calc(8px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.8 * var(--glow-i))),
+        0 0 calc(20px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.55 * var(--glow-i))),
+        0 0 calc(40px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.3 * var(--glow-i))) !important;
+    /*@MOD:rgb*/animation: rgbText 2s linear infinite !important;/*@ENDMOD*/
+}
+
+#gameNameHolder::after {
+    content: "@@LOGO_BOTTOM@@" !important;
+    font-size: @@LOGO_BOTTOM_SIZE@@px !important;
+    font-family: '@@FONT_FAMILY@@', @@FONT_FALLBACK@@ !important;
+    line-height: 1 !important;
+    margin-top: 8px !important;
+    text-shadow:
+        0 0 calc(8px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.8 * var(--glow-i))),
+        0 0 calc(20px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.55 * var(--glow-i))),
+        0 0 calc(40px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.3 * var(--glow-i))) !important;
+    /*@MOD:rgb*/animation: rgbText 2s linear infinite !important;/*@ENDMOD*/
+}
+
+/* @ENDMOD */
+
+/* @MOD:core */
+.greyInner #ammoVal,
+.weapItemInner,
+.statIcon,
+#leaderContainer,
+.killStreakItemInner {
+    padding: 0px;
+}
+
+#roundsDisplay,
+#roundsVal {
+    display: none !important;
+}
+
+/* ============================== CHAT ============================== */
+
+#chatList {
+    background-color: transparent;
+}
+
+#chatList::-webkit-scrollbar {
+    display: none;
+}
+
+#chatInput {
+    background-color: transparent;
+    border: none;
+}
+/* @ENDMOD */
+
+/* @MOD:bigchat */
+/* Bigger font size for chat messages (everything inside) */
+#chatList,
+#chatList *,
+.chatMsg,
+.chatMsg *,
+.chatUser,
+.chatText,
+.chatItem,
+.chatItem *,
+.cItem,
+.cItem *,
+.chatMessage,
+.chatMessage *,
+.chatName,
+.chatUserName,
+.sysMsg,
+.sysMsg * {
+    font-size: @@CHAT_FONT_SIZE@@px !important;
+    line-height: 1.35 !important;
+}
+
+#chatInput {
+    font-size: @@CHAT_FONT_SIZE@@px !important;
+}
+/* @ENDMOD */
+
+/* @MOD:core */
+
+#chatInputHolder {
+    background-color: transparent;
+}
+
+#voiceDisplay,
+#voiceHolder,
+#voiceInputHolder {
+    background-color: rgba(0, 0, 0, 0.4) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+#chatInputHolder,
+#chatInputHolder > *,
+.chatInputHolder {
+    background-color: transparent !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+#chatSwitch,
+#chatSwitchHolder {
+    background-color: transparent !important;
+    background: transparent !important;
+}
+
+/* @ENDMOD */
+
+/* ============================== LEADERBOARD — NAME / VERIFIED BADGE ============================== */
+
+/* @MOD:leaderboard */
+
+.ph-name {
+    font-size: 0 !important;
+}
+
+.ph-name::after {
+    content: var(--Name) !important;
+    font-size: 22px !important;
+    display: inline-block !important;
+    /*@MOD:rgb*/animation: rgbText 2s linear infinite !important;/*@ENDMOD*/
+}
+
+.leaderNameM,
+.newLeaderNameM {
+    font-size: 0 !important;
+}
+
+#leaderContainer {
+    width: auto !important;
+}
+
+/* @ENDMOD */
+
+/* @MOD:badge */
+
+.leaderNameM::before {
+    font-family: 'Material Icons';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 20px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    overflow-wrap: normal;
+    direction: ltr;
+    content: "@@BADGE_CONTENT@@";
+    margin-top: 0px;
+    vertical-align: middle;
+    margin-right: 3px;
+    margin-left: -4px;
+    background-image: linear-gradient(90deg,
+        rgba(153 50 153) 0%, rgba(153 50 153) 33%,
+        #F7D001 33%, #F7D001 66%,
+        #6CB6FF 66%, #6CB6FF 100%);
+    background-clip: text !important;
+    -webkit-background-clip: text;
+    color: transparent !important;
+}
+
+.newLeaderNameM::before {
+    font-family: 'Material Icons';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 20px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    overflow-wrap: normal;
+    direction: ltr;
+    content: "@@BADGE_CONTENT@@";
+    margin-top: 0px;
+    vertical-align: middle;
+    margin-right: 3px;
+    margin-left: -4px;
+    background-image: linear-gradient(90deg,
+        rgba(153 50 153) 0%, rgba(153 50 153) 33%,
+        #F7D001 33%, #F7D001 66%,
+        #6CB6FF 66%, #6CB6FF 100%);
+    background-clip: text !important;
+    -webkit-background-clip: text;
+    color: transparent !important;
+}
+
+/* @ENDMOD */
+
+/* @MOD:leaderboard */
+
+.leaderNameM {
+    font-size: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+}
+
+/* FIX: hide ALL real children (name text, real clan tag, real rank/verified/
+   premium badge icons) — not just <span> — so only our injected ::before
+   (fake verified icon) and ::after (fake name+clan) are visible. */
+.leaderNameM * {
+    display: none !important;
+}
+
+.leaderNameM::after {
+    content: var(--Name2) " " var(--Clan) !important;
+    font-size: 18px !important;
+    visibility: visible !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+    /*@MOD:rgb*/animation: rgbText 2s linear infinite !important;/*@ENDMOD*/
+    position: relative;
+}
+
+.newLeaderNameM {
+    font-size: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+}
+
+/* FIX: same as .leaderNameM above — this selector is what feeds the
+   "new" leaderboard (Tab / round-end table header list). Previously it
+   had no child-hiding rule at all, so the real clan tag and any real
+   rank/verified badge icons rendered right next to our fake name. */
+.newLeaderNameM * {
+    display: none !important;
+}
+
+.newLeaderNameM::after {
+    content: var(--Name2) " " var(--Clan) !important;
+    font-size: 20px !important;
+    visibility: visible !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+    /*@MOD:rgb*/animation: rgbText 2s linear infinite !important;/*@ENDMOD*/
+}
+
+/* Enlarge everything in the leaderboard EXCEPT the name (name reverted above) */
+#leaderContainer *:not(.leaderNameM):not(.newLeaderNameM),
+#leaderboardHolder *:not(.leaderNameM):not(.newLeaderNameM),
+.centerLeaderContainer *:not(.leaderNameM):not(.newLeaderNameM) {
+    font-size: @@LEADER_FONT_SIZE@@px !important;
+}
+
+/* @ENDMOD */
+
+/* ============================== BOTTOM-LEFT PLAYER / HEALTH BAR ============================== */
+
+/* @MOD:core */
+
+#bottomLeftHolder {
+    z-index: 10;
+    position: absolute;
+    bottom: -10px;
+    left: 15px;
+    text-align: left;
+}
+
+#bottomLeftHealthBar {
+    display: inline-flex;
+    padding: unset;
+    background-color: rgba(0, 0, 0, 0.5);
+    width: 290px;
+    margin-left: 5px;
+    border-radius: 12px;
+}
+
+.nHealthBarSeg {
+    background-color: transparent;
+    width: -webkit-fill-available;
+    height: 35px;
+    margin-right: -4px;
+}
+
+.nHealthBarSeg:first-child .nHpBSeg {
+    border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
+}
+
+.nHealthBarSeg:last-child .nHpBSeg {
+    border-bottom-right-radius: 12px;
+    border-top-right-radius: 12px;
+}
+
+.nHpBSeg {
+    width: 100%;
+    border-radius: 0px;
+}
+
+#bottomLeftPlayer {
+    display: flex;
+    border-radius: 6px;
+    padding-right: 5px;
+    background-color: rgba(0, 0, 0, 0);
+    width: 400px;
+    border: 12px solid rgb(255 255 255 / 0%);
+}
+
+#bottomLeftPlayerLeft {
+    background-color: rgba(0, 0, 0, 0);
+    border-radius: 0px;
+    margin: 3px;
+}
+
+/* ============================== AMMO / RELOAD ============================== */
+
+#ammoHolder {
+    background-color: transparent;
+    transform: none;
+    padding: 0;
+    margin: 0;
+    position: fixed;
+    left: calc(50% - 30px);
+    top: calc(50% + 30px);
+    height: 5px;
+    width: 55px;
+    border-radius: 0;
+    background-image: linear-gradient(to right, #fefefe, #fefefe);
+}
+
+#ammoVal {
+    position: fixed;
+    bottom: 20px;
+    font-size: 30px;
+    border-radius: 0;
+    background: transparent;
+    padding: 0;
+    width: 0;
+    right: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#ammoMax,
+#ammoIcon {
+    display: none;
+}
+/* @ENDMOD */
+
+/* @MOD:reload */
+#reloadMsg {
+    position: fixed !important;
+    left: 50% !important;
+    top: calc(50% + 62px) !important;
+    transform: translateX(-50%) !important;
+    background-color: transparent !important;
+    border: none !important;
+    font-size: 0 !important;
+    width: 160px !important;
+    color: transparent !important;
+    overflow: visible !important;
+}
+
+#reloadMsg::after {
+    content: '@@RELOAD_TEXT@@' !important;
+    display: block !important;
+    font-size: 20px !important;
+    color: #fff !important;
+    text-align: center !important;
+    margin-top: 6px !important;
+    text-shadow: 0 0 10px #fff !important;
+    white-space: nowrap !important;
+    letter-spacing: 2px !important;
+}
+/* @ENDMOD */
+
+/* @MOD:core */
+
+/* ============================== KILLSTREAK / TEAM ============================== */
+
+.killStreakHolder,
+#killStreakHolder {
+    position: fixed !important;
+    bottom: 10px !important;
+    right: 125px !important;
+}
+
+#bottomLeftPlayerRight,
+#bottomLeftTeamType {
+    display: none;
+}
+
+#bottomLeftTeamHolder {
+    display: block;
+}
+
+#bottomLeftTeamName {
+    display: block;
+    font-size: 0px;
+    color: #fff;
+    margin-left: 5px;
+    padding: 2px 8px;
+    width: max-content;
+    border-radius: 12px;
+    background-color: rgb(0, 0, 0, .4);
+}
+
+#bottomLeftTeamName::before {
+    font-size: 20px;
+    content: var(--Name);
+}
+
+/* ============================== CLASS PICKER ICON STRIP ============================== */
+
+#hiddenClasses {
+    display: flex !important;
+    flex-direction: row;
+    position: fixed;
+    left: 50%;
+    top: 75px;
+    bottom: unset;
+    transform: translateX(-50%);
+    margin-right: 10px;
+}
+
+#menuClassPicker0[onclick="selectClass(0)"],
+#menuClassPicker1[onclick="selectClass(1)"],
+#menuClassPicker2[onclick="selectClass(2)"],
+#menuClassPicker3[onclick="selectClass(3)"],
+#menuClassPicker4[onclick="selectClass(4)"],
+#menuClassPicker5[onclick="selectClass(5)"],
+#menuClassPicker6[onclick="selectClass(6)"],
+#menuClassPicker7[onclick="selectClass(7)"],
+#menuClassPicker8[onclick="selectClass(8)"],
+#menuClassPicker9[onclick="selectClass(9)"],
+#menuClassPicker10[onclick="selectClass(10)"],
+#menuClassPicker11[onclick="selectClass(11)"],
+#menuClassPicker12[onclick="selectClass(12)"],
+#menuClassPicker13[onclick="selectClass(13)"],
+#menuClassPicker14[onclick="selectClass(14)"],
+#menuClassPicker15[onclick="selectClass(15)"] {
+    display: block;
+    width: 60px;
+    height: 60px;
+    pointer-events: auto;
+    image-rendering: pixelated;
+    margin-right: 10px;
+    padding: 5px;
+    border-radius: 10px;
+    border: 3px solid var(--main-color);
+}
+
+#menuClassPicker0[onclick="selectClass(0)"]   { content: url(https://assets.krunker.io/textures/classes/icon_0.png); }
+#menuClassPicker1[onclick="selectClass(1)"]   { content: url(https://assets.krunker.io/textures/classes/icon_1.png); }
+#menuClassPicker2[onclick="selectClass(2)"]   { content: url(https://assets.krunker.io/textures/classes/icon_2.png); }
+#menuClassPicker3[onclick="selectClass(3)"]   { content: url(https://assets.krunker.io/textures/classes/icon_3.png); }
+#menuClassPicker4[onclick="selectClass(4)"]   { content: url(https://assets.krunker.io/textures/classes/icon_4.png); }
+#menuClassPicker5[onclick="selectClass(5)"]   { content: url(https://assets.krunker.io/textures/classes/icon_5.png); }
+#menuClassPicker6[onclick="selectClass(6)"]   { content: url(https://assets.krunker.io/textures/classes/icon_6.png); }
+#menuClassPicker7[onclick="selectClass(7)"]   { content: url(https://assets.krunker.io/textures/classes/icon_7.png); }
+#menuClassPicker8[onclick="selectClass(8)"]   { content: url(https://assets.krunker.io/textures/classes/icon_8.png); }
+#menuClassPicker9[onclick="selectClass(9)"]   { content: url(https://assets.krunker.io/textures/classes/icon_9.png); }
+#menuClassPicker10[onclick="selectClass(10)"] { content: url(https://assets.krunker.io/textures/classes/icon_10.png); }
+#menuClassPicker11[onclick="selectClass(11)"] { content: url(https://assets.krunker.io/textures/classes/icon_11.png); }
+#menuClassPicker12[onclick="selectClass(12)"] { content: url(https://assets.krunker.io/textures/classes/icon_12.png); }
+#menuClassPicker13[onclick="selectClass(13)"] { content: url(https://assets.krunker.io/textures/classes/icon_13.png); }
+#menuClassPicker14[onclick="selectClass(14)"] { content: url(https://assets.krunker.io/textures/classes/icon_14.png); }
+#menuClassPicker15[onclick="selectClass(15)"] { content: url(https://assets.krunker.io/textures/classes/icon_15.png); }
+
+[id^="menuClassPicker"]:hover {
+    cursor: pointer;
+    filter: drop-shadow(0 0 5px var(--main-color));
+}
+
+/* @ENDMOD */
+
+/* ============================== END TABLE / SCOREBOARD ============================== */
+
+/* @MOD:leaderboard */
+
+.endTableN {
+    font-size: 18px !important;
+    font-family: 'Pacifico', cursive !important;
+    visibility: visible !important;
+    text-indent: 0 !important;
+    position: static !important;
+    opacity: 1 !important;
+    color: #0af !important;
+}
+
+.endTableD {
+    font-size: 22px !important;
+    font-family: 'Pacifico', cursive !important;
+    color: white !important;
+}
+
+.endTableH {
+    font-size: 21px !important;
+    font-family: 'Pacifico', cursive !important;
+    color: #0af !important;
+    background: rgba(0, 170, 255, 0.1) !important;
+    padding: 8px 6px !important;
+    border-bottom: 1px solid rgba(0, 170, 255, 0.3) !important;
+}
+
+.endTableRow.you .endTableN:first-of-type,
+.endTableN[style*="color:#fff"],
+.endTableN[style*="color: #fff"],
+.endTableN[style*="color:rgba(255,255,255,1)"],
+.endTableN[style*="color: rgba(255, 255, 255, 1)"],
+.endTableN[style*="color:rgba(255,255,255,0.9)"],
+.endTableN[style*="color: rgba(255, 255, 255, 0.9)"] {
+    font-size: 0 !important;
+    visibility: visible !important;
+}
+
+/* @ENDMOD */
+
+/* @MOD:badge */
+
+.endTableRow.you .endTableN:first-of-type::before,
+.endTableN[style*="color:#fff"]::before,
+.endTableN[style*="color: #fff"]::before,
+.endTableN[style*="color:rgba(255,255,255,1)"]::before,
+.endTableN[style*="color: rgba(255, 255, 255, 1)"]::before,
+.endTableN[style*="color:rgba(255,255,255,0.9)"]::before,
+.endTableN[style*="color: rgba(255, 255, 255, 0.9)"]::before {
+    font-family: 'Material Icons';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 20px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    overflow-wrap: normal;
+    direction: ltr;
+    content: "@@BADGE_CONTENT@@";
+    margin-top: 0px;
+    vertical-align: middle;
+    margin-right: 3px;
+    margin-left: -4px;
+    background-image: linear-gradient(90deg,
+        rgba(153 50 153) 0%, rgba(153 50 153) 33%,
+        #F7D001 33%, #F7D001 66%,
+        #6CB6FF 66%, #6CB6FF 100%);
+    background-clip: text !important;
+    -webkit-background-clip: text;
+    color: transparent !important;
+}
+
+/* @ENDMOD */
+
+/* @MOD:leaderboard */
+
+.endTableRow.you .endTableN:first-of-type::after,
+.endTableN[style*="color:#fff"]::after,
+.endTableN[style*="color: #fff"]::after,
+.endTableN[style*="color:rgba(255,255,255,1)"]::after,
+.endTableN[style*="color: rgba(255, 255, 255, 1)"]::after,
+.endTableN[style*="color:rgba(255,255,255,0.9)"]::after,
+.endTableN[style*="color: rgba(255, 255, 255, 0.9)"]::after {
+    content: var(--Name) " " var(--Clan) !important;
+    font-size: 18px !important;
+    visibility: visible !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+    /*@MOD:rgb*/animation: rgbText 2s linear infinite !important;/*@ENDMOD*/
+    margin-left: 8px !important;
+}
+
+.endTableN[style*="color:rgba(255,255,255,0.6)"],
+.endTableN[style*="color: rgba(255, 255, 255, 0.6)"] {
+    color: #0af !important;
+    filter: drop-shadow(2px 4px 6px black);
+}
+
+/* FIX v2: hide every real child element inside the matched name cell
+   (flag, real clan tag, any real badge/rank icon) so only our injected
+   ::before (fake verified icon) and ::after (fake name+clan) remain —
+   the same approach used for .leaderNameM / .newLeaderNameM above. */
+.endTableRow.you .endTableN:first-of-type > *,
+.endTableN[style*="color:#fff"] > *,
+.endTableN[style*="color: #fff"] > *,
+.endTableN[style*="color:rgba(255,255,255,1)"] > *,
+.endTableN[style*="color: rgba(255, 255, 255, 1)"] > *,
+.endTableN[style*="color:rgba(255,255,255,0.9)"] > *,
+.endTableN[style*="color: rgba(255, 255, 255, 0.9)"] > * {
+    display: none !important;
+}
+
+/* FIX v3: the flag/badge/gear icons aren't children of .endTableN at all —
+   they're siblings inside a shared wrapper (the whole "# Name" cell), which
+   is why the v2 fix above doesn't move them. Rather than guess at which icon
+   is which, just line up whatever is actually in that wrapper: even spacing,
+   vertically centered, consistent icon size. :has() targets "whichever
+   element directly wraps .endTableN" without needing its real class name. */
+*:has(> .endTableN) {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    flex-wrap: nowrap !important;
+}
+
+*:has(> .endTableN) > img,
+*:has(> .endTableN) > svg,
+*:has(> .endTableN) > i {
+    width: 24px !important;
+    height: 24px !important;
+    flex: none !important;
+    vertical-align: middle !important;
+}
+
+#leaderDisplay {
+    border-radius: 2px;
+    background: none;
+}
+
+.menuClassPlayerVerified::after {
+    content: "VRF" !important;
+    display: block !important;
+    font-size: 9px !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+    text-align: center !important;
+}
+
+.menuClassPlayerPartner::after {
+    content: "PTR" !important;
+    display: block !important;
+    font-size: 9px !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+    text-align: center !important;
+}
+
+.menuClassPlayerPremium::after {
+    content: "PRO" !important;
+    display: block !important;
+    font-size: 9px !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+    text-align: center !important;
+}
+
+/* @ENDMOD */
+
+/* ============================== STAT COUNTERS (kills / deaths / streak / score / kdr) ============================== */
+
+/* @MOD:core */
+
+.topRightCounters {
+    position: fixed !important;
+    bottom: 20px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    right: unset !important;
+    top: unset !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-end !important;
+    justify-content: center !important;
+    gap: 30px !important;
+    width: max-content !important;
+    margin-left: -30px !important;
+}
+
+.statIcon span {
+    color: white !important;
+    font-size: 30px !important;
+    display: block !important;
+    text-align: center !important;
+    text-shadow: 2px 2px 3px rgba(0, 0, 0, 0) !important;
+    position: static !important;
+    bottom: unset !important;
+    line-height: 1.2 !important;
+}
+
+.statIcon span::after {
+    display: block !important;
+    position: static !important;
+    margin-top: 10px !important;
+    font-size: 20px !important;
+    color: #fff !important;
+    text-shadow: none !important;
+    text-align: center !important;
+}
+
+.statIcon .material-icons,
+.statIcon img {
+    display: none !important;
+}
+
+#deathsVal::after  { content: 'Deaths'; }
+#killsVal::after   { content: 'Kills'; }
+#streakVal::after  { content: 'Streak'; }
+#myScoreVal::after { content: 'Score'; }
+#kdVal::after      { content: 'KDR'; }
+
+#killCount   { order: 2 !important; }
+#kdCount     { order: 3 !important; }
+#deathCount  { order: 4 !important; }
+#streakCount { order: 1 !important; }
+#scoreCount  { order: 5 !important; }
+
+/* ============================== TIMER ============================== */
+
+#timerHolder {
+    text-align: center !important;
+    position: fixed !important;
+    left: 50% !important;
+    top: 42px !important;
+    transform: translateX(-50%) !important;
+    width: 110px !important;
+    padding: 0px 0 !important;
+    margin: 0 !important;
+    border-radius: 0 0 10px 10px !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 2147483647 !important;
+    pointer-events: none !important;
+}
+
+#timerVal,
+#timerVal.topLeftOld {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    font-size: 35px !important;
+    line-height: 1 !important;
+    letter-spacing: 3px !important;
+    text-shadow: 0 0 10px rgba(0, 170, 255, 0) !important;
+    color: #fff !important;
+    position: relative !important;
+    z-index: 2147483647 !important;
+}
+
+/* @ENDMOD */
+
+/* @MOD:glass */
+/* ================================================================
+   GLASSMORPHISM PASS
+   Everything below builds the frosted-glass look on top of the
+   layout/behavior rules above. Kept in original order — several
+   selectors reappear with adjusted opacity/blur values further
+   down, and those later values are what actually render.
+   ================================================================ */
+
+/* ----- Main menu buttons ----- */
+
+#subLogoButtons > .button {
+    position: relative !important;
+    border: none !important;
+    border-radius: 16px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: #fff !important;
+}
+
+#subLogoButtons > .button::before {
+    content: "" !important;
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: -1 !important;
+    border-radius: 16px !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(5px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(5px) saturate(160%) !important;
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.25),
+        inset 0 1px 1px rgba(255, 255, 255, 0.12) !important;
+    transition: all 0.15s ease !important;
+}
+
+#subLogoButtons > .button:hover::before {
+    background: rgba(255, 255, 255, 0.15) !important;
+    box-shadow:
+        0 6px 16px rgba(0, 0, 0, 0.3),
+        inset 0 1px 1px rgba(255, 255, 255, 0.2) !important;
+}
+
+/* ----- Leaderboard panel ----- */
+
+#leaderboardHolder,
+#centerLeaderContainer,
+.centerLeaderContainer {
+    background: rgba(255, 255, 255, 0.06) !important;
+    backdrop-filter: blur(5px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(5px) saturate(160%) !important;
+    border-radius: 14px !important;
+    box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.3),
+        inset 0 1px 1px rgba(255, 255, 255, 0.12) !important;
+    overflow: hidden !important;
+}
+
+#leaderContainer,
+.centerLeaderContainerInner {
+    background: transparent !important;
+}
+
+/* ----- End table / scoreboard panel ----- */
+
+#endTable,
+.endCard,
+.endSection,
+.gfSection {
+    background: rgba(255, 255, 255, 0.06) !important;
+    backdrop-filter: blur(5px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(5px) saturate(160%) !important;
+    border-radius: 14px !important;
+    box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.3),
+        inset 0 1px 1px rgba(255, 255, 255, 0.12) !important;
+}
+
+/* ----- Host server type cards (Raids/Zombies/Comp/Community/Custom) ----- */
+
+.serverHostOp {
+    border-radius: 14px !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(5px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(5px) saturate(160%) !important;
+    box-shadow:
+        0 4px 14px rgba(0, 0, 0, 0.3),
+        inset 0 1px 1px rgba(255, 255, 255, 0.12) !important;
+    overflow: hidden !important;
+}
+
+.serverHostOp:hover {
+    background-color: rgba(255, 255, 255, 0.14) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+/* ----- Generic popup window (Host Server Type, Settings, Mail, etc) ----- */
+
+#menuWindow {
+    background-color: rgba(30, 30, 30, 0.55) !important;
+    backdrop-filter: blur(10px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(160%) !important;
+    border-radius: 16px !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow:
+        0 8px 30px rgba(0, 0, 0, 0.4),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1) !important;
+}
+
+/* ----- End screen tabs (Leaderboard/Performance/Medals/Rewards) ----- */
+
+#tabHolder {
+    background-color: rgba(20, 20, 20, 0.5) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    border-radius: 12px !important;
+    box-shadow:
+        0 4px 14px rgba(0, 0, 0, 0.35),
+        inset 0 1px 1px rgba(255, 255, 255, 0.08) !important;
+    overflow: hidden !important;
+}
+
+.tabHeader {
+    background-color: transparent !important;
+}
+
+.tabBody {
+    background-color: rgba(20, 20, 20, 0.35) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    border-radius: 12px !important;
+}
+
+/* ----- Double XP button ----- */
+
+#doubleXPButton {
+    background-color: rgba(20, 20, 20, 0.45) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    border-radius: 12px !important;
+    box-shadow:
+        0 4px 14px rgba(0, 0, 0, 0.35),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1) !important;
+}
+
+/* ----- Top header bar (profile ... wallet, and right side) ----- */
+
+#playerHeaderEl,
+.headerBar {
+    background-color: rgba(20, 20, 20, 0.45) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    box-shadow:
+        0 4px 14px rgba(0, 0, 0, 0.3),
+        inset 0 -1px 1px rgba(255, 255, 255, 0.06) !important;
+}
+
+#signedInHeaderBar,
+#signedOutHeaderBar,
+.headerBarLeft,
+.headerBarRight {
+    background-color: transparent !important;
+}
+
+/* ----- Subtle outline for everything glassed so far ----- */
+
+#subLogoButtons > .button::before,
+#centerLeaderContainer,
+.centerLeaderContainer,
+#endTable,
+.endCard,
+.endSection,
+.gfSection,
+.serverHostOp,
+#menuWindow,
+#tabHolder,
+.tabBody,
+#doubleXPButton,
+#playerHeaderEl,
+.headerBar {
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+/* ----- Weapon / killstreak / powerup holders ----- */
+
+.weapItem,
+.killStreakItem,
+.zPerkItem,
+.powerupItem {
+    background-color: rgba(255, 255, 255, 0.07) !important;
+    backdrop-filter: blur(5px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(5px) saturate(140%) !important;
+    border-radius: 10px !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3) !important;
+    overflow: hidden !important;
+}
+
+.weapItemInner,
+.killStreakItemInner {
+    background-color: transparent !important;
+}
+
+/* ----- Bottom-left player card + health bar ----- */
+
+#bottomLeftPlayer {
+    background-color: rgba(255, 255, 255, 0.07) !important;
+    backdrop-filter: blur(5px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(5px) saturate(140%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+}
+
+#bottomLeftHealthBar {
+    background-color: rgba(255, 255, 255, 0.07) !important;
+    backdrop-filter: blur(5px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(5px) saturate(140%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+/* ----- Team scores ----- */
+
+#teamScores {
+    background-color: rgba(255, 255, 255, 0.07) !important;
+    backdrop-filter: blur(5px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(5px) saturate(140%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 10px !important;
+}
+
+/* ----- Chat ----- */
+
+#chatList {
+    background-color: rgba(20, 20, 20, 0.35) !important;
+    backdrop-filter: blur(5px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(5px) saturate(140%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 10px !important;
+}
+
+#voiceDisplay,
+#voiceHolder,
+#voiceInputHolder {
+    backdrop-filter: blur(5px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(5px) saturate(140%) !important;
+    border-radius: 10px !important;
+}
+
+/* ----- Killfeed ----- */
+
+.killfeedItem {
+    background-color: rgba(255, 255, 255, 0.07) !important;
+    backdrop-filter: blur(5px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(5px) saturate(140%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+}
+
+.killfeedMsg {
+    background-color: transparent !important;
+}
+
+/* ----- Minimap ----- */
+
+#miniMapOverlay {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(5px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(5px) saturate(140%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+}
+
+/* ----- Speedrun / prop control / spectate control panels ----- */
+
+#speedRunBox,
+#speedRunReset,
+#propControlHolder,
+#stalkerControlHolder,
+#stalkerLivingInfoHolder,
+#specControlHolder {
+    background-color: rgba(255, 255, 255, 0.07) !important;
+    backdrop-filter: blur(5px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(5px) saturate(140%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 10px !important;
+}
+
+/* ----- Timer glass ----- */
+
+#timerHolder {
+    background-color: rgba(20, 20, 20, 0.35) !important;
+    backdrop-filter: blur(5px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(5px) saturate(140%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+/* ----- Rounds display / match info ----- */
+
+#roundsDisplay {
+    background-color: rgba(255, 255, 255, 0.07) !important;
+    backdrop-filter: blur(5px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(5px) saturate(140%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+/* ----- Stat icons (kills/deaths/streak/score/kdr row) ----- */
+
+.statIcon {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    margin: 0 !important;
+    padding: 8px 14px !important;
+    background-color: rgba(255, 255, 255, 0.06) !important;
+    backdrop-filter: blur(5px) saturate(140%) !important;
+    -webkit-backdrop-filter: blur(5px) saturate(140%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 10px !important;
+}
+
+/* ----- Ping/FPS nudge (main menu) ----- */
+
+#menuPingDisplay,
+#menuFPSDisplay {
+    margin-left: 10px !important;
+}
+
+/* ----- Chat input bar ("Enter Message") — glass + glow ----- */
+
+#chatInputHolder {
+    background-color: rgba(20, 20, 20, 0.45) !important;
+    backdrop-filter: blur(6px) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(6px) saturate(150%) !important;
+    border-radius: 10px !important;
+    border: 1px solid rgba(var(--glow-rgb), calc(0.55 * var(--glow-i))) !important;
+    box-shadow:
+        0 0 calc(10px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.25 * var(--glow-i))),
+        0 0 calc(20px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.12 * var(--glow-i))),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1) !important;
+    overflow: hidden !important;
+}
+
+#chatInput {
+    background-color: transparent !important;
+}
+
+/* ----- White glow border — applied to every glass element so far ----- */
+
+#subLogoButtons > .button::before,
+#centerLeaderContainer,
+.centerLeaderContainer,
+#endTable,
+.endCard,
+.endSection,
+.gfSection,
+.serverHostOp,
+#menuWindow,
+#tabHolder,
+.tabBody,
+#doubleXPButton,
+#playerHeaderEl,
+.headerBar,
+#bottomLeftPlayer,
+#bottomLeftHealthBar,
+#teamScores,
+#chatList,
+#voiceDisplay,
+#voiceHolder,
+#voiceInputHolder,
+#speedRunBox,
+#speedRunReset,
+#propControlHolder,
+#stalkerControlHolder,
+#stalkerLivingInfoHolder,
+#specControlHolder,
+#chatInputHolder,
+#customizeButton,
+.buttonG {
+    border: 1px solid rgba(var(--glow-rgb), calc(0.55 * var(--glow-i))) !important;
+    box-shadow:
+        0 0 calc(10px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.25 * var(--glow-i))),
+        0 0 calc(20px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.12 * var(--glow-i))),
+        inset 0 1px 1px rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Leaderboard: same glass, but glow spread kept tight to the box edge */
+#leaderboardHolder {
+    border: 1px solid rgba(var(--glow-rgb), calc(0.55 * var(--glow-i))) !important;
+    box-shadow:
+        0 0 calc(3px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.2 * var(--glow-i))),
+        0 0 calc(6px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.08 * var(--glow-i))),
+        inset 0 1px 1px rgba(255, 255, 255, 0.15) !important;
+}
+
+#subLogoButtons > .button:hover::before,
+.serverHostOp:hover,
+#customizeButton:hover,
+.buttonG:hover {
+    border: 1px solid rgba(var(--glow-rgb), calc(0.85 * var(--glow-i))) !important;
+    box-shadow:
+        0 0 calc(16px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.4 * var(--glow-i))),
+        0 0 calc(28px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.2 * var(--glow-i))),
+        inset 0 1px 1px rgba(255, 255, 255, 0.25) !important;
+}
+
+/* ----- Loadout / customize buttons -----
+   (border + glow above come from the shared catchall block; this adds
+   the button-specific background, hover background, and final glow size) */
+
+#customizeButton,
+.buttonG {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(6px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(6px) saturate(160%) !important;
+    box-shadow:
+        0 0 calc(6px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.15 * var(--glow-i))),
+        0 0 calc(10px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.06 * var(--glow-i))),
+        inset 0 1px 1px rgba(255, 255, 255, 0.08) !important;
+}
+
+#customizeButton:hover,
+.buttonG:hover {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* ----- Footer links bar (Contact | Terms | Changelog) ----- */
+
+#termsInfo {
+    display: inline-block !important;
+    background-color: rgba(20, 20, 20, 0.45) !important;
+    backdrop-filter: blur(6px) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(6px) saturate(150%) !important;
+    border-radius: 8px !important;
+    border: 1px solid rgba(var(--glow-rgb), calc(0.55 * var(--glow-i))) !important;
+    margin: 0 !important;
+    padding: 0 6px !important;
+    box-sizing: border-box !important;
+    box-shadow:
+        0 0 calc(4px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.12 * var(--glow-i))),
+        0 0 calc(8px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.05 * var(--glow-i))) !important;
+}
+
+/* ----- Social popup ----- */
+
+.socialModal {
+    background-color: rgba(30, 30, 30, 0.55) !important;
+    backdrop-filter: blur(10px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(160%) !important;
+    border-radius: 16px !important;
+    border: 1px solid rgba(var(--glow-rgb), calc(0.55 * var(--glow-i))) !important;
+    box-shadow:
+        0 8px 30px rgba(0, 0, 0, 0.4),
+        0 0 calc(20px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.15 * var(--glow-i))),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1) !important;
+}
+
+/* ----- Class picker icon strip — glow ----- */
+
+#menuClassPicker0[onclick="selectClass(0)"],
+#menuClassPicker1[onclick="selectClass(1)"],
+#menuClassPicker2[onclick="selectClass(2)"],
+#menuClassPicker3[onclick="selectClass(3)"],
+#menuClassPicker4[onclick="selectClass(4)"],
+#menuClassPicker5[onclick="selectClass(5)"],
+#menuClassPicker6[onclick="selectClass(6)"],
+#menuClassPicker7[onclick="selectClass(7)"],
+#menuClassPicker8[onclick="selectClass(8)"],
+#menuClassPicker9[onclick="selectClass(9)"],
+#menuClassPicker10[onclick="selectClass(10)"],
+#menuClassPicker11[onclick="selectClass(11)"],
+#menuClassPicker12[onclick="selectClass(12)"],
+#menuClassPicker13[onclick="selectClass(13)"],
+#menuClassPicker14[onclick="selectClass(14)"],
+#menuClassPicker15[onclick="selectClass(15)"] {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(5px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(5px) saturate(160%) !important;
+    border: 1px solid rgba(var(--glow-rgb), calc(0.55 * var(--glow-i))) !important;
+    box-shadow:
+        0 0 calc(10px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.25 * var(--glow-i))),
+        0 0 calc(18px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.12 * var(--glow-i))),
+        inset 0 1px 1px rgba(255, 255, 255, 0.15) !important;
+}
+
+[id^="menuClassPicker"]:hover {
+    border: 1px solid rgba(var(--glow-rgb), calc(0.9 * var(--glow-i))) !important;
+    box-shadow:
+        0 0 calc(16px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.4 * var(--glow-i))),
+        0 0 calc(26px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.2 * var(--glow-i))),
+        inset 0 1px 1px rgba(255, 255, 255, 0.25) !important;
+}
+
+/* ----- HUD items using the dark card pattern (perks, killstreak, weapons, misc HUD) ----- */
+
+.perkItem,
+.killStreakItem,
+.weapItem,
+#specStats,
+#specNames,
+#bottomLeftTeamName,
+#bottomLeftTeamType,
+#mLevelCont,
+#networkLag,
+#voteToKick,
+#voteToForfeit,
+.newLeaderTeam,
+#homeStoreAd,
+#cmpDatBox,
+.badgeCard,
+#shopMainSellB,
+#shopSideSellB {
+    /* background-color/backdrop-filter below are the values that end up
+       rendering — a later block used to override just those two props */
+    background-color: rgba(255, 255, 255, 0.04) !important;
+    backdrop-filter: blur(14px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(14px) saturate(180%) !important;
+    border-radius: 10px !important;
+    border: 1px solid rgba(var(--glow-rgb), calc(0.55 * var(--glow-i))) !important;
+    box-shadow:
+        0 0 calc(10px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.2 * var(--glow-i))),
+        0 0 calc(18px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.1 * var(--glow-i))),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1) !important;
+    overflow: hidden !important;
+}
+
+.perkItemInner,
+.killStreakItemInner,
+.weapItemInner {
+    background-color: transparent !important;
+}
+
+/* ----- Settings section headers (grey bars) ----- */
+
+.setHed,
+.setHedS,
+.setBodH {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+    backdrop-filter: blur(14px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(14px) saturate(180%) !important;
+    border-radius: 8px !important;
+    border: 1px solid rgba(var(--glow-rgb), calc(0.5 * var(--glow-i))) !important;
+    box-shadow:
+        0 0 calc(8px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.18 * var(--glow-i))),
+        0 0 calc(14px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.08 * var(--glow-i))) !important;
+}
+
+/* ----- Contacts header: glass toned way down vs other section headers ----- */
+
+.contactsHeader {
+    background-color: rgba(255, 255, 255, 0.03) !important;
+    backdrop-filter: blur(2px) saturate(120%) !important;
+    -webkit-backdrop-filter: blur(2px) saturate(120%) !important;
+    border-radius: 8px !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: none !important;
+}
+
+/* ----- All popup / modal windows (purchases, trade, events, rewards, etc) ----- */
+
+.twitchPop,
+.nftPop,
+.confPop,
+.clientExitPop,
+#confPurchItemPop,
+#bundlePop,
+#premiumPop,
+.metaPop,
+.confPremiumPop,
+.vouchPop,
+.polConfPop,
+.rankedPop,
+.promoPop,
+.clientPop,
+#tradePop,
+.pfpPop,
+.dropsPop,
+.claimPop,
+.accountCreatePop,
+.importPop,
+.disconnectPop,
+.imagePop,
+.badgePop,
+.imageNewPop,
+.eventPop,
+.loadingPop,
+.autoLoadPop,
+.editMapPop,
+.responsePop,
+.infoPop,
+.contPop,
+.ticketPop,
+.spinErrorPop,
+.charmErrorPop,
+.gameCodePop,
+.abTestsPop,
+.registerGiftPop,
+.rankedQueueModal,
+.rankedMenuModal,
+.communityPopup,
+.tutorialPopup,
+.defaultModal,
+.krunkCupJoinModal,
+.krunkCupViewModal,
+.exchangeModal,
+.itemsModal,
+.moreKrunkerPopup,
+.bp-generic-pop,
+.bp-purchase-pop,
+.dxp-pop,
+.spinHistoryStatsPop,
+#spinHistoryPop,
+.registerRewardsPop,
+#popupContent {
+    background-color: rgba(30, 30, 30, 0.55) !important;
+    backdrop-filter: blur(10px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(160%) !important;
+    border-radius: 16px !important;
+    border: 1px solid rgba(var(--glow-rgb), calc(0.55 * var(--glow-i))) !important;
+    box-shadow:
+        0 8px 30px rgba(0, 0, 0, 0.4),
+        0 0 calc(20px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.15 * var(--glow-i))),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1) !important;
+}
+
+/* ----- Profile page elements ----- */
+
+#profilePicM,
+#mLevelContV,
+.progressBar,
+#menuUsernameContainer,
+#menuAccountUsername {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(14px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(14px) saturate(180%) !important;
+    border: 1px solid rgba(var(--glow-rgb), calc(0.5 * var(--glow-i))) !important;
+    box-shadow:
+        0 0 calc(10px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.2 * var(--glow-i))),
+        0 0 calc(18px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.1 * var(--glow-i))) !important;
+    border-radius: 10px !important;
+}
+
+/* ----- Spectate UI (name/stats while dead-and-watching) ----- */
+
+#specStats,
+#specControlHolder,
+#specNames {
+    background-color: rgba(255, 255, 255, 0.07) !important;
+    backdrop-filter: blur(12px) saturate(170%) !important;
+    -webkit-backdrop-filter: blur(12px) saturate(170%) !important;
+    border-radius: 14px !important;
+    border: 1px solid rgba(var(--glow-rgb), calc(0.55 * var(--glow-i))) !important;
+    box-shadow:
+        0 4px 18px rgba(0, 0, 0, 0.35),
+        0 0 calc(12px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.25 * var(--glow-i))),
+        0 0 calc(24px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.12 * var(--glow-i))),
+        inset 0 1px 1px rgba(255, 255, 255, 0.15) !important;
+    overflow: hidden !important;
+}
+
+/* ----- Death screen (the "killed by" recap) ----- */
+
+.death-ui-bottom,
+.death-ui-bottom-empty {
+    background: rgba(255, 255, 255, 0.06) !important;
+    backdrop-filter: blur(14px) saturate(170%) !important;
+    -webkit-backdrop-filter: blur(14px) saturate(170%) !important;
+    border-top: 1px solid rgba(var(--glow-rgb), calc(0.55 * var(--glow-i))) !important;
+    border-bottom: 1px solid rgba(var(--glow-rgb), calc(0.55 * var(--glow-i))) !important;
+    box-shadow:
+        0 0 calc(16px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.25 * var(--glow-i))),
+        0 0 calc(32px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.12 * var(--glow-i))),
+        inset 0 1px 1px rgba(255, 255, 255, 0.15) !important;
+}
+
+.death-row-bottom {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(10px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(160%) !important;
+    border-radius: 8px !important;
+    outline: 1px solid rgba(var(--glow-rgb), calc(0.55 * var(--glow-i))) !important;
+    box-shadow:
+        0 0 calc(10px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.25 * var(--glow-i))),
+        0 0 calc(20px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.12 * var(--glow-i))),
+        inset 0 1px 1px rgba(255, 255, 255, 0.15) !important;
+}
+
+.death-stats {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+    backdrop-filter: blur(10px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(160%) !important;
+    border: 1px solid rgba(var(--glow-rgb), calc(0.4 * var(--glow-i))) !important;
+    box-shadow:
+        0 0 calc(8px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.2 * var(--glow-i))),
+        0 0 calc(16px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.1 * var(--glow-i))) !important;
+    padding: 12px 16px !important;
+    height: auto !important;
+    row-gap: 8px !important;
+}
+
+.death-row-user-text,
+.death-row-weapon-text,
+.death-stats-row {
+    font-family: 'Pacifico', cursive !important;
+}
+
+.death-report-text {
+    font-family: 'Pacifico', cursive !important;
+    letter-spacing: 1px !important;
+}
+
+/* ----- Wallet / KR / Junk header pills ----- */
+
+.krInfo,
+.junkInfo {
+    display: inline-block !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(10px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(160%) !important;
+    border-radius: 8px !important;
+    padding: 4px 10px !important;
+    border: 1px solid rgba(var(--glow-rgb), calc(0.5 * var(--glow-i))) !important;
+    box-shadow:
+        0 0 calc(6px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.15 * var(--glow-i))),
+        0 0 calc(10px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.06 * var(--glow-i))) !important;
+}
+
+/* Nudge in-game HUD Ping/FPS display slightly right */
+#pingDisplay,
+#fpsDisplay {
+    margin-left: 10px !important;
+}
+
+/* Catch-all guess for any "Wallet" element (class/id contains "wallet") */
+[class*="wallet" i],
+[id*="wallet" i] {
+    display: inline-block !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(10px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(160%) !important;
+    border-radius: 8px !important;
+    padding: 4px 10px !important;
+    border: 1px solid rgba(var(--glow-rgb), calc(0.5 * var(--glow-i))) !important;
+    box-shadow:
+        0 0 calc(6px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.15 * var(--glow-i))),
+        0 0 calc(10px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.06 * var(--glow-i))) !important;
+}
+
+/* ----- In-game player list (search box, group rows, action icons, votekick) ----- */
+
+#playerSearchH {
+    background-color: rgba(20, 20, 20, 0.45) !important;
+    backdrop-filter: blur(10px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(160%) !important;
+    border-radius: 10px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+#plySearchH {
+    background: transparent !important;
+}
+
+#plySearch {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(6px) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(6px) saturate(150%) !important;
+    color: #fff !important;
+    border: 1px solid rgba(var(--glow-rgb), calc(0.55 * var(--glow-i))) !important;
+    border-radius: 8px !important;
+    box-shadow:
+        0 0 calc(8px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.18 * var(--glow-i))),
+        0 0 calc(14px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.08 * var(--glow-i))) !important;
+}
+
+#plySearch::placeholder {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.pListTable {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(10px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(160%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 10px !important;
+    box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.3),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1) !important;
+}
+
+.pListName {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.pListActions {
+    background: transparent !important;
+}
+
+/* Small round icon buttons (chat / invite / settings) in each row */
+.takeAction {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(4px) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(4px) saturate(150%) !important;
+    border-radius: 50% !important;
+    padding: 4px !important;
+}
+
+.takeAction:hover {
+    background-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+.muteUserBtn {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(4px) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(4px) saturate(150%) !important;
+    border-radius: 50% !important;
+    padding: 4px !important;
+}
+
+/* Votekick / Kick / Ban pill button */
+.takeActionBtn {
+    backdrop-filter: blur(5px) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(5px) saturate(150%) !important;
+    border: 1px solid rgba(var(--glow-rgb), calc(0.55 * var(--glow-i))) !important;
+    box-shadow:
+        0 0 calc(8px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.2 * var(--glow-i))),
+        0 0 calc(14px * var(--glow-i)) rgba(var(--glow-rgb), calc(0.08 * var(--glow-i))) !important;
+}
+
+/* @ENDMOD */
+
+/* ============================== MISC TEXT / WATERMARK / SCALE ============================== */
+
+/* @MOD:playtext */
+
+/* Play button — replace "CLICK TO PLAY" text with "Lock In" / "FuckShit" */
+#instructions {
+    font-size: 0 !important;
+}
+
+#instructions::before {
+    content: "@@PLAY_TOP@@" !important;
+    display: block !important;
+    font-size: 36px !important;
+    font-family: '@@FONT_FAMILY@@', @@FONT_FALLBACK@@ !important;
+    /*@MOD:rgb*/animation: rgbText 2s linear infinite !important;/*@ENDMOD*/
+}
+
+#instructions::after {
+    content: "@@PLAY_BOTTOM@@" !important;
+    display: block !important;
+    margin-top: 5px !important;
+    font-size: 36px !important;
+    font-family: '@@FONT_FAMILY@@', @@FONT_FALLBACK@@ !important;
+    /*@MOD:rgb*/animation: rgbText 2s linear infinite !important;/*@ENDMOD*/
+}
+
+/* @ENDMOD */
+
+/* @MOD:watermark */
+/* Watermark — always-visible credit line in the bottom-right corner */
+#uiBase::after {
+    content: "@@WATERMARK_TEXT@@" !important;
+    position: fixed !important;
+    bottom: 6px !important;
+    right: 10px !important;
+    font-size: @@WATERMARK_SIZE@@px !important;
+    font-family: '@@FONT_FAMILY@@', @@FONT_FALLBACK@@ !important;
+    color: rgba(255, 255, 255, 0.6) !important;
+    text-shadow: 0 0 4px rgba(0, 0, 0, 0.8) !important;
+    pointer-events: none !important;
+    z-index: 2147483647 !important;
+    /*@MOD:rgb*/animation: rgbText 4s linear infinite !important;/*@ENDMOD*/
+}
+/* @ENDMOD */
+
+/* Scale up the whole UI (~25% bigger — text, icons, buttons, everything).
+   #uiBase already has transform-origin: 0 0 in Krunker's base CSS, built
+   for exactly this kind of scaling. Width/height are compensated so the
+   scaled box still fills the full viewport instead of overflowing/clipping. */
+
+/* @MOD:scale */
+#uiBase {
+    transform: scale(@@UI_SCALE@@);
+    width: calc(100% / @@UI_SCALE@@);
+    height: calc(100% / @@UI_SCALE@@);
+}
+/* @ENDMOD */

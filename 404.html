@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Page Not Found — Krunker Resource Hub</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+<link rel="shortcut icon" href="assets/favicon.ico">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  .notfound{
+    min-height:70vh; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; text-align:center; padding:40px 20px; gap:16px;
+  }
+  .notfound .code{
+    font-family:'Baloo 2',sans-serif; font-weight:800; font-size:clamp(64px,14vw,140px);
+    line-height:1; letter-spacing:1px;
+    background:linear-gradient(90deg, #ff9fc6, #ffe08a 45%, #6be6e0);
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .notfound h1{ font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:22px; color:var(--text-0); }
+  .notfound p{ color:var(--text-1); font-size:14.5px; max-width:440px; }
+  .notfound .actions{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:8px; }
+  .notfound .btn{
+    display:inline-block; padding:11px 22px; border-radius:999px; font-weight:700; font-size:14px;
+    text-decoration:none; transition:.2s ease; font-family:'Plus Jakarta Sans',sans-serif;
+  }
+  .notfound .btn.primary{ background:var(--accent-gradient); color:#12081f; box-shadow:0 10px 24px -10px rgba(255,107,157,.5); }
+  .notfound .btn.primary:hover{ filter:brightness(1.08); transform:translateY(-2px); }
+  .notfound .btn.ghost{ background:rgba(255,255,255,.05); color:var(--text-1); border:1px solid var(--border-strong); }
+  .notfound .btn.ghost:hover{ background:rgba(255,255,255,.1); color:var(--text-0); transform:translateY(-2px); }
+</style>
+<link rel="stylesheet" href="assets/site-glow.css">
+<script>(function(){try{var v=localStorage.getItem("krh:reduceEffects");var r=v==="1"||(v!=="0"&&window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);if(r)document.documentElement.setAttribute("data-glow-effects","off");}catch(e){}})();</script>
+<script src="assets/site-glow.js" defer></script>
+</head>
+<body>
+<div class="shell">
+  <header>
+    <div class="logo-frame"><img src="assets/logo.png" alt="Krunker Resource Hub" class="logo-img"></div>
+  </header>
+
+  <div class="notfound">
+    <div class="code">404</div>
+    <h1>This page doesn't exist</h1>
+    <p>The link might be broken, or the page may have been moved or removed. Let's get you back on track.</p>
+    <div class="actions">
+      <a href="/krh/" class="btn primary">Back to Home</a>
+      <a href="/krh/community/login.html" class="btn ghost" id="profileLink">My Profile</a>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="community/supabase-client.js"></script>
+<script>(async () => {
+  try {
+    if (await getSessionUser()) {
+      const profile = await getMyProfile();
+      if (profile) {
+        document.getElementById("profileLink").href = `/krh/community/profile.html?user=${encodeURIComponent(profile.username)}`;
+      }
+    }
+  } catch (e) {}
+})();</script>
+</body>
+</html>

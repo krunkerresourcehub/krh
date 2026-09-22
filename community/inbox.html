@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inbox — Krunker Resource Hub</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+<link rel="shortcut icon" href="../assets/favicon.ico">
+<link rel="stylesheet" href="community.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  .inbox-list{ display:flex; flex-direction:column; gap:8px; }
+  .inbox-row{
+    display:flex; gap:12px; align-items:flex-start; padding:14px 16px; border-radius:20px;
+    border:1px solid var(--border); background:var(--surface-2); text-decoration:none; cursor:pointer;
+    transition:.15s ease; position:relative;
+  }
+  .inbox-row:hover{ border-color:var(--border-strong); }
+  .inbox-row.unread{ background:rgba(96,165,250,.08); border-color:rgba(96,165,250,.4); }
+  .inbox-row.read{ opacity:.72; }
+  .unread-dot{
+    width:9px; height:9px; border-radius:50%; background:var(--blue-glow); flex:none;
+    margin-top:7px;
+  }
+  .unread-dot.hidden-dot{ background:transparent; }
+  .inbox-icon{ font-size:20px; flex:none; width:22px; text-align:center; margin-top:2px; }
+  .inbox-body{ flex:1; min-width:0; }
+  .inbox-text{ font-size:13.5px; color:var(--text-1); line-height:1.5; }
+  .inbox-row.unread .inbox-text{ font-weight:700; color:var(--text-0); }
+  .inbox-text b{ color:var(--text-0); }
+  .inbox-reason{
+    margin-top:6px; font-size:12.5px; color:var(--text-2); background:rgba(255,255,255,.03);
+    border-left:2px solid var(--border-strong); padding:6px 10px; border-radius:0 6px 6px 0;
+    font-weight:400 !important;
+  }
+  .inbox-date{ font-size:11.5px; color:var(--text-2); margin-top:6px; font-weight:400 !important; }
+  .inbox-actions{ display:flex; flex-direction:column; gap:6px; flex:none; align-items:flex-end; }
+  .inbox-del, .inbox-toggle-read{
+    background:none; border:none; color:var(--text-2); font-size:12px; cursor:pointer; white-space:nowrap;
+  }
+  .inbox-del:hover{ color:#ff8b8b; }
+  .inbox-toggle-read:hover{ color:var(--blue-glow); }
+  .inbox-toolbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+  .unread-count-badge{
+    display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px;
+    padding:0 5px; border-radius:20px; background:var(--blue-glow); color:#05070f;
+    font-size:11px; font-weight:700; margin-left:6px; vertical-align:middle;
+  }
+</style>
+<link rel="stylesheet" href="../assets/site-glow.css">
+<script>(function(){try{var v=localStorage.getItem("krh:reduceEffects");var r=v==="1"||(v!=="0"&&window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);if(r)document.documentElement.setAttribute("data-glow-effects","off");}catch(e){}})();</script>
+<script src="../assets/site-glow.js" defer></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand"><a href="../index.html"><img src="../assets/logo.png" alt="Krunker Resource Hub" class="brand-logo">Krunker Resource Hub</a></div>
+    <div class="topnav" id="topnav"></div>
+  </div>
+
+  <div class="card">
+    <div class="inbox-toolbar">
+      <h2 style="margin:0;">Inbox<span id="inboxCountBadge"></span></h2>
+      <button class="btn-ghost" id="btnMarkAllRead">Mark all as read</button>
+    </div>
+    <div class="inbox-list" id="inboxList"><div class="empty">Loading...</div></div>
+  </div>
+</div>
+
+<script src="supabase-client.js"></script>
+<script>
+const TYPE_ICON = {
+  post_like: '\u{1F44D}', post_dislike: '\u{1F44E}', post_comment: '\u{1F4AC}',
+  comment_reply: '\u21A9\uFE0F', comment_like: '\u{1F44D}', comment_dislike: '\u{1F44E}',
+  post_edited: '\u270F\uFE0F', post_deleted: '\u{1F5D1}\uFE0F', warned: '\u26A0\uFE0F',
+  banned: '\u26D4', unbanned: '\u2705', new_follower: '\u{1F464}',
+};
+
+let me = null;
+
+function describe(n) {
+  const actor = n.actor?.display_name || 'Someone';
+  const title = n.post_title ? `"${n.post_title}"` : 'your post';
+  switch (n.type) {
+    case 'post_like': return `<b>${escapeHtml(actor)}</b> liked your post ${escapeHtml(title)}`;
+    case 'post_dislike': return `<b>${escapeHtml(actor)}</b> disliked your post ${escapeHtml(title)}`;
+    case 'post_comment': return `<b>${escapeHtml(actor)}</b> commented on your post ${escapeHtml(title)}`;
+    case 'comment_reply': return `<b>${escapeHtml(actor)}</b> replied to your comment on ${escapeHtml(title)}`;
+    case 'comment_like': return `<b>${escapeHtml(actor)}</b> liked your comment on ${escapeHtml(title)}`;
+    case 'comment_dislike': return `<b>${escapeHtml(actor)}</b> disliked your comment on ${escapeHtml(title)}`;
+    case 'post_edited': return `<b>${escapeHtml(actor)}</b> (staff) edited your post ${escapeHtml(title)}`;
+    case 'post_deleted': return `<b>${escapeHtml(actor)}</b> (staff) deleted your post ${escapeHtml(title)}`;
+    case 'warned': return `<b>${escapeHtml(actor)}</b> (staff) issued you a warning${n.post_title ? ` regarding ${escapeHtml(title)}` : ''}`;
+    case 'banned': return `<b>${escapeHtml(actor)}</b> (staff) banned your account`;
+    case 'unbanned': return `<b>${escapeHtml(actor)}</b> (staff) lifted your ban \u2014 you have full access again`;
+    case 'new_follower': return `<b>${escapeHtml(actor)}</b> started following you`;
+    default: return 'New notification';
+  }
+}
+
+async function boot() {
+  const profile = await getMyProfile();
+  if (!profile) { window.location.href = "login.html"; return; }
+  me = await getSessionUser();
+
+  const nav = document.getElementById("topnav");
+  let links = ``;
+  if (profile.role === "admin" || profile.role === "developer") {
+    links += `<a href="admin.html">Admin Panel</a>`;
+  }
+  if (profile.role === "developer") {
+    links += `<a href="developer.html">Developer Panel</a>`;
+  }
+  links += `<a href="messages.html" style="margin-left:6px;">Messages${unreadBadgeHtml(await getUnreadMessageCount(me.id))}</a>`;
+  links += `<a href="saved.html" style="margin-left:6px;">Saved</a>`;
+  links += `<a href="profile.html?user=${encodeURIComponent(profile.username)}" style="margin-left:6px;">My Profile</a>`;
+  nav.innerHTML = links;
+
+  document.getElementById('btnMarkAllRead').addEventListener('click', markAllRead);
+
+  loadInbox();
+}
+
+async function loadInbox() {
+  const listEl = document.getElementById('inboxList');
+
+  const { data, error } = await sb
+    .from('notifications')
+    .select('*, actor:profiles!notifications_actor_id_fkey(username,display_name,avatar_url)')
+    .eq('user_id', me.id)
+    .order('created_at', { ascending: false })
+    .limit(100);
+
+  if (error) {
+    listEl.innerHTML = `<div class="empty">Failed to load your inbox.</div>`;
+    return;
+  }
+  if (!data.length) {
+    listEl.innerHTML = `<div class="empty">Nothing here yet — likes, replies, and staff notices will show up here.</div>`;
+    updateUnreadBadge(0);
+    return;
+  }
+
+  listEl.innerHTML = data.map(n => `
+    <div class="inbox-row ${n.read ? 'read' : 'unread'}" data-id="${n.id}" data-post-id="${n.post_id || ''}" data-actor-username="${escapeHtml(n.actor?.username || '')}" data-read="${n.read}">
+      <div class="unread-dot${n.read ? ' hidden-dot' : ''}"></div>
+      <div class="inbox-icon">${TYPE_ICON[n.type] || '\u{1F514}'}</div>
+      <div class="inbox-body">
+        <div class="inbox-text">${describe(n)}</div>
+        ${n.reason ? `<div class="inbox-reason">${escapeHtml(n.reason)}</div>` : ''}
+        <div class="inbox-date">${formatDate(n.created_at)}</div>
+      </div>
+      <div class="inbox-actions">
+        <button class="inbox-toggle-read" data-toggle-id="${n.id}">${n.read ? 'Mark unread' : 'Mark read'}</button>
+        <button class="inbox-del" data-del-id="${n.id}">Remove</button>
+      </div>
+    </div>
+  `).join('');
+
+  updateUnreadBadge(data.filter(n => !n.read).length);
+
+  listEl.querySelectorAll('.inbox-row').forEach(row => {
+    row.addEventListener('click', async (e) => {
+      if (e.target.closest('button')) return;
+      const id = row.getAttribute('data-id');
+      const postId = row.getAttribute('data-post-id');
+      const actorUsername = row.getAttribute('data-actor-username');
+      if (row.getAttribute('data-read') === 'false') {
+        await sb.from('notifications').update({ read: true }).eq('id', id);
+      }
+      if (postId) {
+        window.location.href = `post.html?id=${encodeURIComponent(postId)}`;
+      } else if (actorUsername) {
+        window.location.href = `profile.html?user=${encodeURIComponent(actorUsername)}`;
+      } else {
+        loadInbox();
+      }
+    });
+  });
+
+  listEl.querySelectorAll('[data-toggle-id]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const id = btn.getAttribute('data-toggle-id');
+      const row = btn.closest('.inbox-row');
+      const isRead = row.getAttribute('data-read') === 'true';
+      await sb.from('notifications').update({ read: !isRead }).eq('id', id);
+      loadInbox();
+    });
+  });
+
+  listEl.querySelectorAll('[data-del-id]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const { error } = await sb.from('notifications').delete().eq('id', btn.getAttribute('data-del-id'));
+      if (error) { alert('Failed to remove: ' + error.message); return; }
+      loadInbox();
+    });
+  });
+}
+
+function updateUnreadBadge(count) {
+  const badgeEl = document.getElementById('inboxCountBadge');
+  badgeEl.innerHTML = count > 0 ? `<span class="unread-count-badge">${count > 99 ? '99+' : count}</span>` : '';
+  document.title = count > 0 ? `(${count}) Inbox — Krunker Resource Hub` : 'Inbox — Krunker Resource Hub';
+}
+
+async function markAllRead() {
+  await sb.from('notifications').update({ read: true }).eq('user_id', me.id).eq('read', false);
+  loadInbox();
+}
+
+boot();
+</script>
+</body>
+</html>

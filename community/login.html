@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — Krunker Resource Hub</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+<link rel="shortcut icon" href="../assets/favicon.ico">
+<link rel="stylesheet" href="community.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="../assets/site-glow.css">
+<script>(function(){try{var v=localStorage.getItem("krh:reduceEffects");var r=v==="1"||(v!=="0"&&window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);if(r)document.documentElement.setAttribute("data-glow-effects","off");}catch(e){}})();</script>
+<script src="../assets/site-glow.js" defer></script>
+</head>
+<body>
+<div class="wrap narrow">
+  <div class="topbar">
+    <div class="brand"><a href="../index.html"><img src="../assets/logo.png" alt="Krunker Resource Hub" class="brand-logo">Krunker Resource Hub</a></div>
+  </div>
+
+  <div class="card">
+    <h1>Login</h1>
+    <p class="subtitle">Log in to post, edit, and delete your posts.</p>
+
+    <label>Email</label>
+    <input type="email" id="fEmail" placeholder="email@example.com">
+
+    <label>Password</label>
+    <div class="pw-wrap">
+      <input type="password" id="fPassword" placeholder="Your password">
+      <button class="pw-toggle" data-target="fPassword" tabindex="-1"></button>
+    </div>
+    <p class="hint" style="text-align:right; margin-top:8px;"><a href="forgot-password.html">Forgot your password?</a></p>
+
+    <button class="btn" id="btnLogin">Login</button>
+    <div class="msg" id="msg"></div>
+
+    <div class="divider">or</div>
+    <a href="signup.html" class="btn ghost" style="display:block; text-align:center;">Don't have an account? Sign Up</a>
+  </div>
+</div>
+
+<script src="supabase-client.js"></script>
+<script>
+document.getElementById("btnLogin").addEventListener("click", async () => {
+  const msg = document.getElementById("msg");
+  const email = document.getElementById("fEmail").value.trim();
+  const password = document.getElementById("fPassword").value;
+  if (!email || !password) {
+    msg.className = "msg error show"; msg.textContent = "Please fill in email & password.";
+    return;
+  }
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  if (error) {
+    msg.className = "msg error show"; msg.textContent = error.message;
+    return;
+  }
+  const profile = await getMyProfile();
+  window.location.href = profile ? `profile.html?user=${encodeURIComponent(profile.username)}` : "../index.html";
+});
+</script>
+</body>
+</html>

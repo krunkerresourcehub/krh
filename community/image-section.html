@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Krunker Resource Hub</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+<link rel="shortcut icon" href="../assets/favicon.ico">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#120c28">
+<meta name="description" content="Community submissions on Krunker Resource Hub.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Krunker Resource Hub">
+<meta property="og:title" content="Krunker Resource Hub">
+<meta property="og:description" content="Community submissions on Krunker Resource Hub.">
+<meta property="og:image" content="../assets/logo.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Krunker Resource Hub">
+<meta name="twitter:description" content="Community submissions on Krunker Resource Hub.">
+<meta name="twitter:image" content="../assets/logo.png">
+<link rel="stylesheet" href="community.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="../assets/site-glow.css">
+<script>(function(){try{var v=localStorage.getItem("krh:reduceEffects");var r=v==="1"||(v!=="0"&&window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);if(r)document.documentElement.setAttribute("data-glow-effects","off");}catch(e){}})();</script>
+<script src="../assets/site-glow.js" defer></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand"><a href="../index.html"><img src="../assets/logo.png" alt="Krunker Resource Hub" class="brand-logo">Krunker Resource Hub</a></div>
+    <div class="topnav" id="topnav"></div>
+  </div>
+
+  <div class="card">
+    <h1 id="pageTitle">Posts</h1>
+    <p class="subtitle" id="pageSubtitle">Community submissions for this section.</p>
+  </div>
+
+  <div class="card" id="submitCard" style="display:none;">
+    <h2 id="submitHeading">Post Here</h2>
+    <label>Title</label>
+    <input type="text" id="pTitle" placeholder="Title">
+    <label id="imageLabel">Image (PNG)</label>
+    <input type="file" id="pImage" accept="image/png">
+    <p class="hint" id="uploadSizeHint"></p>
+    <div id="pPreviewWrap" style="display:none; margin:12px 0;">
+      <img id="pPreview" alt="Preview" style="max-width:160px; max-height:160px; border-radius:18px; border:1px solid var(--border); background:#05070f;">
+    </div>
+    <label>Description</label>
+    <textarea id="pDescription" placeholder="Describe this image (optional)"></textarea>
+    <button class="btn green" id="btnPublish">Publish</button>
+    <div class="msg" id="createMsg"></div>
+  </div>
+
+  <div class="card" id="loginPrompt">
+    <p class="subtitle" style="margin-bottom:14px;">Log in to post here.</p>
+    <a href="login.html" class="btn ghost" style="display:block; text-align:center; margin-bottom:10px;">Login</a>
+    <a href="signup.html" class="btn" style="display:block; text-align:center;">Sign Up</a>
+  </div>
+
+  <div class="card" id="logoutCard" style="display:none;">
+    <button class="btn logout-btn" id="btnLogout">Logout</button>
+  </div>
+</div>
+
+<script src="supabase-client.js"></script>
+<script>
+let me = null;
+let pendingFile = null;
+
+const params = new URLSearchParams(window.location.search);
+const CAT = params.get("cat") || "general";
+const TITLE = params.get("title") || "Posts";
+
+document.title = TITLE + " — Krunker Resource Hub";
+document.getElementById("pageTitle").textContent = TITLE;
+document.getElementById("pageSubtitle").textContent = `Community-made ${TITLE.toLowerCase()} images. Upload a PNG so others can grab it.`;
+document.getElementById("submitHeading").textContent = `Post Your ${TITLE}`;
+document.getElementById("imageLabel").textContent = `${TITLE} Image (PNG)`;
+
+function setPreview(file) {
+  pendingFile = file;
+  const url = URL.createObjectURL(file);
+  document.getElementById("pPreview").src = url;
+  document.getElementById("pPreviewWrap").style.display = "block";
+}
+
+async function boot() {
+  me = await getSessionUser();
+  if (me) await getMyProfile(); // triggers ban-check + redirect to banned.html if this account is banned
+  const nav = document.getElementById("topnav");
+  nav.innerHTML = "";
+  document.getElementById("uploadSizeHint").textContent =
+    `Max ${formatMaxSize(UPLOAD_MAX_BYTES_DEFAULT)} per image.`;
+
+  if (me) {
+    document.getElementById("logoutCard").style.display = "block";
+    document.getElementById("btnLogout").addEventListener("click", async (e) => {
+      e.preventDefault();
+      if (!confirm("Are you sure you want to log out?")) return;
+      await sb.auth.signOut(); window.location.reload();
+    });
+
+    document.getElementById("submitCard").style.display = "block";
+    document.getElementById("loginPrompt").style.display = "none";
+  }
+}
+
+document.getElementById("pImage")?.addEventListener("change", (e) => {
+  const msg = document.getElementById("createMsg");
+  const file = e.target.files[0];
+  if (!file) return;
+  const sizeError = checkUploadSize(file);
+  if (sizeError) {
+    msg.className = "msg error show"; msg.textContent = sizeError;
+    e.target.value = "";
+    pendingFile = null;
+    document.getElementById("pPreviewWrap").style.display = "none";
+    return;
+  }
+  msg.className = ""; msg.textContent = "";
+  setPreview(file);
+});
+
+document.getElementById("btnPublish")?.addEventListener("click", async () => {
+  const msg = document.getElementById("createMsg");
+  const title = document.getElementById("pTitle").value.trim();
+  if (!title || !pendingFile) {
+    msg.className = "msg error show"; msg.textContent = "Title & a PNG image are required.";
+    return;
+  }
+  const sizeError = checkUploadSize(pendingFile);
+  if (sizeError) {
+    msg.className = "msg error show"; msg.textContent = sizeError;
+    return;
+  }
+
+  const btn = document.getElementById("btnPublish");
+  btn.disabled = true; btn.textContent = "Publishing...";
+
+  const path = `${me.id}/${CAT}-${Date.now()}.png`;
+  const { error: uploadError } = await sb.storage
+    .from("crosshairs")
+    .upload(path, pendingFile, { upsert: true, cacheControl: "3600", contentType: "image/png" });
+
+  if (uploadError) {
+    msg.className = "msg error show"; msg.textContent = uploadError.message;
+    btn.disabled = false; btn.textContent = "Publish";
+    return;
+  }
+
+  const { data: publicData } = sb.storage.from("crosshairs").getPublicUrl(path);
+  const content = JSON.stringify({
+    file_url: publicData.publicUrl,
+    description: document.getElementById("pDescription").value.trim(),
+  });
+
+  const { error } = await sb.from("posts").insert({
+    author_id: me.id, title, content, status: "published", category: CAT,
+  });
+  btn.disabled = false; btn.textContent = "Publish";
+  if (error) {
+    msg.className = "msg error show"; msg.textContent = error.message;
+    return;
+  }
+  msg.className = "msg ok show"; msg.textContent = "Posted!";
+  document.getElementById("pTitle").value = "";
+  document.getElementById("pImage").value = "";
+  document.getElementById("pDescription").value = "";
+  document.getElementById("pPreviewWrap").style.display = "none";
+  pendingFile = null;
+  try {
+    if (window.parent && typeof window.parent.loadCrosshairGallery === "function") {
+      window.parent.loadCrosshairGallery(CAT);
+    }
+  } catch(e) { /* cross-origin or not embedded — ignore */ }
+});
+
+boot();
+</script>
+</body>
+</html>

@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Account Banned — Krunker Resource Hub</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+<link rel="shortcut icon" href="../assets/favicon.ico">
+<link rel="stylesheet" href="community.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  .banned-wrap{ max-width:520px; margin:60px auto 24px; text-align:center; }
+  .banned-icon{ font-size:44px; margin-bottom:14px; line-height:1; }
+  .banned-reason{
+    margin-top:18px; text-align:left; font-size:13.5px; color:var(--text-1);
+    background:rgba(240,69,69,.08); border:1px solid rgba(240,69,69,.35); border-radius:18px;
+    padding:14px 16px; line-height:1.55; white-space:pre-wrap;
+  }
+
+  .appeal-wrap{ max-width:520px; margin:0 auto; }
+
+  .status-box{
+    text-align:left; border-radius:18px; padding:14px 16px; line-height:1.55; font-size:13.5px;
+  }
+  .status-box.pending{ background:rgba(245,165,36,.08); border:1px solid rgba(245,165,36,.35); color:var(--text-1); }
+  .status-box.rejected{ background:rgba(240,69,69,.08); border:1px solid rgba(240,69,69,.35); color:var(--text-1); }
+  .status-box .status-title{ font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:15px; margin-bottom:6px; color:var(--text-0); }
+
+  #dropzone{
+    border:2px dashed var(--border-strong); border-radius:18px; padding:20px;
+    text-align:center; color:var(--text-2); font-size:13.5px; cursor:pointer;
+    transition:.15s ease;
+  }
+  #dropzone.drag{ background:rgba(122,150,255,.08); border-color:#7a96ff; color:var(--text-1); }
+  #previewGrid{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(110px,1fr));
+    gap:10px; margin-top:12px;
+  }
+  .preview-thumb{ position:relative; border-radius:16px; overflow:hidden; border:1px solid var(--border); background:#05070f; }
+  .preview-thumb img{ width:100%; height:90px; object-fit:cover; display:block; }
+  .preview-thumb .file-chip{
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+    height:90px; padding:8px; text-align:center;
+  }
+  .preview-thumb .file-ext{
+    font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:11px; letter-spacing:.4px;
+    color:var(--text-0); background:var(--surface-2); border:1px solid var(--border);
+    border-radius:14px; padding:3px 8px; text-transform:uppercase;
+  }
+  .preview-thumb .file-name{
+    font-size:11px; color:var(--text-2); max-width:100%; overflow:hidden;
+    text-overflow:ellipsis; white-space:nowrap; padding:0 4px;
+  }
+  .preview-thumb button{
+    position:absolute; top:4px; right:4px; width:20px; height:20px; border-radius:50%;
+    border:none; background:rgba(0,0,0,.7); color:#fff; font-size:12px; line-height:1;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .preview-thumb button:hover{ background:var(--red); }
+</style>
+<link rel="stylesheet" href="../assets/site-glow.css">
+<script>(function(){try{var v=localStorage.getItem("krh:reduceEffects");var r=v==="1"||(v!=="0"&&window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);if(r)document.documentElement.setAttribute("data-glow-effects","off");}catch(e){}})();</script>
+<script src="../assets/site-glow.js" defer></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand"><a href="../index.html"><img src="../assets/logo.png" alt="Krunker Resource Hub" class="brand-logo">Krunker Resource Hub</a></div>
+  </div>
+
+  <div class="card banned-wrap">
+    <div class="banned-icon">⛔</div>
+    <h1>Your account has been banned</h1>
+    <p class="subtitle">This account has been banned. You're still logged in, but this is the only page it can open — no browsing, posting, or account settings.</p>
+    <div class="banned-reason" id="banReason" style="display:none;"></div>
+  </div>
+
+  <div class="appeal-wrap">
+
+    <div class="card" id="statusCard" style="display:none;">
+      <h2>Appeal Status</h2>
+      <div id="statusBox"></div>
+    </div>
+
+    <div class="card" id="appealCard" style="display:none;">
+      <h2>Appeal Ban</h2>
+      <p class="subtitle">Think this ban was a mistake? Open a ticket below — same as reporting content or making a post, just for your account. A developer will review it.</p>
+
+      <label>Your Username</label>
+      <input type="text" id="fUsername" placeholder="Your Krunker Resource Hub username">
+
+      <label>Reason You Were Banned</label>
+      <textarea id="fBanReason" placeholder="The reason given for your ban" style="min-height:70px;"></textarea>
+
+      <label>Why Should We Revoke Your Ban?</label>
+      <textarea id="fMessage" placeholder="Explain what happened, why you believe the ban was a mistake or is no longer justified, and anything else we should know." style="min-height:140px;"></textarea>
+
+      <div class="row2">
+        <div>
+          <label>Krunker Username / In-Game Name</label>
+          <input type="text" id="fKrunker" placeholder="Your in-game name">
+        </div>
+        <div>
+          <label>Discord ID</label>
+          <input type="text" id="fDiscordId" placeholder="e.g. 123456789012345678">
+        </div>
+      </div>
+
+      <label>Discord Username</label>
+      <input type="text" id="fDiscordUsername" placeholder="e.g. yourname">
+
+      <label>Proof</label>
+      <div id="dropzone" tabindex="0">
+        Click to upload, drag &amp; drop, or paste (Ctrl+V) files — screenshots, docs (.doc/.docx), .txt, .md
+      </div>
+      <input type="file" id="fProofInput" accept="image/*,.doc,.docx,.txt,.md" multiple style="display:none;">
+      <div id="previewGrid"></div>
+
+      <button class="btn danger" id="btnSubmit" style="margin-top:18px;">Submit Appeal</button>
+      <div class="msg" id="appealMsg"></div>
+    </div>
+
+  </div>
+</div>
+
+<script src="supabase-client.js"></script>
+<script>
+let me = null;
+let myProfile = null;
+let proofFiles = []; /* array of File objects, any accepted type */
+
+const ACCEPTED_EXT = ["doc", "docx", "txt", "md"];
+const MAX_FILES = 8;
+const MAX_SIZE = 15 * 1024 * 1024; // 15MB per file
+
+function isAcceptedFile(file) {
+  if (file.type && file.type.startsWith("image/")) return true;
+  const ext = (file.name.split(".").pop() || "").toLowerCase();
+  return ACCEPTED_EXT.includes(ext);
+}
+
+async function boot() {
+  me = await getSessionUser();
+  if (!me) { window.location.href = "login.html"; return; }
+
+  myProfile = await getMyProfile();
+  if (!myProfile) return; // not actually banned (or redirected already) — getMyProfile handles it
+  if (!myProfile.banned) { window.location.href = `profile.html?user=${encodeURIComponent(myProfile.username)}`; return; }
+
+  const reason = myProfile.ban_reason || "";
+  if (reason) {
+    const el = document.getElementById("banReason");
+    el.textContent = `Reason given: ${reason}`;
+    el.style.display = "block";
+  }
+
+  // prefill what we already know about them
+  document.getElementById("fUsername").value = myProfile.username || "";
+  document.getElementById("fBanReason").value = reason;
+  document.getElementById("fKrunker").value = myProfile.krunker_username || "";
+  document.getElementById("fDiscordId").value = myProfile.discord_id || "";
+  document.getElementById("fDiscordUsername").value = myProfile.discord_username || "";
+
+  await checkExistingAppeal();
+}
+
+async function checkExistingAppeal() {
+  const { data, error } = await sb
+    .from("ban_appeals")
+    .select("*")
+    .eq("user_id", me.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) { console.error(error); document.getElementById("appealCard").style.display = "block"; return; }
+
+  if (data && data.status === "pending") {
+    const box = document.getElementById("statusBox");
+    box.innerHTML = `
+      <div class="status-box pending">
+        <div class="status-title">Pending review</div>
+        You submitted an appeal on ${formatDate(data.created_at)}. A developer hasn't reviewed it yet — no need to submit another one.
+      </div>`;
+    document.getElementById("statusCard").style.display = "block";
+    document.getElementById("appealCard").style.display = "none";
+    return;
+  }
+
+  if (data && data.status === "rejected") {
+    const box = document.getElementById("statusBox");
+    box.innerHTML = `
+      <div class="status-box rejected">
+        <div class="status-title">Previous appeal rejected</div>
+        Your appeal from ${formatDate(data.created_at)} was reviewed and rejected.${data.reviewer_note ? ` Note from the team: "${escapeHtml(data.reviewer_note)}"` : ""}
+        You can submit a new appeal below if something has changed.
+      </div>`;
+    document.getElementById("statusCard").style.display = "block";
+  }
+
+  document.getElementById("appealCard").style.display = "block";
+}
+
+/* ---------- proof files: click / drag / paste ---------- */
+const dropzone = document.getElementById("dropzone");
+const proofInput = document.getElementById("fProofInput");
+const previewGrid = document.getElementById("previewGrid");
+
+dropzone.addEventListener("click", () => proofInput.click());
+
+proofInput.addEventListener("change", (e) => {
+  addProofFiles(Array.from(e.target.files));
+  proofInput.value = "";
+});
+
+dropzone.addEventListener("dragover", (e) => { e.preventDefault(); dropzone.classList.add("drag"); });
+dropzone.addEventListener("dragleave", () => dropzone.classList.remove("drag"));
+dropzone.addEventListener("drop", (e) => {
+  e.preventDefault();
+  dropzone.classList.remove("drag");
+  const files = Array.from(e.dataTransfer.files).filter(isAcceptedFile);
+  addProofFiles(files);
+});
+
+document.addEventListener("paste", (e) => {
+  if (document.getElementById("appealCard").style.display === "none") return;
+  const items = Array.from(e.clipboardData?.items || []);
+  const files = items.filter(it => it.type && it.type.startsWith("image/")).map(it => it.getAsFile()).filter(Boolean);
+  if (files.length) addProofFiles(files);
+});
+
+function addProofFiles(files) {
+  const msg = document.getElementById("appealMsg");
+  files.forEach(file => {
+    if (proofFiles.length >= MAX_FILES) {
+      msg.className = "msg error show"; msg.textContent = `You can attach up to ${MAX_FILES} files.`;
+      return;
+    }
+    if (!isAcceptedFile(file)) {
+      msg.className = "msg error show"; msg.textContent = `"${file.name}" isn't a supported file type.`;
+      return;
+    }
+    if (file.size > MAX_SIZE) {
+      msg.className = "msg error show"; msg.textContent = `"${file.name}" is too large (max 15MB).`;
+      return;
+    }
+
+    proofFiles.push(file);
+    const thumb = document.createElement("div");
+    thumb.className = "preview-thumb";
+    if (file.type && file.type.startsWith("image/")) {
+      const url = URL.createObjectURL(file);
+      thumb.innerHTML = `<img src="${url}"><button type="button">✕</button>`;
+    } else {
+      const ext = (file.name.split(".").pop() || "file").toUpperCase();
+      thumb.innerHTML = `
+        <div class="file-chip">
+          <span class="file-ext">${escapeHtml(ext)}</span>
+          <span class="file-name">${escapeHtml(file.name)}</span>
+        </div>
+        <button type="button">✕</button>`;
+    }
+    thumb.querySelector("button").addEventListener("click", () => {
+      const idx = proofFiles.indexOf(file);
+      if (idx > -1) proofFiles.splice(idx, 1);
+      thumb.remove();
+    });
+    previewGrid.appendChild(thumb);
+  });
+}
+
+/* ---------- submit ---------- */
+document.getElementById("btnSubmit").addEventListener("click", async () => {
+  const msg = document.getElementById("appealMsg");
+  const username = document.getElementById("fUsername").value.trim();
+  const banReason = document.getElementById("fBanReason").value.trim();
+  const message = document.getElementById("fMessage").value.trim();
+  const krunker = document.getElementById("fKrunker").value.trim();
+  const discordId = document.getElementById("fDiscordId").value.trim();
+  const discordUsername = document.getElementById("fDiscordUsername").value.trim();
+
+  if (!username || !banReason || !message) {
+    msg.className = "msg error show";
+    msg.textContent = "Username, ban reason, and your explanation are all required.";
+    return;
+  }
+  if (!proofFiles.length) {
+    msg.className = "msg error show";
+    msg.textContent = "Please attach at least one piece of proof.";
+    return;
+  }
+
+  const btn = document.getElementById("btnSubmit");
+  btn.disabled = true; btn.textContent = "Submitting...";
+
+  try {
+    const proofUrls = [];
+    for (let i = 0; i < proofFiles.length; i++) {
+      const f = proofFiles[i];
+      const ext = (f.name.split(".").pop() || "bin").toLowerCase();
+      const path = `${me.id}/${Date.now()}-${i}.${ext}`;
+      const { error: upErr } = await sb.storage.from("ban-appeal-proofs")
+        .upload(path, f, { upsert: true, cacheControl: "3600" });
+      if (upErr) throw upErr;
+      const { data } = sb.storage.from("ban-appeal-proofs").getPublicUrl(path);
+      proofUrls.push({ url: data.publicUrl, name: f.name, type: f.type || "", size: f.size });
+    }
+
+    const { error } = await sb.from("ban_appeals").insert({
+      user_id: me.id,
+      username,
+      ban_reason: banReason,
+      message,
+      krunker_username: krunker || null,
+      discord_id: discordId || null,
+      discord_username: discordUsername || null,
+      proof_files: proofUrls,
+      status: "pending",
+    });
+    if (error) throw error;
+
+    msg.className = "msg ok show";
+    msg.textContent = "Appeal submitted. A developer will review it soon.";
+    document.getElementById("appealCard").style.display = "none";
+    await checkExistingAppeal();
+  } catch (err) {
+    msg.className = "msg error show";
+    msg.textContent = err.message || "Something went wrong.";
+  } finally {
+    btn.disabled = false; btn.textContent = "Submit Appeal";
+  }
+});
+
+boot();
+</script>
+</body>
+</html>

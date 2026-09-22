@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>History Logs — Krunker Resource Hub</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+<link rel="shortcut icon" href="../assets/favicon.ico">
+<link rel="stylesheet" href="community.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  /* Specific to this page — everything else uses community.css */
+  .log-row{
+    display:flex; gap:14px; align-items:flex-start;
+    border:1px solid var(--border); border-radius:20px;
+    padding:14px 16px; margin-bottom:10px; background:var(--surface);
+  }
+  .log-icon{
+    flex:0 0 auto; width:30px; height:30px; border-radius:16px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px; font-weight:700; border:1px solid var(--border);
+    background:var(--bg-1);
+  }
+  .log-body{flex:1 1 auto; min-width:0;}
+  .log-head{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+  .log-action{
+    padding:3px 9px; border-radius:20px; font-size:11px;
+    font-weight:700; text-transform:uppercase; letter-spacing:.4px;
+    border:1px solid currentColor;
+  }
+  .log-line{font-size:14px; color:var(--text-0); margin-top:7px; line-height:1.5; word-break:break-word;}
+  .log-line a{color:var(--blue-glow);}
+  .log-reason{
+    font-size:13px; color:var(--text-1); margin-top:7px; line-height:1.5;
+    border-left:2px solid var(--border-strong); padding-left:10px; white-space:pre-wrap;
+  }
+  .log-time{font-size:11.5px; color:var(--text-2); white-space:nowrap;}
+  .log-id{font-size:11px; color:var(--text-2); margin-top:6px; font-family:monospace;}
+
+  .stat-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px;}
+  @media(max-width:700px){.stat-grid{grid-template-columns:repeat(2,1fr);}}
+  .stat{
+    border:1px solid var(--border); border-radius:19px;
+    padding:14px 16px; background:var(--bg-1);
+  }
+  .stat .num{font-family:'Baloo 2',sans-serif; font-size:21px; font-weight:800; color:var(--text-0);}
+  .stat .lbl{font-size:11.5px; color:var(--text-2); text-transform:uppercase; letter-spacing:.5px; margin-top:4px;}
+
+  .filter-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px;}
+  @media(max-width:820px){.filter-grid{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:480px){.filter-grid{grid-template-columns:1fr;}}
+
+  .loading-row{opacity:.5; pointer-events:none;}
+</style>
+<link rel="stylesheet" href="../assets/site-glow.css">
+<script>(function(){try{var v=localStorage.getItem("krh:reduceEffects");var r=v==="1"||(v!=="0"&&window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);if(r)document.documentElement.setAttribute("data-glow-effects","off");}catch(e){}})();</script>
+<script src="../assets/site-glow.js" defer></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand"><a href="../index.html"><img src="../assets/logo.png" alt="Krunker Resource Hub" class="brand-logo">Krunker Resource Hub</a></div>
+    <div class="topnav" id="topnav"></div>
+  </div>
+
+  <div class="card">
+    <h1>History Logs</h1>
+    <p class="subtitle">
+      Every staff action on the community, newest first. This log is append-only —
+      nothing here can be edited or deleted from the website, not even by a Developer.
+    </p>
+    <div class="stat-grid" id="stats">
+      <div class="stat"><div class="num">—</div><div class="lbl">Total</div></div>
+      <div class="stat"><div class="num">—</div><div class="lbl">Last 24h</div></div>
+      <div class="stat"><div class="num">—</div><div class="lbl">Last 7 days</div></div>
+      <div class="stat"><div class="num">—</div><div class="lbl">Staff active</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Filters</h2>
+    <div class="filter-grid">
+      <select id="filterAction">
+        <option value="all">All actions</option>
+        <optgroup label="Posts">
+          <option value="post_publish">Published post</option>
+          <option value="post_unpublish">Unpublished post</option>
+          <option value="post_edit">Edited post</option>
+          <option value="post_delete">Deleted post</option>
+        </optgroup>
+        <optgroup label="Users">
+          <option value="user_ban">Banned user</option>
+          <option value="user_unban">Unbanned user</option>
+          <option value="user_warn">Warned user</option>
+        </optgroup>
+        <optgroup label="Roles">
+          <option value="role_grant_admin">Granted Admin</option>
+          <option value="role_revoke_admin">Revoked Admin</option>
+        </optgroup>
+        <optgroup label="Appeals">
+          <option value="appeal_approve">Approved appeal</option>
+          <option value="appeal_reject">Rejected appeal</option>
+        </optgroup>
+        <optgroup label="Comments">
+          <option value="comment_delete">Deleted comment</option>
+        </optgroup>
+      </select>
+
+      <select id="filterActor">
+        <option value="all">All staff</option>
+      </select>
+
+      <select id="filterRange">
+        <option value="all">All time</option>
+        <option value="1">Last 24 hours</option>
+        <option value="7">Last 7 days</option>
+        <option value="30">Last 30 days</option>
+      </select>
+
+      <input type="text" id="filterSearch" placeholder="Search target / reason...">
+    </div>
+    <div class="hint" id="resultCount" style="margin-top:12px;"></div>
+  </div>
+
+  <div class="card">
+    <h2>Activity</h2>
+    <div id="logList"><div class="empty">Loading...</div></div>
+    <button class="btn ghost" id="btnMore" style="display:none;">Load more</button>
+  </div>
+
+  <div class="card">
+    <button class="btn logout-btn" id="btnLogout">Logout</button>
+  </div>
+</div>
+
+<script src="supabase-client.js"></script>
+<script>
+/* ---------------------------------------------------------------
+   PERFORMANCE NOTE
+   All filtering, sorting, and paging is done in the DATABASE, not in
+   the browser. Only 25 rows per page are fetched, and only the
+   columns that are actually displayed (the "meta" column is never
+   fetched since it isn't rendered here).
+
+   Paging uses KEYSET, not offset: the next page asks for "rows whose
+   created_at is earlier than the last row's". Offset paging gets
+   slower the deeper you go, since the database still has to skip
+   past every skipped row; keyset always jumps straight through the
+   index.
+   --------------------------------------------------------------- */
+
+const PAGE_SIZE = 25;
+const COLUMNS = "id,actor_id,actor_username,actor_display_name,actor_role," +
+                "action,target_type,target_id,target_label,reason,created_at";
+
+let rows = [];          // rows currently displayed
+let cursor = null;      // created_at of the last row (for keyset paging)
+let hasMore = false;
+let busy = false;
+let reqId = 0;          // request marker, used to discard stale filter responses
+
+async function boot() {
+  const profile = await requireRole(["admin", "developer"]);
+  if (!profile) return;
+
+  const nav = document.getElementById("topnav");
+  let links = `<a href="profile.html?user=${encodeURIComponent(profile.username)}">My Profile</a><a href="admin.html">Admin Panel</a>`;
+  if (profile.role === "developer") links += `<a href="developer.html">Developer Panel</a>`;
+  links += `<span style="color:var(--text-1); font-size:13.5px; margin-left:4px;">${escapeHtml(profile.display_name)} ${roleBadge(profile.role)}</span>`;
+  links += `<a href="account-settings.html" style="margin-left:6px;">Account</a>`;
+  links += `<a href="settings.html" style="margin-left:6px;">Theme</a>`;
+  nav.innerHTML = links;
+
+  document.getElementById("btnLogout").addEventListener("click", async (e) => {
+    e.preventDefault();
+    if (!confirm("Are you sure you want to log out?")) return;
+    await sb.auth.signOut(); window.location.href = "../index.html";
+  });
+
+  ["filterAction", "filterActor", "filterRange"].forEach(id =>
+    document.getElementById(id).addEventListener("change", reload)
+  );
+
+  /* Search is debounced by 350ms. Without this, every keystroke
+     would trigger a separate database query. */
+  let timer = null;
+  document.getElementById("filterSearch").addEventListener("input", () => {
+    clearTimeout(timer);
+    timer = setTimeout(reload, 350);
+  });
+
+  document.getElementById("btnMore").addEventListener("click", () => loadPage(false));
+
+  // Tiga request awal jalan BARENGAN, bukan antre satu-satu
+  loadPage(true);
+  loadStats();
+  loadStaffList();
+}
+
+// Statistik dihitung database lewat RPC — satu round-trip, empat angka
+async function loadStats() {
+  const { data, error } = await sb.rpc("activity_log_stats");
+  if (error) { console.error(error); return; }
+  const s = Array.isArray(data) ? data[0] : data;
+  if (!s) return;
+  const vals = [
+    [s.total, "Total"], [s.last_24h, "Last 24h"],
+    [s.last_7d, "Last 7 days"], [s.staff_active, "Staff active"],
+  ];
+  document.getElementById("stats").innerHTML = vals.map(([n, l]) =>
+    `<div class="stat"><div class="num">${n ?? 0}</div><div class="lbl">${l}</div></div>`
+  ).join("");
+}
+
+/* The "All staff" dropdown is populated from the profiles table (just
+   a handful of rows), rather than scanning thousands of log entries
+   to find unique names. */
+async function loadStaffList() {
+  const { data, error } = await sb
+    .from("profiles")
+    .select("id,display_name,username")
+    .in("role", ["admin", "developer"])
+    .order("display_name");
+  if (error || !data) return;
+  const sel = document.getElementById("filterActor");
+  sel.innerHTML = `<option value="all">All staff</option>` +
+    data.map(u => `<option value="${escapeHtml(u.id)}">${escapeHtml(u.display_name || u.username)}</option>`).join("");
+}
+
+function reload() {
+  cursor = null;
+  rows = [];
+  loadPage(true);
+}
+
+async function loadPage(isFirst) {
+  if (busy) return;
+  busy = true;
+  const myReq = ++reqId;
+
+  const listEl = document.getElementById("logList");
+  const moreBtn = document.getElementById("btnMore");
+  if (isFirst) listEl.innerHTML = `<div class="empty">Loading...</div>`;
+  else { moreBtn.disabled = true; moreBtn.textContent = "Loading..."; }
+
+  const action = document.getElementById("filterAction").value;
+  const actor  = document.getElementById("filterActor").value;
+  const range  = document.getElementById("filterRange").value;
+  const search = document.getElementById("filterSearch").value.trim();
+
+  let q = sb.from("activity_logs").select(COLUMNS).order("created_at", { ascending: false });
+
+  if (action !== "all") q = q.eq("action", action);
+  if (actor  !== "all") q = q.eq("actor_id", actor);
+  if (range  !== "all") q = q.gte("created_at", new Date(Date.now() - Number(range) * 864e5).toISOString());
+  if (search) {
+    const safe = search.replace(/[%,()]/g, " ");
+    q = q.or(`target_label.ilike.%${safe}%,reason.ilike.%${safe}%`);
+  }
+  if (cursor) q = q.lt("created_at", cursor);
+
+  /* Request 1 more row than what's displayed. If the response comes
+     back full, that means there's still another page — so there's no
+     need for a separate count query just to decide whether the
+     "Load more" button should appear. */
+  const { data, error } = await q.limit(PAGE_SIZE + 1);
+
+  busy = false;
+  moreBtn.disabled = false;
+  moreBtn.textContent = "Load more";
+
+  // The filter was already changed by the user — this response is stale, discard it
+  if (myReq !== reqId) return;
+
+  if (error) {
+    listEl.innerHTML = `<div class="empty">Failed to load: ${escapeHtml(error.message)}<br><br>
+      Sudah jalanin <code>sql/add_history_logs.sql</code> versi terbaru di Supabase SQL Editor?</div>`;
+    moreBtn.style.display = "none";
+    return;
+  }
+
+  const page = data || [];
+  hasMore = page.length > PAGE_SIZE;
+  const visible = hasMore ? page.slice(0, PAGE_SIZE) : page;
+  if (visible.length) cursor = visible[visible.length - 1].created_at;
+  rows = rows.concat(visible);
+
+  render();
+}
+
+// Kalimat "siapa melakukan apa ke siapa" per jenis aksi
+function describe(l) {
+  const target = escapeHtml(l.target_label || "(unknown)");
+  const postLink = l.target_type === "post" && l.target_id && l.action !== "post_delete"
+    ? `<a href="post.html?id=${encodeURIComponent(l.target_id)}" target="_blank" rel="noopener">${target}</a>`
+    : `<strong>${target}</strong>`;
+  const userLink = (l.target_type === "user" || l.target_type === "appeal" || l.target_type === "comment")
+    ? `<a href="profile.html?user=${encodeURIComponent(l.target_label || "")}" target="_blank" rel="noopener">@${target}</a>`
+    : `<strong>${target}</strong>`;
+
+  switch (l.action) {
+    case "post_publish":      return `published the post ${postLink}`;
+    case "post_unpublish":    return `moved the post ${postLink} back to draft`;
+    case "post_edit":         return `edited the post ${postLink}`;
+    case "post_delete":       return `permanently deleted the post <strong>${target}</strong>`;
+    case "user_ban":          return `banned ${userLink}`;
+    case "user_unban":        return `unbanned ${userLink}`;
+    case "user_warn":         return `sent a warning to ${userLink}`;
+    case "role_grant_admin":  return `promoted ${userLink} to Admin`;
+    case "role_revoke_admin": return `revoked Admin from ${userLink}`;
+    case "appeal_approve":    return `approved the ban appeal from ${userLink} and unbanned them`;
+    case "appeal_reject":     return `rejected the ban appeal from ${userLink}`;
+    case "comment_delete":    return `deleted a comment by ${userLink}`;
+    default:                  return `performed <strong>${escapeHtml(l.action)}</strong> on <strong>${target}</strong>`;
+  }
+}
+
+function rowHtml(l) {
+  const meta = LOG_ACTIONS[l.action] || { label: l.action, icon: "•", color: "var(--text-1)" };
+  return `
+    <div class="log-row">
+      <div class="log-icon" style="color:${meta.color};">${meta.icon}</div>
+      <div class="log-body">
+        <div class="log-head">
+          <span class="log-action" style="color:${meta.color};">${escapeHtml(meta.label)}</span>
+          ${l.actor_role ? roleBadge(l.actor_role) : ""}
+          <span class="log-time" title="${escapeHtml(formatDateTime(l.created_at))}">${escapeHtml(timeAgo(l.created_at))}</span>
+        </div>
+        <div class="log-line">
+          <strong>${escapeHtml(l.actor_display_name || l.actor_username || "Deleted account")}</strong>
+          ${l.actor_username ? `<span style="color:var(--text-2); font-weight:500;">@${escapeHtml(l.actor_username)}</span>` : ""}
+          ${describe(l)}
+        </div>
+        ${l.reason ? `<div class="log-reason">${escapeHtml(l.reason)}</div>` : ""}
+        <div class="log-id">${escapeHtml(formatDateTime(l.created_at))}${l.target_id ? " · " + escapeHtml(l.target_id) : ""}</div>
+      </div>
+    </div>`;
+}
+
+function render() {
+  const el = document.getElementById("logList");
+  const more = document.getElementById("btnMore");
+  const countEl = document.getElementById("resultCount");
+
+  if (!rows.length) {
+    el.innerHTML = `<div class="empty">No log entries match these filters.</div>`;
+    countEl.textContent = "";
+    more.style.display = "none";
+    return;
+  }
+
+  el.innerHTML = rows.map(rowHtml).join("");
+  countEl.textContent = `Showing ${rows.length} ${rows.length === 1 ? "entry" : "entries"}${hasMore ? " (more available)" : ""}.`;
+  more.style.display = hasMore ? "block" : "none";
+}
+
+boot();
+</script>
+</body>
+</html>

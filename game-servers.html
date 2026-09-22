@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Krunker Game Servers</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+<link rel="shortcut icon" href="assets/favicon.ico">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#120c28">
+<meta name="description" content="Live Krunker.io server browser — filter lobbies by mode and region, quick-join a random game, and see live player counts.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Krunker Resource Hub">
+<meta property="og:title" content="Krunker Game Servers — Krunker Resource Hub">
+<meta property="og:description" content="Live Krunker.io server browser — filter lobbies by mode and region, quick-join a random game, and see live player counts.">
+<meta property="og:image" content="assets/logo.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Krunker Game Servers — Krunker Resource Hub">
+<meta name="twitter:description" content="Live Krunker.io server browser — filter lobbies by mode and region, quick-join a random game, and see live player counts.">
+<meta name="twitter:image" content="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#120c28; --bg2:#170f33; --panel:#1e1642; --panel2:#291c56; --line:rgba(255,255,255,.10); --line2:rgba(255,255,255,.20);
+    --txt:#fdfbff; --dim:#c3b8e8; --faint:#8177ab;
+    --accent:#3fe0d8; --accent2:#ff6b9d; --bad:#ff6b9d; --good:#4ade9a; --warn:#ffb454;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --display:'Baloo 2',var(--sans);
+    --label:'Plus Jakarta Sans',var(--sans);
+    --r:20px;
+
+    /* ---- Account theme (community/settings.html) ----
+       Defaults match the rest of the site; a logged-in user's saved
+       theme overrides these at runtime as inline styles on <html>
+       (applyUserTheme() in community/supabase-client.js). */
+    --accent-gradient:linear-gradient(135deg, #ff6b9d, #b895ff 60%, #3fe0d8);
+    --bg-glow-1:rgba(255,107,157,.28); --bg-glow-2:rgba(63,224,216,.22); --bg-glow-3:rgba(184,149,255,.24);
+    --page-bg-image:none; --page-bg-size:cover; --page-bg-dim:0;
+    --ui-scale:1; --ui-saturation:1; --ui-hue:0deg;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    background-color:var(--bg-0, var(--bg));
+    background-image:var(--page-bg-image),
+      radial-gradient(620px 520px at 8% 6%, var(--bg-glow-1), transparent 62%),
+      radial-gradient(680px 560px at 96% 0%, var(--bg-glow-2), transparent 60%),
+      radial-gradient(720px 620px at 50% 105%, var(--bg-glow-3), transparent 62%);
+    background-size:var(--page-bg-size), auto, auto, auto;
+    background-position:center; background-repeat:no-repeat;
+    zoom:var(--ui-scale); filter:saturate(var(--ui-saturation)) hue-rotate(var(--ui-hue));
+    color:var(--txt); font:15px/1.5 var(--sans); -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit}
+  ::-webkit-scrollbar{width:10px; height:10px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--panel2); border-radius:8px}
+  ::-webkit-scrollbar-thumb:hover{background:var(--line2)}
+
+  header{padding:20px 26px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+    background:linear-gradient(180deg,rgba(30,22,66,.6),transparent)}
+  header .brand{flex:1;min-width:220px}
+  header h1{margin:0;font-family:var(--display);font-weight:800;letter-spacing:.3px;font-size:21px}
+  header h1 .c{background:var(--accent-gradient);-webkit-background-clip:text;background-clip:text;color:transparent}
+  header p{margin:5px 0 0;color:var(--dim);font-size:12.5px;font-family:var(--label);font-weight:600;letter-spacing:.2px}
+
+  .wrap{display:grid;grid-template-columns:minmax(300px,360px) 1fr;gap:20px;align-items:start;
+    max-width:1400px;margin:0 auto;padding:20px}
+  @media(max-width:860px){.wrap{grid-template-columns:1fr}}
+
+  .panel{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:var(--r);padding:18px}
+  .panel + .panel{margin-top:16px}
+  .panel h2{margin:0 0 12px;font-size:12.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--dim);font-weight:700;font-family:var(--label)}
+
+  /* ---- filter chip buttons (mode / region), replaces original KBrowser buttons ---- */
+  .chip-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+  .chip-row:last-of-type{margin-bottom:0}
+  .filter-cell{display:flex;align-items:center;gap:4px}
+  .chip{
+    --c: var(--accent);
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:var(--label);font-weight:700;font-size:13px;letter-spacing:.1px;
+    color:var(--dim); background:var(--panel2); border:1px solid var(--line); border-radius:999px;
+    padding:9px 15px;cursor:pointer;transition:color .2s ease,border-color .2s ease,background .2s ease,transform .2s ease;
+    font:inherit;
+  }
+  .chip:hover{color:var(--txt);border-color:var(--line2);transform:translateY(-2px)}
+  .chip:active{transform:translateY(0)}
+  .chip .dot{width:8px;height:8px;border-radius:50%;background:var(--c);flex:none;box-shadow:0 0 8px var(--c)}
+
+  .dice{
+    display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;flex:none;
+    border-radius:50%;border:1px solid var(--line);background:var(--panel2);cursor:pointer;font-size:14px;
+    transition:border-color .2s ease,transform .2s ease;
+  }
+  .dice:hover{border-color:var(--accent);transform:translateY(-2px) rotate(15deg)}
+
+  .refresh-btn{
+    display:inline-flex;align-items:center;gap:8px;flex:none;
+    font-family:var(--label);font-weight:700;font-size:13px;letter-spacing:.1px;
+    color:var(--txt);background:var(--panel2);border:1px solid var(--line);border-radius:999px;
+    padding:10px 18px;cursor:pointer;transition:border-color .2s ease,transform .2s ease,background .2s ease;
+  }
+  .refresh-btn:hover{border-color:var(--accent);transform:translateY(-2px)}
+  .refresh-btn:active{transform:translateY(0)}
+  .refresh-btn:disabled{opacity:.6;cursor:default;transform:none}
+  .refresh-btn .refresh-icon{display:inline-block;font-size:15px;line-height:1;transition:transform .2s ease}
+  .refresh-btn.spinning .refresh-icon{animation:refresh-spin .8s linear infinite}
+  @keyframes refresh-spin{ from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+  .toggle-row{display:flex;align-items:center;gap:10px;padding:4px 0 0}
+  .toggle-row label{font-size:13px;color:var(--txt);font-weight:600;font-family:var(--label);cursor:pointer}
+  .sw{position:relative;display:inline-block;width:40px;height:22px;flex:none}
+  .sw input{opacity:0;width:0;height:0;position:absolute}
+  .sw .slider{position:absolute;inset:0;background:var(--panel2);border:1px solid var(--line2);border-radius:20px;cursor:pointer;transition:.15s}
+  .sw .slider::before{content:"";position:absolute;height:16px;width:16px;left:2px;top:2px;background:var(--faint);border-radius:50%;transition:.15s}
+  .sw input:checked + .slider{background:rgba(63,224,216,.25);border-color:var(--accent)}
+  .sw input:checked + .slider::before{transform:translateX(18px);background:var(--accent)}
+
+  .stats-grandparent{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+  .cgs-stats-parent{display:flex;flex-direction:column;gap:6px}
+  .cgs-stats{font-family:var(--mono);font-size:12.5px;color:var(--dim)}
+
+  /* ---- server table ---- */
+  .table-panel{padding:0;overflow:hidden}
+  .table-wrap{max-height:calc(100vh - 140px);overflow-y:auto;overflow-x:hidden;padding:6px 4px;font-size:13.5px;color:var(--dim)}
+  .table-wrap > a{color:var(--accent);text-decoration:underline}
+  .cgs-table{width:100%;border-collapse:collapse;border:0}
+  .cgs-table > tbody > tr{border-bottom:1px solid var(--line);transition:background .12s ease}
+  .cgs-table > tbody > tr:hover{cursor:pointer;background:rgba(255,255,255,.05)}
+  .cgs-table > tbody > tr > th, .cgs-table > tbody > tr > td{padding:0}
+  .cgs-table > tbody > tr > th > a, .cgs-table > tbody > tr > td > a{padding:10px 12px;display:block;font-size:13.5px}
+
+  .cgs-table > tbody > tr > td:nth-child(1){width:5.5em;max-width:5.5em;min-width:5.5em;text-align:right;font-family:var(--mono);color:var(--faint)}
+  .cgs-table > tbody > tr > td:nth-child(2){width:auto}
+  .cgs-table > tbody > tr > td:nth-child(3){width:9em;max-width:9em;min-width:9em}
+  .cgs-table > tbody > tr > td:nth-child(4){width:5.5em;max-width:5.5em;min-width:5.5em;font-family:var(--mono)}
+  .cgs-table > tbody > tr > td:nth-child(5){width:2.5em;max-width:2.5em;min-width:2.5em;text-align:center}
+
+  .wrapper-cg-full{opacity:.65}
+  .wrapper-cg-non-empty{opacity:.9}
+  .wrapper-cg-empty{opacity:.55}
+
+  .cg-mode{color:var(--dim);font-weight:700;font-family:var(--label)}
+  .cg-mode-bhop{color:#b39ffb}
+  .cg-mode-infect{color:#4ade80}
+  .cg-mode-team{color:#f472b6}
+  .cg-mode-solo{color:#fb923c}
+  .cg-mode-fun{color:#2dd4bf}
+  .cg-mode-trade{color:#94a3b8}
+  .cg-mode-bots{color:#94a3b8}
+
+  .cg-map{color:var(--txt)}
+  .cg-map-repeated{color:var(--faint)}
+  .cg-map-non-empty{color:var(--dim)}
+  .cg-map-empty{color:var(--faint)}
+  .cg-map-full{color:var(--faint)}
+
+  .cg-region{color:var(--dim);font-family:var(--label);font-weight:600}
+  .cg-region-us-east{color:#f87171}
+  .cg-region-us-west{color:#f87171}
+  .cg-region-mx{color:#f87171}
+  .cg-region-eu{color:#60a5fa}
+  .cg-region-au{color:#818cf8}
+  .cg-region-ind{color:#fb923c}
+  .cg-region-asia{color:#e879f9}
+  .cg-region-arab{color:#d6a373}
+  .cg-region-afr{color:#34d399}
+  .cg-region-brz{color:#22c55e}
+
+  .cg-players{color:var(--txt);font-family:var(--mono)}
+
+  .cgs-table > tbody > td a{display:block}
+  .cgs-table > tbody > td a:hover{text-decoration:none}
+
+  .msg-state{padding:28px 18px;text-align:center;color:var(--dim);font-size:13.5px}
+  .msg-state a{color:var(--accent);text-decoration:underline;cursor:pointer}
+</style>
+<link rel="stylesheet" href="assets/site-glow.css">
+<script>(function(){try{var v=localStorage.getItem("krh:reduceEffects");var r=v==="1"||(v!=="0"&&window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);if(r)document.documentElement.setAttribute("data-glow-effects","off");}catch(e){}})();</script>
+<script src="assets/site-glow.js" defer></script>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <h1><span class="c">Krunker</span> Game Servers</h1>
+    <p>Live matchmaker listings — filter by mode &amp; region, or quick-join a random lobby</p>
+  </div>
+  <button id="refresh-btn" class="refresh-btn" onclick="refresh_wrapper(this);" title="Refresh lobby list">
+    <span class="refresh-icon">⟳</span> Refresh
+  </button>
+</header>
+
+<div class="wrap">
+  <!-- LEFT: filters -->
+  <div class="left">
+    <div class="panel">
+      <h2>Mode</h2>
+      <div class="chip-row">
+        <div class="filter-cell">
+          <button onclick="populate_wrapper(null, null);" class="chip"><span class="dot" style="--c:var(--accent)"></span>All modes</button>
+          <a onclick="lucky_wrapper(null, null, this);" class="dice" title="Quick join">🎲</a>
+        </div>
+      </div>
+      <div class="chip-row">
+        <div class="filter-cell">
+          <button onclick="populate_wrapper('bhop');" class="chip"><span class="dot" style="--c:#b39ffb"></span>Bhop</button>
+          <a onclick="lucky_wrapper('bhop', null, this);" class="dice" title="Quick join">🎲</a>
+        </div>
+        <div class="filter-cell">
+          <button onclick="populate_wrapper('infect');" class="chip"><span class="dot" style="--c:#4ade80"></span>Infect</button>
+          <a onclick="lucky_wrapper('infect', null, this);" class="dice" title="Quick join">🎲</a>
+        </div>
+        <div class="filter-cell">
+          <button onclick="populate_wrapper('team');" class="chip"><span class="dot" style="--c:#f472b6"></span>Team</button>
+          <a onclick="lucky_wrapper('team', null, this);" class="dice" title="Quick join">🎲</a>
+        </div>
+        <div class="filter-cell">
+          <button onclick="populate_wrapper('solo');" class="chip"><span class="dot" style="--c:#fb923c"></span>Solo</button>
+          <a onclick="lucky_wrapper('solo', null, this);" class="dice" title="Quick join">🎲</a>
+        </div>
+        <div class="filter-cell">
+          <button onclick="populate_wrapper('fun');" class="chip"><span class="dot" style="--c:#2dd4bf"></span>Fun</button>
+          <a onclick="lucky_wrapper('fun', null, this);" class="dice" title="Quick join">🎲</a>
+        </div>
+        <div class="filter-cell">
+          <button onclick="populate_wrapper('trade');" class="chip"><span class="dot" style="--c:#94a3b8"></span>Trade</button>
+          <a onclick="lucky_wrapper('trade', null, this);" class="dice" title="Quick join">🎲</a>
+        </div>
+        <div class="filter-cell">
+          <button onclick="populate_wrapper('bots');" class="chip"><span class="dot" style="--c:#94a3b8"></span>Bots</button>
+          <a onclick="lucky_wrapper('bots', null, this);" class="dice" title="Quick join">🎲</a>
+        </div>
+      </div>
+
+      <h2 style="margin-top:16px">Region</h2>
+      <div class="chip-row">
+        <div class="filter-cell">
+          <button onclick="populate_wrapper(null, 'eu');" class="chip"><span class="dot" style="--c:#60a5fa"></span>Europe</button>
+          <a onclick="lucky_wrapper(null, 'eu', this);" class="dice" title="Quick join">🎲</a>
+        </div>
+        <div class="filter-cell">
+          <button onclick="populate_wrapper(null, 'us-east');" class="chip"><span class="dot" style="--c:#f87171"></span>US East</button>
+          <a onclick="lucky_wrapper(null, 'us-east', this);" class="dice" title="Quick join">🎲</a>
+        </div>
+        <div class="filter-cell">
+          <button onclick="populate_wrapper(null, 'asia');" class="chip"><span class="dot" style="--c:#e879f9"></span>Asia</button>
+          <a onclick="lucky_wrapper(null, 'asia', this);" class="dice" title="Quick join">🎲</a>
+        </div>
+        <div class="filter-cell">
+          <button onclick="populate_wrapper(null, 'us-west');" class="chip"><span class="dot" style="--c:#f87171"></span>US West</button>
+          <a onclick="lucky_wrapper(null, 'us-west', this);" class="dice" title="Quick join">🎲</a>
+        </div>
+        <div class="filter-cell">
+          <button onclick="populate_wrapper(null, 'au');" class="chip"><span class="dot" style="--c:#818cf8"></span>Australia</button>
+          <a onclick="lucky_wrapper(null, 'au', this);" class="dice" title="Quick join">🎲</a>
+        </div>
+        <div class="filter-cell">
+          <button onclick="populate_wrapper(null, 'ind');" class="chip"><span class="dot" style="--c:#fb923c"></span>India</button>
+          <a onclick="lucky_wrapper(null, 'ind', this);" class="dice" title="Quick join">🎲</a>
+        </div>
+        <div class="filter-cell">
+          <button onclick="populate_wrapper(null, 'brz');" class="chip"><span class="dot" style="--c:#22c55e"></span>Brazil</button>
+          <a onclick="lucky_wrapper(null, 'brz', this);" class="dice" title="Quick join">🎲</a>
+        </div>
+        <div class="filter-cell">
+          <button onclick="populate_wrapper(null, 'afr');" class="chip"><span class="dot" style="--c:#34d399"></span>Africa</button>
+          <a onclick="lucky_wrapper(null, 'afr', this);" class="dice" title="Quick join">🎲</a>
+        </div>
+        <div class="filter-cell">
+          <button onclick="populate_wrapper(null, 'mx');" class="chip"><span class="dot" style="--c:#f87171"></span>Mexico</button>
+          <a onclick="lucky_wrapper(null, 'mx', this);" class="dice" title="Quick join">🎲</a>
+        </div>
+        <div class="filter-cell">
+          <button onclick="populate_wrapper(null, 'arab');" class="chip"><span class="dot" style="--c:#d6a373"></span>Arabia</button>
+          <a onclick="lucky_wrapper(null, 'arab', this);" class="dice" title="Quick join">🎲</a>
+        </div>
+      </div>
+
+      <div class="toggle-row">
+        <label class="sw">
+          <input type="checkbox" id="show-pubs" onchange="toggle_show_pubs(this);">
+          <span class="slider"></span>
+        </label>
+        <label for="show-pubs">Show public games?</label>
+      </div>
+
+      <div id="cgs-stats-grandparent" class="stats-grandparent"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: server table -->
+  <div class="right">
+    <div class="panel table-panel">
+      <div id="cgs-parent" class="table-wrap">
+        <table id="cgs" class="cgs-table"></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="game-servers.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="community/supabase-client.js"></script>
+<script>(async () => { try { if (await getSessionUser()) await getMyProfile(); } catch (e) {} })();</script>
+</body>
+</html>
