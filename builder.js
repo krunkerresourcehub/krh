@@ -787,6 +787,7 @@ const DISCORD_SERVER_LISTS = {
       { name: "MAR2 Clan", url: "https://discord.gg/SfaufxzPuW" },
       { name: "Cute Clan", url: "https://discord.gg/Df3A89u7" },
       { name: "Turf Clan", url: "https://discord.gg/3JRw8St7b4" },
+      { name: "7-11 Clan", url: "https://discord.gg/MrA6SrKhw" },
     ],
   },
 };
@@ -1210,6 +1211,67 @@ function renderModsGuide(node, main, crumbs){
   `;
 }
 
+
+/* ---------- Guides > Raids > Arg (Eterno ARG - 725 Searchers walkthrough) ---------- */
+// Escapes text, then re-links any substrings the source doc had as hyperlinks
+// (e.g. "Inverted_Castle" in a step title linking to the krunker.io host URL).
+function argGuideLinkedText(text, links){
+  let html = escapeHtml(text).replace(/\n/g,'<br>');
+  (links||[]).forEach(([linkText, url]) => {
+    const needle = escapeHtml(linkText);
+    const anchor = `<a href="${escapeHtml(url)}" target="_blank" rel="noopener" class="arg-guide-link">${needle}</a>`;
+    html = html.replace(needle, anchor);
+  });
+  return html;
+}
+
+function argGuideBlockHtml(b){
+  if(b.t === 'step'){
+    return `<h3 class="arg-guide-step">${argGuideLinkedText(b.text, b.links)}</h3>`;
+  }
+  if(b.t === 'agent'){
+    return `<h4 class="arg-guide-agent">${icon('pin')}<span>${argGuideLinkedText(b.text, b.links)}</span></h4>`;
+  }
+  if(b.t === 'code'){
+    return `<div class="arg-guide-code">${escapeHtml(b.text)}</div>`;
+  }
+  if(b.t === 'end'){
+    return `<div class="arg-guide-end">${argGuideLinkedText(b.text, b.links)}</div>`;
+  }
+  if(b.t === 'img'){
+    const multi = b.srcs.length > 1;
+    return `<div class="arg-guide-imgs${multi ? ' arg-guide-imgs-multi' : ''}">
+      ${b.srcs.map(s => `<a href="${ARG_GUIDE_IMG_BASE}${s}" target="_blank" rel="noopener"><img class="arg-guide-img" src="${ARG_GUIDE_IMG_BASE}${s}" alt="Eterno ARG screenshot" loading="lazy"></a>`).join('')}
+    </div>`;
+  }
+  // plain paragraph
+  return `<p class="arg-guide-p">${argGuideLinkedText(b.text, b.links)}</p>`;
+}
+
+function renderArgGuide(node, main, crumbs){
+  const c = ARG_GUIDE_CONTENT;
+  const el = document.getElementById('content');
+  el.innerHTML = `
+    <div class="breadcrumb">${crumbs}</div>
+    <div class="content-head">
+      <div class="content-icon">${icon(main.glyph)}</div>
+      <h2>${node.label}</h2>
+    </div>
+    <p class="content-desc">${c.intro}</p>
+    <div class="arg-guide-header">
+      <div class="arg-guide-title">${escapeHtml(c.title)}</div>
+      <div class="arg-guide-searchers"><span>Searchers credited:</span> ${escapeHtml(c.searchers)}</div>
+    </div>
+    ${c.phases.map(phase => `
+      <section class="arg-guide-phase">
+        <h3 class="arg-guide-phase-title">${argGuideLinkedText(phase.title, phase.links)}</h3>
+        <div class="arg-guide-phase-body">
+          ${phase.blocks.map(argGuideBlockHtml).join('')}
+        </div>
+      </section>
+    `).join('')}
+  `;
+}
 
 /* ---------- Guides > Pubs (Noob-to-Pro movement/aim guide) ---------- */
 const TIPS_KEY_LEGEND = [
@@ -2268,6 +2330,11 @@ function renderContent(){
 
   if(node.id === 'guides-tips'){
     renderTipsGuide(node, main, crumbs);
+    return;
+  }
+
+  if(node.id === 'guides-raids-arg'){
+    renderArgGuide(node, main, crumbs);
     return;
   }
 

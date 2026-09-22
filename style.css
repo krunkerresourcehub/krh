@@ -471,6 +471,60 @@ ul.tree ul.tree{margin-left:16px; border-left:2px dotted var(--border-strong); p
 .mod-guide-table td{ color:var(--text-1); border-bottom:1px solid var(--border); }
 .mod-guide-table tr:last-child td{ border-bottom:none; }
 .mod-guide-table tr:hover td{ background:rgba(255,255,255,.03); }
+
+/* ---------- Guides > Raids > Arg (Eterno ARG walkthrough) ---------- */
+.arg-guide-header{
+  border:1px solid var(--border); border-radius:20px; background:rgba(255,255,255,.035);
+  padding:16px 20px; margin:6px 0 28px; display:flex; flex-direction:column; gap:6px;
+}
+.arg-guide-title{ font-family:'Baloo 2',sans-serif; font-weight:700; font-size:17px; color:var(--text-0); }
+.arg-guide-searchers{ font-size:12.5px; color:var(--text-2); line-height:1.5; }
+.arg-guide-searchers span{ color:var(--text-1); font-weight:600; margin-right:4px; }
+.arg-guide-phase{ margin-bottom:38px; }
+.arg-guide-phase:last-child{ margin-bottom:0; }
+.arg-guide-phase-title{
+  font-family:'Baloo 2',sans-serif; font-weight:700; font-size:20px; color:var(--c, var(--purple));
+  padding-bottom:10px; margin-bottom:18px; border-bottom:1px solid var(--border);
+}
+.arg-guide-phase-body{ display:flex; flex-direction:column; gap:2px; }
+.arg-guide-step{
+  font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:15.5px; color:var(--text-0);
+  margin:26px 0 12px; padding-left:12px; border-left:3px solid var(--c, var(--purple));
+}
+.arg-guide-step:first-child{ margin-top:0; }
+.arg-guide-agent{
+  display:flex; align-items:center; gap:8px; font-family:'Plus Jakarta Sans',sans-serif; font-weight:700;
+  font-size:14px; color:var(--text-0); margin:18px 0 8px;
+  background:rgba(184,149,255,.1); border:1px solid var(--border); border-radius:14px; padding:9px 14px; width:fit-content;
+}
+.arg-guide-agent svg{ width:15px; height:15px; flex:none; color:var(--c, var(--purple)); }
+.arg-guide-p{ font-size:14px; color:var(--text-1); line-height:1.65; margin:8px 0; }
+.arg-guide-code{
+  font-family:'JetBrains Mono','Courier New',monospace; font-size:15px; letter-spacing:4px; color:var(--text-0);
+  background:rgba(0,0,0,.3); border:1px solid var(--border-strong); border-radius:12px;
+  padding:10px 16px; margin:10px 0 14px; width:fit-content;
+}
+.arg-guide-end{
+  font-size:13px; font-weight:700; letter-spacing:.4px; text-transform:uppercase; color:var(--c, var(--purple));
+  background:rgba(184,149,255,.1); border:1px dashed var(--border-strong); border-radius:14px;
+  padding:12px 16px; margin:16px 0 4px; text-align:center;
+}
+.arg-guide-imgs{ display:flex; flex-wrap:wrap; gap:10px; margin:6px 0 16px; }
+.arg-guide-img{
+  max-width:340px; width:100%; border-radius:14px; border:1px solid var(--border);
+  display:block; cursor:zoom-in; transition:.2s ease;
+}
+.arg-guide-img:hover{ border-color:var(--border-strong); transform:translateY(-2px); }
+.arg-guide-imgs-multi .arg-guide-img{ max-width:260px; }
+.arg-guide-link{
+  color:var(--c, var(--purple)); text-decoration:underline; text-decoration-color:rgba(184,149,255,.4);
+  text-underline-offset:3px; transition:.15s ease;
+}
+.arg-guide-link:hover{ text-decoration-color:var(--c, var(--purple)); }
+@media (max-width:640px){
+  .arg-guide-img, .arg-guide-imgs-multi .arg-guide-img{ max-width:100%; }
+}
+
 .gallery-actions{ display:flex; gap:6px; margin-top:6px; flex-wrap:wrap; justify-content:center; }
 .gallery-btn{
   font-family:'Plus Jakarta Sans',sans-serif; font-size:12px; font-weight:700; padding:7px 13px;

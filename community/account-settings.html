@@ -46,7 +46,7 @@
     <input type="text" id="fUsername" placeholder="Unique username">
 
     <label>Krunker Username</label>
-    <input type="text" id="fKrunker" placeholder="Your Krunker username (optional)">
+    <input type="text" id="fKrunker" placeholder="Your Krunker username">
 
     <label>Bio</label>
     <textarea id="fBio" placeholder="Tell people a bit about yourself (optional)" maxlength="200" style="min-height:90px;"></textarea>
@@ -243,8 +243,8 @@ document.getElementById("btnSaveProfile").addEventListener("click", async () => 
   const krunker_username = document.getElementById("fKrunker").value.trim();
   const bio = document.getElementById("fBio").value.trim();
 
-  if (!display_name || !username) {
-    msg.className = "msg error show"; msg.textContent = "Full name & username are required.";
+  if (!display_name || !username || !krunker_username) {
+    msg.className = "msg error show"; msg.textContent = "Full name, username, and Krunker username are required.";
     return;
   }
 
@@ -252,7 +252,7 @@ document.getElementById("btnSaveProfile").addEventListener("click", async () => 
   btn.disabled = true; btn.textContent = "Saving...";
 
   const { error } = await sb.from("profiles").update({
-    display_name, username, krunker_username: krunker_username || null, bio: bio || null,
+    display_name, username, krunker_username, bio: bio || null,
   }).eq("id", me.id);
 
   btn.disabled = false; btn.textContent = "Save Changes";

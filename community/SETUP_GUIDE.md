@@ -3,7 +3,7 @@
 Your site is **static** (just HTML/JS, hosted on GitHub Pages). To make the
 login/role system actually secure (not just localStorage, which can easily
 be tampered with via the browser console), everything runs through
-**Supabase** — a free backend (database + auth + Discord OAuth built in).
+**Supabase** — a free backend (database + auth built in).
 
 ## 1. Create a Supabase project
 1. Go to https://supabase.com → Sign up (you can use GitHub) → **New Project**.
@@ -32,20 +32,7 @@ access the entire database without limits, bypassing all security rules
 (RLS). Your site is static and doesn't need that key at all — keep it
 somewhere safe, never in the code.
 
-## 4. Set up Discord OAuth (for identity verification at signup)
-1. Go to https://discord.com/developers/applications → **New Application**.
-2. Go to the **OAuth2** tab → note down the **Client ID** and
-   **Client Secret**.
-3. Under **OAuth2 > Redirects**, add the redirect URL from Supabase
-   (format: `https://xxxxxxxx.supabase.co/auth/v1/callback` — you can copy
-   it in the next step).
-4. Back in Supabase → **Authentication** → **Providers** → find **Discord**
-   → enable it → paste the Client ID & Client Secret from Discord → Save.
-5. In Supabase → **Authentication** → **URL Configuration**, add your
-   site's domain (e.g. `https://username.github.io`) to **Redirect URLs**,
-   so that after connecting Discord it redirects back to your site.
-
-## 5. Disable email confirmation (optional, lets users log in right away)
+## 4. Disable email confirmation (optional, lets users log in right away)
 By default, Supabase requires users to click a confirmation link in their
 email before they can log in. If your site doesn't have its own email
 server yet and you want users to be able to use their account right away:
@@ -54,7 +41,7 @@ server yet and you want users to be able to use their account right away:
 If you want to keep it on (safer against spam accounts), just leave the
 default enabled.
 
-## 6. Enable Password Reset (Forgot Password)
+## 5. Enable Password Reset (Forgot Password)
 The `login.html` page now has a "Forgot your password?" link that sends a
 reset email via Supabase. To make the link redirect back to your own site
 (not Supabase's default localhost):
@@ -66,7 +53,7 @@ reset email via Supabase. To make the link redirect back to your own site
 3. Done — users can just click "Forgot your password?" on the login page,
    enter their email, and follow the link sent to their inbox.
 
-## 7. Send Emails From Your Own Address (Custom SMTP)
+## 6. Send Emails From Your Own Address (Custom SMTP)
 By default, Supabase sends auth emails (password reset, signup
 confirmation) from its own address and limits you to a couple per hour.
 You can switch this to send from your own Gmail address instead — no code
@@ -101,6 +88,19 @@ community site — if KRH grows a lot, a transactional provider (Resend,
 Brevo, SendGrid) is worth switching to later, but the steps above are the
 same either way, just with different host/port/credentials.
 
+## 7. Require Krunker Username (optional, but recommended)
+`signup.html` and `account-settings.html` now require a Krunker username
+in the browser, but that's only a front-end check — someone hitting the
+Supabase API directly could still leave it blank. To close that gap:
+
+1. Supabase → **SQL Editor** → paste and run `sql/require_krunker_username.sql`.
+2. It backfills any existing accounts that don't have one yet with a
+   placeholder (`unset-<their username>`) so the migration doesn't fail,
+   then locks the column with a real `NOT NULL` constraint.
+3. The query at the bottom of that file lists which accounts got the
+   placeholder — you may want to reach out and ask them to set their real
+   Krunker username in Account Settings.
+
 ## 8. Set the first Developer
 The Developer role (the highest role) **cannot** be granted from the web
 panel — this is intentional, so no one can escalate themselves to
@@ -123,9 +123,8 @@ things tidier, you can also store it outside the published folder.
 
 ## User flow summary
 - **Not logged in** → can only view published posts (view only).
-- **Sign up** → connect Discord first (identity verification) → fill in
-  name, username, email, password, date of birth, gender, Krunker
-  username → account created.
+- **Sign up** → fill in name, username, email, password, date of birth,
+  gender, Krunker username, agree to Terms → account created.
 - **Regular user** (logged in) → can create posts, publish/unpublish,
   edit, and delete posts **they own**.
 - **Admin** → can publish/unpublish & delete **anyone's** posts, but
@@ -228,10 +227,9 @@ posts)
   `UPLOAD_MAX_BYTES_ZIP` in `community/supabase-client.js`.
 
 ## CAPTCHA / Anti-Bot on Signup (optional, but recommended)
-Signup already requires connecting Discord first as step 1, which is
-already a fairly big barrier for ordinary bots. If you want to add
-another layer (e.g. as the site becomes more well-known and starts
-getting real bot registrations):
+Signup is now a plain email/password form, so it's worth adding a bot
+check if the site becomes well-known and starts getting real bot
+registrations:
 1. Go to https://dash.cloudflare.com/?to=/:account/turnstile → create a
    new widget (Cloudflare Turnstile, free). Any domain is fine for
    testing.
