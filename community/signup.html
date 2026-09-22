@@ -23,18 +23,9 @@
 
   <div class="card">
     <h1>Create Account</h1>
-    <p class="subtitle">Step 1: connect Discord. Step 2: complete your account details.</p>
+    <p class="subtitle">Fill in your account details to get started.</p>
 
-    <!-- STEP 1: Discord connect -->
-    <div class="step active" id="step1">
-      <button class="btn discord" id="btnDiscord"><i>🔗</i> Connect with Discord</button>
-      <p class="hint">We only use your Discord username for identity verification — it's not used for login.</p>
-    </div>
-
-    <!-- STEP 2: registration form (muncul setelah discord connect) -->
-    <div class="step" id="step2">
-      <div class="msg ok show" id="discordConnected" style="margin-bottom:6px;"></div>
-
+    <div id="step2">
       <label>Full Name</label>
       <input type="text" id="fName" placeholder="Your real name">
 
@@ -105,7 +96,6 @@
 const TURNSTILE_SITE_KEY = "";
 // =========================================================
 
-let discordMeta = null; // { discord_id, discord_username }
 let turnstileToken = null;
 
 if (TURNSTILE_SITE_KEY) {
@@ -115,35 +105,6 @@ if (TURNSTILE_SITE_KEY) {
 
 function onTurnstileSuccess(token) { turnstileToken = token; }
 function onTurnstileExpired() { turnstileToken = null; }
-
-async function init() {
-  // If returning from the OAuth redirect, a temporary Discord session is active here
-  const { data: { session } } = await sb.auth.getSession();
-  if (session && session.user.app_metadata.provider === "discord") {
-    const identity = session.user.identities.find(i => i.provider === "discord");
-    discordMeta = {
-      discord_id: session.user.user_metadata.provider_id || session.user.user_metadata.sub || identity?.id,
-      discord_username: session.user.user_metadata.full_name || session.user.user_metadata.name || session.user.user_metadata.custom_claims?.global_name || "Discord User",
-    };
-    // Sign out sesi sementara ini — akun asli dibuat via email/password di step 2
-    await sb.auth.signOut();
-    showStep2();
-  }
-}
-
-function showStep2() {
-  document.getElementById("step1").classList.remove("active");
-  document.getElementById("step2").classList.add("active");
-  document.getElementById("discordConnected").textContent =
-    "✓ Discord connected as: " + discordMeta.discord_username;
-}
-
-document.getElementById("btnDiscord").addEventListener("click", async () => {
-  await sb.auth.signInWithOAuth({
-    provider: "discord",
-    options: { redirectTo: window.location.href }
-  });
-});
 
 document.getElementById("btnSubmit").addEventListener("click", async () => {
   const msg = document.getElementById("formMsg");
@@ -223,8 +184,6 @@ document.getElementById("btnSubmit").addEventListener("click", async () => {
     id: user.id,
     birthdate,
     gender,
-    discord_id: discordMeta?.discord_id || null,
-    discord_username: discordMeta?.discord_username || null,
   });
 
   if (privateError) {
@@ -236,8 +195,6 @@ document.getElementById("btnSubmit").addEventListener("click", async () => {
 
   window.location.href = `profile.html?user=${encodeURIComponent(username)}`;
 });
-
-init();
 </script>
 </body>
 </html>
