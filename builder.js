@@ -243,7 +243,10 @@ const DATA = [
           { id:'guides-raids-soul-sanctum', label:'Soul Sanctum' },
           { id:'guides-raids-laboratory', label:'Laboratory' },
           { id:'guides-raids-zombie', label:'Zombie' },
-          { id:'guides-raids-arg', label:'Arg' },
+          { id:'guides-raids-arg', label:'Arg', children:[
+              { id:'guides-raids-arg-eterno', label:'Eterno' },
+              { id:'guides-raids-arg-hidden-echo', label:'Hidden Echo' },
+            ] },
           { id:'guides-raids-bastion', label:'Bastion' },
         ] },
     ] },
@@ -2333,7 +2336,7 @@ function renderContent(){
     return;
   }
 
-  if(node.id === 'guides-raids-arg'){
+  if(node.id === 'guides-raids-arg-eterno'){
     renderArgGuide(node, main, crumbs);
     return;
   }
