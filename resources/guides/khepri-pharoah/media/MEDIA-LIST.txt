@@ -1,0 +1,30 @@
+Pharoah Raid Guide media - files in this folder, named exactly like this.
+GIFs from the Discord export were converted to looping .mp4 (same look, ~10x smaller). Missing files are hidden on the page.
+
+pharoah-01.png   image  original: image.png                                                      684.25 KB
+pharoah-02.png   image  original: image.png                                                      76.65 KB
+pharoah-03.png   image  original: image.png                                                      522.39 KB
+pharoah-04.png   image  original: image.png                                                      246.88 KB
+pharoah-05.png   image  original: image.png                                                      186.57 KB
+pharoah-06.png   image  original: image.png                                                      20.41 KB
+pharoah-07.png   image  original: image.png                                                      160.65 KB
+pharoah-08.png   image  original: image.png                                                      542.04 KB
+pharoah-09.png   image  original: image.png                                                      4.83 KB
+pharoah-10.png   image  original: image.png                                                      295.47 KB
+pharoah-11.png   image  original: image.png                                                      241.72 KB
+pharoah-12.png   image  original: image.png                                                      185.93 KB
+pharoah-13.png   image  original: image.png                                                      20.41 KB
+pharoah-14.png   image  original: image.png                                                      71.81 KB
+pharoah-15.png   image  original: image.png                                                      113.14 KB
+pharoah-16.png   image  original: image.png                                                      794.21 KB
+pharoah-17.mp4   loop   original: ezgif-45211104e07012_2.gif                                     10.89 MB
+pharoah-18.mp4   loop   original: ezgif-47264c9e8a43f8_1.gif                                     12.29 MB
+pharoah-19.mp4   loop   original: ezgif-4486de42828786_1.gif                                     8.93 MB
+pharoah-20.png   image  original: content.png                                                    722.7 KB
+pharoah-21.png   image  original: image.png                                                      863.51 KB
+pharoah-22.png   image  original: image.png                                                      306.13 KB
+pharoah-23.png   image  original: image.png                                                      185.93 KB
+pharoah-24.png   image  original: image.png                                                      20.41 KB
+pharoah-25.png   image  original: image.png                                                      77.33 KB
+pharoah-26.png   image  original: image.png                                                      64.01 KB
+pharoah-27.mp4   loop   original: clideo_editor_922493122f994d05ba0a7991fdadf3dc.gif             1.72 MB

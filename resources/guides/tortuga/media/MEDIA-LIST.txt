@@ -1,0 +1,45 @@
+Tortuga guide media - put each file in this folder with EXACTLY these names.
+Original Discord filenames are all "image.png", so match by the size in the last column.
+Images: keep .png/.jpg (no .webp). Videos and GIF-style loops (kind "loop", converted from .gif): .mp4. Missing files are simply hidden on the page.
+
+tortuga-01.png   image  original: image.png                                                  8.02 KB
+tortuga-02.png   image  original: image.png                                                  322.33 KB
+tortuga-03.png   image  original: image.png                                                  82.73 KB
+tortuga-04.png   image  original: image.png                                                  18.27 KB
+tortuga-05.png   image  original: image.png                                                  15.64 KB
+tortuga-06.png   image  original: image.png                                                  18.47 KB
+tortuga-07.png   image  original: kRoxusa.png                                                356.15 KB
+tortuga-08.png   image  original: image.png                                                  188.99 KB
+tortuga-09.png   image  original: image.png                                                  39.34 KB
+tortuga-10.png   image  original: image.png                                                  21.68 KB
+tortuga-11.png   image  original: image.png                                                  168.10 KB
+tortuga-12.png   image  original: image.png                                                  117.83 KB
+tortuga-13.png   image  original: image.png                                                  17.13 KB
+tortuga-14.mp4   video  original: clideo_editor_280f0c6ba35b4815851da1309957835b_1.mp4       837.99 KB
+tortuga-15.mp4   video  original: clideo_editor_1abffdc626a54e1a80f7d760e66147d6_1.mp4       1.61 MB
+tortuga-16.png   image  original: image.png                                                  603.90 KB
+tortuga-17.mp4   video  original: MedalTVGlorp20250828122517-1756379129_1.mp4                9.83 MB
+tortuga-18.png   image  original: image.png                                                  652.97 KB
+tortuga-19.png   image  original: image.png                                                  389.90 KB
+tortuga-20.png   image  original: latest.png                                                 57.27 KB
+tortuga-21.mp4   video  original: clideo_editor_50975074e0e64ebc9ef8722a177cacce_1.mp4       3.33 MB
+tortuga-22.png   image  original: image.png                                                  17.21 KB
+tortuga-23.png   image  original: image.png                                                  299.40 KB
+tortuga-24.mp4   video  original: clideo_editor_3c2c2582df3e4b948a472e17094f1765_1.mp4       3.17 MB
+tortuga-25.png   image  original: image.png                                                  139.37 KB
+tortuga-26.png   image  original: image.png                                                  91.91 KB
+tortuga-27.png   image  original: image.png                                                  25.19 KB
+tortuga-28.png   image  original: image.png                                                  20.27 KB
+tortuga-29.png   image  original: image.png                                                  20.85 KB
+tortuga-30.png   image  original: image.png                                                  17.05 KB
+tortuga-31.png   image  original: image.png                                                  23.34 KB
+tortuga-32.png   image  original: image.png                                                  13.53 KB
+tortuga-33.png   image  original: image.png                                                  18.93 KB
+tortuga-34.png   image  original: image.png                                                  17.39 KB
+tortuga-35.png   image  original: image.png                                                  13.44 KB
+tortuga-36.mp4   loop   original: clideo_editor_d3d2247cda9e48b5b268959ddba2fbf3_1.gif       513.35 KB
+tortuga-37.png   image  original: image.png                                                  340.68 KB
+tortuga-38.png   image  original: image.png                                                  39.27 KB
+tortuga-39.png   image  original: image.png                                                  41.15 KB
+tortuga-40.png   image  original: image.png                                                  13.21 KB
+tortuga-41.png   image  original: Jl8P2Y6-1.png                                              1.10 MB

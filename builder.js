@@ -1276,6 +1276,91 @@ function renderArgGuide(node, main, crumbs){
   `;
 }
 
+/* ---------- Guides > Raids > Tortuga / Khepri > Osiris + Pharoah (community room-by-room raid guides) ---------- */
+// Data lives in resources/guides/<raid>/<raid>-guide-data.js (TORTUGA_GUIDE_CONTENT, OSIRIS_GUIDE_CONTENT, PHAROAH_GUIDE_CONTENT, ...)
+// with the images/videos next to it in .../media/. Text is stored as pre-sanitised
+// inline HTML (only <strong>/<em>/<br>). Media kinds: image | video (with controls) |
+// loop (GIF replacement: muted looping mp4 that only plays after a click on its play button). Files that aren't in the media
+// folder are simply removed from the page (see the error listeners in renderRaidGuide).
+function raidGuideBlockHtml(b, mediaBase){
+  if(b.t === 'sub')  return `<h4 class="raid-guide-sub">${escapeHtml(b.text)}</h4>`;
+  if(b.t === 'tier') return `<div class="raid-guide-tier">${escapeHtml(b.text)}</div>`;
+  if(b.t === 'media'){
+    const figHtml = it => {
+      const url = mediaBase + it.src;
+      const cap = it.cap ? `<figcaption class="raid-cap">${escapeHtml(it.cap)}</figcaption>` : '';
+      let body;
+      if(it.kind === 'video')     body = `<video class="raid-vid" controls preload="metadata" playsinline><source src="${url}"></video>`;
+      else if(it.kind === 'loop') body = `<div class="raid-loop">
+          <video class="raid-vid" loop muted playsinline preload="metadata"><source src="${url}#t=0.1"></video>
+          <button class="raid-play" type="button" aria-label="Play"><svg class="ic-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg><svg class="ic-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor"/></svg></button>
+        </div>`;
+      else body = `<a href="${url}" target="_blank" rel="noopener"><img class="raid-img" src="${url}" alt="${escapeHtml(it.cap || 'Raid guide screenshot')}" decoding="async"></a>`;
+      return `<figure class="raid-fig${it.kind === 'image' ? '' : ' is-video'}">${body}${cap}</figure>`;
+    };
+    // Groups = images under one drop-rate label (e.g. "25,49%"); unlabeled groups are plain galleries.
+    const multi = b.groups.length > 1 || b.groups.some(g => g.items.length > 1);
+    return `<div class="raid-tiers${multi ? ' raid-media-multi' : ''}">
+      ${b.groups.map(g => `
+        <div class="raid-tier-group">
+          ${g.label ? `<div class="raid-guide-tier">${escapeHtml(g.label)}</div>` : ''}
+          <div class="raid-media">${g.items.map(figHtml).join('')}</div>
+        </div>`).join('')}
+    </div>`;
+  }
+  return `<p class="raid-guide-p">${b.html}</p>`;
+}
+
+function renderRaidGuide(node, main, crumbs, c, mediaBase){
+  const el = document.getElementById('content');
+  el.innerHTML = `
+    <div class="breadcrumb">${crumbs}</div>
+    <div class="content-head">
+      <div class="content-icon">${icon(main.glyph)}</div>
+      <h2>${node.label}</h2>
+    </div>
+    <p class="content-desc">${c.intro}</p>
+    <div class="raid-guide-header">
+      <div class="raid-guide-title">${escapeHtml(c.title)}</div>
+      <div class="raid-guide-author"><span>Written by:</span> ${escapeHtml(c.author)}</div>
+    </div>
+    ${c.sections.map(sec => `
+      <section class="raid-guide-section">
+        ${sec.title ? `<h3 class="raid-guide-section-title">${escapeHtml(sec.title)}</h3>` : ''}
+        <div class="raid-guide-body">${sec.blocks.map(b => raidGuideBlockHtml(b, mediaBase)).join('')}</div>
+      </section>
+    `).join('')}
+  `;
+  // GIF-style loops: paused on the first frame, click (or the play button) toggles playback.
+  el.querySelectorAll('.raid-loop').forEach(box => {
+    const vid = box.querySelector('video');
+    const btn = box.querySelector('.raid-play');
+    const sync = () => {
+      const playing = !vid.paused;
+      box.classList.toggle('is-playing', playing);
+      btn.setAttribute('aria-label', playing ? 'Pause' : 'Play');
+    };
+    vid.addEventListener('play', sync);
+    vid.addEventListener('pause', sync);
+    box.addEventListener('click', () => {
+      if(vid.paused){ const p = vid.play(); if(p && p.catch) p.catch(() => {}); }
+      else vid.pause();
+    });
+  });
+  // Drop any media file that isn't uploaded (yet) instead of showing a broken box.
+  el.querySelectorAll('.raid-fig img, .raid-fig source').forEach(m => {
+    m.addEventListener('error', () => {
+      const fig = m.closest('.raid-fig');
+      if(!fig) return;
+      const group = fig.closest('.raid-tier-group');
+      const tiers = fig.closest('.raid-tiers');
+      fig.remove();
+      if(group && !group.querySelector('.raid-fig')) group.remove();
+      if(tiers && !tiers.querySelector('.raid-fig')) tiers.remove();
+    });
+  });
+}
+
 /* ---------- Guides > Pubs (Noob-to-Pro movement/aim guide) ---------- */
 const TIPS_KEY_LEGEND = [
   ['W','Move Forward'],['A','Move Left'],['S','Move Backward'],['D','Move Right'],
@@ -2338,6 +2423,21 @@ function renderContent(){
 
   if(node.id === 'guides-raids-arg-eterno'){
     renderArgGuide(node, main, crumbs);
+    return;
+  }
+
+  if(node.id === 'guides-raids-tortuga'){
+    renderRaidGuide(node, main, crumbs, TORTUGA_GUIDE_CONTENT, TORTUGA_GUIDE_MEDIA_BASE);
+    return;
+  }
+
+  if(node.id === 'guides-raids-khepri-osiris'){
+    renderRaidGuide(node, main, crumbs, OSIRIS_GUIDE_CONTENT, OSIRIS_GUIDE_MEDIA_BASE);
+    return;
+  }
+
+  if(node.id === 'guides-raids-khepri-pharoah'){
+    renderRaidGuide(node, main, crumbs, PHAROAH_GUIDE_CONTENT, PHAROAH_GUIDE_MEDIA_BASE);
     return;
   }
 

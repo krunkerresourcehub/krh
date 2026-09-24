@@ -525,6 +525,68 @@ ul.tree ul.tree{margin-left:16px; border-left:2px dotted var(--border-strong); p
   .arg-guide-img, .arg-guide-imgs-multi .arg-guide-img{ max-width:100%; }
 }
 
+/* ---------- Guides > Raids > Tortuga / Khepri > Osiris + Pharoah (community raid guides) ---------- */
+.raid-guide-header{
+  border:1px solid var(--border); border-radius:20px; background:rgba(255,255,255,.035);
+  padding:16px 20px; margin:6px 0 28px; display:flex; flex-direction:column; gap:6px;
+}
+.raid-guide-title{ font-family:'Baloo 2',sans-serif; font-weight:700; font-size:17px; color:var(--text-0); }
+.raid-guide-author{ font-size:12.5px; color:var(--text-2); line-height:1.5; }
+.raid-guide-author span{ color:var(--text-1); font-weight:600; margin-right:4px; }
+.raid-guide-section{ margin-bottom:38px; }
+.raid-guide-section:last-child{ margin-bottom:0; }
+.raid-guide-section-title{
+  font-family:'Baloo 2',sans-serif; font-weight:700; font-size:20px; color:var(--c, var(--purple));
+  padding-bottom:10px; margin-bottom:18px; border-bottom:1px solid var(--border);
+}
+.raid-guide-body{ display:flex; flex-direction:column; gap:2px; }
+.raid-guide-sub{
+  font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:15.5px; color:var(--text-0);
+  margin:22px 0 10px; padding-left:12px; border-left:3px solid var(--c, var(--purple));
+}
+.raid-guide-p{ font-size:14px; color:var(--text-1); line-height:1.8; margin:8px 0; }
+.raid-guide-p strong{ color:var(--text-0); }
+.raid-guide-tier{
+  font-size:12.5px; font-weight:700; letter-spacing:.3px; color:var(--c, var(--purple));
+  background:rgba(184,149,255,.1); border:1px solid var(--border); border-radius:999px;
+  padding:5px 12px; margin:12px 0 4px; width:fit-content;
+}
+.raid-tiers{ display:flex; flex-wrap:wrap; gap:4px 18px; margin:6px 0 16px; }
+.raid-tier-group{ display:flex; flex-direction:column; gap:6px; max-width:100%; }
+.raid-tier-group .raid-guide-tier{ margin:0; }
+.raid-media{ display:flex; flex-wrap:wrap; gap:10px; }
+.raid-fig{ margin:0; max-width:340px; width:100%; }
+.raid-media-multi .raid-fig{ max-width:260px; }
+.raid-fig.is-video{ max-width:480px; }
+.raid-media-multi .raid-fig.is-video{ max-width:340px; }
+.raid-img, .raid-vid{
+  display:block; border-radius:14px; border:1px solid var(--border); background:rgba(0,0,0,.25);
+}
+.raid-vid{ width:100%; }
+.raid-img{ width:auto; max-width:100%; height:auto; }  /* small drop-icon screenshots stay sharp instead of being stretched */
+.raid-img{ cursor:zoom-in; transition:.2s ease; }
+.raid-img:hover{ border-color:var(--border-strong); transform:translateY(-2px); }
+/* GIF-style loops: click-to-play with a play/pause button */
+.raid-loop{ position:relative; cursor:pointer; }
+.raid-play{
+  position:absolute; inset:0; margin:auto; width:56px; height:56px; border-radius:50%; padding:0;
+  display:grid; place-items:center; color:#fff; cursor:pointer;
+  background:rgba(10,8,22,.62); border:1px solid rgba(255,255,255,.35);
+  -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); transition:.2s ease;
+}
+.raid-play:hover{ background:rgba(10,8,22,.8); border-color:rgba(255,255,255,.6); transform:scale(1.06); }
+.raid-play svg{ width:24px; height:24px; }
+.raid-play .ic-pause{ display:none; }
+/* while playing the button shrinks to a small pause control in the corner */
+.raid-loop.is-playing .raid-play{ inset:auto 10px 10px auto; margin:0; width:34px; height:34px; opacity:.8; }
+.raid-loop.is-playing .raid-play svg{ width:16px; height:16px; }
+.raid-loop.is-playing .ic-play{ display:none; }
+.raid-loop.is-playing .ic-pause{ display:block; }
+.raid-cap{ font-size:12px; font-weight:600; color:var(--text-2); margin-top:6px; padding-left:4px; }
+@media (max-width:640px){
+  .raid-fig, .raid-media-multi .raid-fig, .raid-fig.is-video, .raid-media-multi .raid-fig.is-video{ max-width:100%; }
+}
+
 .gallery-actions{ display:flex; gap:6px; margin-top:6px; flex-wrap:wrap; justify-content:center; }
 .gallery-btn{
   font-family:'Plus Jakarta Sans',sans-serif; font-size:12px; font-weight:700; padding:7px 13px;

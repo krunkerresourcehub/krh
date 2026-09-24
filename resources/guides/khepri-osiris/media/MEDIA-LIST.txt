@@ -1,0 +1,36 @@
+Osiris guide media - files in this folder, named exactly like this.
+GIFs from the Discord export were converted to looping .mp4 (same look, ~10x smaller). Missing files are hidden on the page.
+
+osiris-01.png    image  original: image.png                                                      607.76 KB
+osiris-02.png    image  original: image.png                                                      76.65 KB
+osiris-03.png    image  original: image.png                                                      334.79 KB
+osiris-04.png    image  original: image.png                                                      246.88 KB
+osiris-05.png    image  original: image.png                                                      186.57 KB
+osiris-06.png    image  original: image.png                                                      20.41 KB
+osiris-07.png    image  original: image.png                                                      160.65 KB
+osiris-08.png    image  original: image.png                                                      986.68 KB
+osiris-09.png    image  original: image.png                                                      4.83 KB
+osiris-10.png    image  original: image.png                                                      224.67 KB
+osiris-11.png    image  original: image.png                                                      294.74 KB
+osiris-12.png    image  original: image.png                                                      185.93 KB
+osiris-13.png    image  original: image.png                                                      20.41 KB
+osiris-14.png    image  original: image.png                                                      71.81 KB
+osiris-15.png    image  original: image.png                                                      83.79 KB
+osiris-16.png    image  original: image.png                                                      715.71 KB
+osiris-17.mp4    loop   original: ezgif-4486de42828786_1.gif                                     4.66 MB
+osiris-18.mp4    loop   original: ezgif-47264c9e8a43f8_1.gif                                     5.24 MB
+osiris-19.mp4    loop   original: ezgif-45211104e07012.gif                                       18.28 MB
+osiris-20.png    image  original: image.png                                                      162.93 KB
+osiris-21.png    image  original: image.png                                                      90.18 KB
+osiris-22.png    image  original: DjTNKAAAABklEQVQDADGzYsz89DNdAAAAAElFTkSuQmCC.png              219.57 KB
+osiris-23.mp4    loop   original: clideo_editor_8ae94b0a978c42f5897dbf41dc77aa99.gif             12.99 MB
+osiris-24.mp4    loop   original: clideo_editor_04f6817885014788a38239763ca4c4fa_compressed.gif  17.72 MB
+osiris-25.png    image  original: image.png                                                      287.78 KB
+osiris-26.png    image  original: Snimek_obrazovky_2026-03-10_181343-removebg-preview.png        106.08 KB
+osiris-27.png    image  original: image.png                                                      477.84 KB
+osiris-28.png    image  original: image.png                                                      179.21 KB
+osiris-29.png    image  original: image.png                                                      21.26 KB
+osiris-30.png    image  original: image.png                                                      36.31 KB
+osiris-31.png    image  original: image.png                                                      64.01 KB
+osiris-32.png    image  original: image.png                                                      50.33 KB
+osiris-33.mp4    loop   original: clideo_editor_f051d51b0a1949b5846cf0da12527444.gif             1.66 MB
