@@ -575,4 +575,3 @@ function toast(msg){
 }
 
 refreshSavedList();
-document.getElementById("verTag").textContent = "v" + VERSION;
