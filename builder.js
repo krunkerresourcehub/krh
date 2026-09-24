@@ -242,7 +242,7 @@ const DATA = [
             ] },
           { id:'guides-raids-soul-sanctum', label:'Soul Sanctum' },
           { id:'guides-raids-laboratory', label:'Laboratory' },
-          { id:'guides-raids-zombie', label:'Zombie' },
+          { id:'guides-raids-zombie', label:'Zombie Facility' },
           { id:'guides-raids-arg', label:'Arg', children:[
               { id:'guides-raids-arg-eterno', label:'Eterno' },
               { id:'guides-raids-arg-hidden-echo', label:'Hidden Echo' },
@@ -1276,11 +1276,12 @@ function renderArgGuide(node, main, crumbs){
   `;
 }
 
-/* ---------- Guides > Raids > Tortuga / Khepri > Osiris + Pharoah (community room-by-room raid guides) ---------- */
-// Data lives in resources/guides/<raid>/<raid>-guide-data.js (TORTUGA_GUIDE_CONTENT, OSIRIS_GUIDE_CONTENT, PHAROAH_GUIDE_CONTENT, ...)
+/* ---------- Guides > Raids > Tortuga / Khepri > Osiris + Pharoah / Zombie Facility (community raid guides) ---------- */
+// Data lives in resources/guides/<raid>/<raid>-guide-data.js (TORTUGA_GUIDE_CONTENT, OSIRIS_GUIDE_CONTENT, PHAROAH_GUIDE_CONTENT, ZOMBIE_FACILITY_GUIDE_CONTENT, ...)
 // with the images/videos next to it in .../media/. Text is stored as pre-sanitised
 // inline HTML (only <strong>/<em>/<br>). Media kinds: image | video (with controls) |
-// loop (GIF replacement: muted looping mp4 that only plays after a click on its play button). Files that aren't in the media
+// loop (GIF replacement: muted looping mp4 that only plays after a click on its play button). An image item may also
+// carry an optional "href" (e.g. a YouTube thumbnail) to link somewhere other than the image file. Files that aren't in the media
 // folder are simply removed from the page (see the error listeners in renderRaidGuide).
 function raidGuideBlockHtml(b, mediaBase){
   if(b.t === 'sub')  return `<h4 class="raid-guide-sub">${escapeHtml(b.text)}</h4>`;
@@ -1295,8 +1296,8 @@ function raidGuideBlockHtml(b, mediaBase){
           <video class="raid-vid" loop muted playsinline preload="metadata"><source src="${url}#t=0.1"></video>
           <button class="raid-play" type="button" aria-label="Play"><svg class="ic-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg><svg class="ic-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor"/></svg></button>
         </div>`;
-      else body = `<a href="${url}" target="_blank" rel="noopener"><img class="raid-img" src="${url}" alt="${escapeHtml(it.cap || 'Raid guide screenshot')}" decoding="async"></a>`;
-      return `<figure class="raid-fig${it.kind === 'image' ? '' : ' is-video'}">${body}${cap}</figure>`;
+      else body = `<a href="${it.href ? String(it.href).replace(/"/g, '&quot;') : url}" target="_blank" rel="noopener"><img class="raid-img" src="${url}" alt="${escapeHtml(it.cap || 'Raid guide screenshot')}" decoding="async"></a>`;
+      return `<figure class="raid-fig${it.kind === 'image' ? '' : ' is-video'}${it.href ? ' is-link' : ''}">${body}${cap}</figure>`;
     };
     // Groups = images under one drop-rate label (e.g. "25,49%"); unlabeled groups are plain galleries.
     const multi = b.groups.length > 1 || b.groups.some(g => g.items.length > 1);
@@ -2438,6 +2439,11 @@ function renderContent(){
 
   if(node.id === 'guides-raids-khepri-pharoah'){
     renderRaidGuide(node, main, crumbs, PHAROAH_GUIDE_CONTENT, PHAROAH_GUIDE_MEDIA_BASE);
+    return;
+  }
+
+  if(node.id === 'guides-raids-zombie'){
+    renderRaidGuide(node, main, crumbs, ZOMBIE_FACILITY_GUIDE_CONTENT, ZOMBIE_FACILITY_GUIDE_MEDIA_BASE);
     return;
   }
 

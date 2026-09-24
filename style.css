@@ -546,6 +546,8 @@ ul.tree ul.tree{margin-left:16px; border-left:2px dotted var(--border-strong); p
 }
 .raid-guide-p{ font-size:14px; color:var(--text-1); line-height:1.8; margin:8px 0; }
 .raid-guide-p strong{ color:var(--text-0); }
+.raid-guide-p a{ color:var(--cyan); text-decoration:underline; text-underline-offset:2px; word-break:break-all; }
+.raid-guide-p a:hover{ color:var(--text-0); }
 .raid-guide-tier{
   font-size:12.5px; font-weight:700; letter-spacing:.3px; color:var(--c, var(--purple));
   background:rgba(184,149,255,.1); border:1px solid var(--border); border-radius:999px;
@@ -566,6 +568,7 @@ ul.tree ul.tree{margin-left:16px; border-left:2px dotted var(--border-strong); p
 .raid-img{ width:auto; max-width:100%; height:auto; }  /* small drop-icon screenshots stay sharp instead of being stretched */
 .raid-img{ cursor:zoom-in; transition:.2s ease; }
 .raid-img:hover{ border-color:var(--border-strong); transform:translateY(-2px); }
+.raid-fig.is-link .raid-img{ cursor:pointer; }  /* thumbnail that opens an external link (e.g. YouTube) */
 /* GIF-style loops: click-to-play with a play/pause button */
 .raid-loop{ position:relative; cursor:pointer; }
 .raid-play{

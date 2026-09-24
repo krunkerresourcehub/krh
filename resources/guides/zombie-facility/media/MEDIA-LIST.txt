@@ -1,0 +1,34 @@
+Zombie Facility guide media - each file in this folder is referenced by exactly these names.
+Videos were re-encoded (max 720p, CRF 29, 64k audio) to keep the repo light. Images are the original Discord files.
+
+zombie-facility-01.jpg  image   original: maxresdefault-32d6d20d873313da.jpg                              102.79 KB
+zombie-facility-02.png  image   original: image-29a0768de32fa9c5.png                                       19.86 KB
+zombie-facility-03.png  image   original: image-ceb2a015bfc20d13.png                                       25.39 KB
+zombie-facility-04.png  image   original: image-8b14592e252c1b6f.png                                       21.50 KB
+zombie-facility-05.png  image   original: image-acdd69e75ea4d210.png                                       22.42 KB
+zombie-facility-06.png  image   original: image-e0b495fc4554384f.png                                       20.84 KB
+zombie-facility-07.png  image   original: image-5486951635d96837.png                                       21.46 KB
+zombie-facility-08.png  image   original: image-e08140e7d80362c0.png                                       28.41 KB
+zombie-facility-09.png  image   original: image-8e277d3472da9519.png                                      665.63 KB
+zombie-facility-10.png  image   original: image-706cdf3093ffd54e.png                                      663.75 KB
+zombie-facility-11.png  image   original: image-b143176060c9442f.png                                        3.43 KB
+zombie-facility-12.png  image   original: image-0bfc5acfa6e328e4.png                                      167.14 KB
+zombie-facility-13.png  image   original: image-e3f62a70c959bdd1.png                                       38.31 KB
+zombie-facility-14.png  image   original: image-b54492d582843f3e.png                                       76.84 KB
+zombie-facility-15.png  image   original: image-e15aac8cfe6f3ca2.png                                        3.18 KB
+zombie-facility-16.png  image   original: image-9899b9599b9eec38.png                                       31.13 KB
+zombie-facility-17.png  image   original: image-1df61d5ca3de3a22.png                                       19.23 KB
+zombie-facility-18.png  image   original: image-faa2e287f4ab654b.png                                       24.75 KB
+zombie-facility-19.png  image   original: image-e0f1917bb51fbbe5.png                                       18.98 KB
+zombie-facility-20.png  image   original: image-9a1fe06e3c66409a.png                                       20.67 KB
+zombie-facility-21.png  image   original: image-42a9265c9331596f.png                                       21.44 KB
+zombie-facility-22.png  image   original: image-f63eeaa0ad62130b.png                                       21.75 KB
+zombie-facility-23.png  image   original: image-607a0871d188147f.png                                       38.91 KB
+zombie-facility-24.png  image   original: image-5358ca800a83f153.png                                       12.00 KB
+zombie-facility-25.mp4  video   original: clideo_editor_571c207f8b4a42c19e61731732f3-fe7c95b4c4c35c1e.   1077.36 KB
+zombie-facility-26.mp4  video   original: yxch7o_1_1-4bff70d146e48ac3.mp4                                1378.23 KB
+zombie-facility-27.mp4  video   original: clideo_editor_b5d33091a47e407ca202367381f3-7cea16e4fedaa075.   1141.24 KB
+zombie-facility-28.mp4  video   original: clideo_editor_c20d7cb70007430a8bbc2b11ea6c-275c6aa51389bf68.    988.06 KB
+zombie-facility-29.mp4  video   original: clideo_editor_89002b8f6b9a4c29b21a92121f90-e5f0afcfdb65321d.   1677.86 KB
+zombie-facility-30.mp4  video   original: clideo_editor_799e69dac6794d3e8a79e60ea1e2-1c67fd956b8971df.    907.87 KB
+zombie-facility-31.png  image   original: image-cb37398f670340a1.png                                       46.82 KB
