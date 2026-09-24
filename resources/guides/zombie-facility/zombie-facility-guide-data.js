@@ -2,7 +2,7 @@
 const ZOMBIE_FACILITY_GUIDE_MEDIA_BASE = 'resources/guides/zombie-facility/media/';
 const ZOMBIE_FACILITY_GUIDE_CONTENT = {
   "title": "Zombie Facility Raid Guide",
-  "author": "VigoPochmura and Mpew",
+  "author": "basih, VigoPochmura and Mpew",
   "intro": "<strong>Zombie Facility is the zombie raid of Krunker.</strong> Survive round after round, buy perks, spin the mystery box and grind rare drops like the <strong>Attack Drone</strong>.<br><br>This guide covers <strong>special rounds, the 525 gun upgrade, perks, power ups, map locations, drops and life-hacks</strong>.",
   "sections": [
     {
@@ -47,7 +47,7 @@ const ZOMBIE_FACILITY_GUIDE_CONTENT = {
         },
         {
           "t": "p",
-          "html": "<strong>!! U must shoot all skulls !!</strong> If u knife them, 2 perks dont spawn and u dont get the free stuff.<br>Skulls locations: <a href=\"https://youtu.be/klcOpw6qN5I\" target=\"_blank\" rel=\"noopener\">https://youtu.be/klcOpw6qN5I</a>"
+          "html": "<strong>!! U must shoot all skulls !!</strong> If u knife them, 2 perks dont spawn and u dont get the free stuff.<br>Skulls locations (video by vigopochmura):"
         },
         {
           "t": "media",
@@ -56,10 +56,8 @@ const ZOMBIE_FACILITY_GUIDE_CONTENT = {
               "label": null,
               "items": [
                 {
-                  "src": "zombie-facility-01.jpg",
-                  "kind": "image",
-                  "cap": "vigopochmura - SKULLS (525)",
-                  "href": "https://youtu.be/klcOpw6qN5I"
+                  "src": "zombie-facility-01.mp4",
+                  "kind": "video"
                 }
               ]
             }

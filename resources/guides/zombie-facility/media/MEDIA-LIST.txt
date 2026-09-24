@@ -1,7 +1,7 @@
 Zombie Facility guide media - each file in this folder is referenced by exactly these names.
 Videos were re-encoded (max 720p, CRF 29, 64k audio) to keep the repo light. Images are the original Discord files.
 
-zombie-facility-01.jpg  image   original: maxresdefault-32d6d20d873313da.jpg                              102.79 KB
+zombie-facility-01.mp4  video   original: SKULLS-525-cropped.mp4                                         7301.43 KB
 zombie-facility-02.png  image   original: image-29a0768de32fa9c5.png                                       19.86 KB
 zombie-facility-03.png  image   original: image-ceb2a015bfc20d13.png                                       25.39 KB
 zombie-facility-04.png  image   original: image-8b14592e252c1b6f.png                                       21.50 KB
