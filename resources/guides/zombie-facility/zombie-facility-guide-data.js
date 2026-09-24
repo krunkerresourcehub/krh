@@ -2,7 +2,7 @@
 const ZOMBIE_FACILITY_GUIDE_MEDIA_BASE = 'resources/guides/zombie-facility/media/';
 const ZOMBIE_FACILITY_GUIDE_CONTENT = {
   "title": "Zombie Facility Raid Guide",
-  "author": "basih, VigoPochmura and Mpew",
+  "author": "VigoPochmura and Mpew",
   "intro": "<strong>Zombie Facility is the zombie raid of Krunker.</strong> Survive round after round, buy perks, spin the mystery box and grind rare drops like the <strong>Attack Drone</strong>.<br><br>This guide covers <strong>special rounds, the 525 gun upgrade, perks, power ups, map locations, drops and life-hacks</strong>.",
   "sections": [
     {
