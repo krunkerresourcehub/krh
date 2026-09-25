@@ -78,6 +78,8 @@
     <p class="subtitle" style="margin-bottom:0;">This profile doesn't exist, or the link is incorrect.</p>
   </div>
 
+  <div class="card" id="krunkerProfileCard" style="display:none;"></div>
+
   <div class="card" id="profileCard" style="display:none;">
     <div class="profile-head">
       <div class="profile-avatar-wrap" id="profileAvatar"></div>
@@ -106,6 +108,7 @@
 </div>
 
 <script src="supabase-client.js"></script>
+<script src="krunker-connect.js"></script>
 <script>
 const CATEGORY_LABELS = {
   'crosshair': 'Crosshair',
@@ -166,6 +169,50 @@ async function boot() {
   renderProfile(profile);
   loadStats(profile.id);
   loadPosts(profile.id);
+  renderKrunkerProfileCard(profile.id);
+}
+
+async function renderKrunkerProfileCard(profileId) {
+  const card = document.getElementById('krunkerProfileCard');
+  const connection = await getPublicKrunkerConnection(profileId);
+  if (!connection) { card.style.display = 'none'; return; }
+
+  const cache = await getPublicKrunkerProfileCache(connection.id);
+
+  const statsHtml = (() => {
+    if (!cache || cache.stats_status !== 'available' || !cache.stats) {
+      return `<p class="hint">${escapeHtml(krunkerDataStatusLabel(cache ? cache.stats_status : 'unavailable') || 'Not available.')}</p>`;
+    }
+    const s = cache.stats;
+    const rows = [
+      ['Level', s.level], ['Score', s.score], ['Kills', s.kills], ['Deaths', s.deaths],
+      ['K/D', s.kd], ['Wins', s.wins], ['Losses', s.losses], ['Win Rate', s.winRate != null ? `${s.winRate}%` : undefined],
+    ].filter(([, v]) => v !== undefined && v !== null);
+    if (!rows.length) return `<p class="hint">No stats available.</p>`;
+    return `<div class="profile-stats">${rows.map(([label, v]) => `<div class="profile-stat"><b>${escapeHtml(String(v))}</b> <span>${escapeHtml(label)}</span></div>`).join('')}</div>`;
+  })();
+
+  const mapsHtml = cache && cache.maps_status === 'available' && cache.maps && cache.maps.length
+    ? `<p class="hint">${cache.maps.length} map(s) created.</p>`
+    : `<p class="hint">${escapeHtml(krunkerDataStatusLabel(cache ? cache.maps_status : 'unavailable') || 'No maps.')}</p>`;
+
+  const modsHtml = cache && cache.mods_status === 'available' && cache.mods && cache.mods.length
+    ? `<p class="hint">${cache.mods.length} mod(s) created.</p>`
+    : `<p class="hint">${escapeHtml(krunkerDataStatusLabel(cache ? cache.mods_status : 'unavailable') || 'No mods.')}</p>`;
+
+  card.innerHTML = `
+    <h2 style="display:flex; align-items:center; gap:10px;">
+      Krunker Profile
+      <span class="msg ok show" style="margin:0; padding:3px 10px; font-size:12px;">Verified</span>
+    </h2>
+    <p class="subtitle">${escapeHtml(connection.krunker_username)} — connected ${formatDate(connection.verified_at)}</p>
+    <h3 style="margin-bottom:6px;">Stats</h3>
+    ${statsHtml}
+    <h3 style="margin-bottom:6px;">Maps Created</h3>
+    ${mapsHtml}
+    <h3 style="margin-bottom:6px;">Mods Created</h3>
+    ${modsHtml}`;
+  card.style.display = 'block';
 }
 
 function showNotFound() {

@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true,
+    "lib": ["deno.window"]
+  },
+  "tasks": {
+    "check": "deno check _shared/*.ts */index.ts",
+    "test": "deno test --allow-env _shared/",
+    "fmt": "deno fmt _shared/ */index.ts",
+    "lint": "deno lint _shared/ */index.ts"
+  },
+  "fmt": {
+    "lineWidth": 120
+  }
+}

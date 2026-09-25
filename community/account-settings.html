@@ -56,6 +56,14 @@
     <div class="msg" id="profileMsg"></div>
   </div>
 
+  <!-- Connected Accounts: Krunker -->
+  <div class="card">
+    <h2>Connected Accounts</h2>
+    <p class="subtitle">Verify you own a Krunker account to show it on your profile with your real stats, maps, and mods.</p>
+    <div id="krunkerConnectBox"></div>
+    <div class="msg" id="krunkerMsg"></div>
+  </div>
+
   <!-- Personal Info: birthday + gender -->
   <div class="card">
     <h2>Personal Info</h2>
@@ -141,6 +149,7 @@
 </div>
 
 <script src="supabase-client.js"></script>
+<script src="krunker-connect.js"></script>
 <script>
 let me = null;
 let myProfile = null;
@@ -175,6 +184,8 @@ async function boot() {
   document.getElementById("accountInfo").innerHTML =
     `Joined: ${formatDate(myProfile.created_at)}`;
   document.getElementById("viewProfileLink").href = `profile.html?user=${encodeURIComponent(myProfile.username)}`;
+
+  renderKrunkerBox();
 }
 
 function renderAvatarPreview() {
@@ -405,6 +416,165 @@ document.getElementById("btnChangePassword").addEventListener("click", async () 
   document.getElementById("fConfirmPassword").value = "";
   msg.className = "msg ok show"; msg.textContent = "Password updated!";
 });
+
+// =========================================================
+// Connected Accounts — Connect Krunker Account
+// =========================================================
+let _krunkerCountdownTimer = null;
+
+function krunkerMsg(text, ok) {
+  const msg = document.getElementById("krunkerMsg");
+  msg.className = `msg ${ok ? "ok" : "error"} show`;
+  msg.textContent = text;
+}
+function clearKrunkerMsg() {
+  const msg = document.getElementById("krunkerMsg");
+  msg.className = "msg"; msg.textContent = "";
+}
+
+async function renderKrunkerBox() {
+  if (_krunkerCountdownTimer) { clearInterval(_krunkerCountdownTimer); _krunkerCountdownTimer = null; }
+  const box = document.getElementById("krunkerConnectBox");
+  box.innerHTML = `<p class="hint">Loading...</p>`;
+
+  const connection = await getMyKrunkerConnection(me.id);
+
+  if (!connection) {
+    box.innerHTML = `
+      <label>Krunker Username</label>
+      <input type="text" id="krunkerUsernameInput" placeholder="Your Krunker username">
+      <button class="btn" id="btnKrunkerConnect">Connect Krunker Account</button>`;
+    document.getElementById("btnKrunkerConnect").addEventListener("click", onKrunkerStartConnect);
+    return;
+  }
+
+  if (connection.verification_status === "verified") {
+    box.innerHTML = `
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <span style="font-weight:600;">${escapeHtml(connection.krunker_username)}</span>
+        <span class="msg ok show" style="margin:0; padding:3px 10px; display:inline-block;">Verified</span>
+      </div>
+      <p class="hint">Last synced: ${connection.last_synced_at ? formatDateTime(connection.last_synced_at) : "Never"}${connection.last_sync_status === "partial" ? " (partial — some data unavailable)" : ""}${connection.last_sync_status === "failed" ? " (last sync failed)" : ""}</p>
+      <label style="display:flex; align-items:center; gap:8px; font-weight:400; margin-top:10px;">
+        <input type="checkbox" id="krunkerShowPublic" ${connection.show_on_public_profile ? "checked" : ""} style="width:auto;">
+        Show on my public profile
+      </label>
+      <button class="btn small" id="btnKrunkerSync" style="margin-top:12px;">Sync Now</button>
+      <button class="btn small danger" id="btnKrunkerDisconnect">Disconnect</button>`;
+    document.getElementById("btnKrunkerSync").addEventListener("click", onKrunkerSync);
+    document.getElementById("btnKrunkerDisconnect").addEventListener("click", onKrunkerDisconnect);
+    document.getElementById("krunkerShowPublic").addEventListener("change", onKrunkerToggleVisibility);
+    return;
+  }
+
+  if (connection.verification_status === "pending") {
+    const challenge = await getMyPendingKrunkerChallenge(me.id);
+    if (!challenge || new Date(challenge.expires_at).getTime() < Date.now()) {
+      box.innerHTML = `
+        <p class="hint">Your verification code for <b>${escapeHtml(connection.krunker_username)}</b> expired.</p>
+        <button class="btn small" id="btnKrunkerRegenerate">Generate New Code</button>
+        <button class="btn small ghost" id="btnKrunkerCancel">Cancel</button>`;
+      document.getElementById("btnKrunkerRegenerate").addEventListener("click", () => onKrunkerStartConnect(null, connection.krunker_username));
+      document.getElementById("btnKrunkerCancel").addEventListener("click", onKrunkerDisconnect);
+      return;
+    }
+    // We don't store/display the raw token client-side across page
+    // reloads (only the Edge Function response right after creating
+    // it holds the raw code) — if the user refreshes mid-flow, ask
+    // them to generate a fresh one rather than show a stale/unknown code.
+    box.innerHTML = `
+      <p class="hint">A verification code was generated for <b>${escapeHtml(connection.krunker_username)}</b>. If you still have it copied, paste it on your Krunker Social Feed and click Verify. Otherwise generate a new one.</p>
+      <p>Expires in: <span id="krunkerCountdown">${krunkerCountdownText(challenge.expires_at)}</span></p>
+      <a class="btn small ghost" href="https://krunker.io/social.html" target="_blank" rel="noopener">Open Krunker Social Feed</a>
+      <button class="btn small" id="btnKrunkerVerify">Verify Account</button>
+      <button class="btn small ghost" id="btnKrunkerRegenerate">Generate New Code</button>
+      <button class="btn small danger" id="btnKrunkerCancel">Cancel</button>`;
+    document.getElementById("btnKrunkerVerify").addEventListener("click", onKrunkerVerify);
+    document.getElementById("btnKrunkerRegenerate").addEventListener("click", () => onKrunkerStartConnect(null, connection.krunker_username));
+    document.getElementById("btnKrunkerCancel").addEventListener("click", onKrunkerDisconnect);
+    _krunkerCountdownTimer = setInterval(() => {
+      const el = document.getElementById("krunkerCountdown");
+      if (!el) { clearInterval(_krunkerCountdownTimer); return; }
+      el.textContent = krunkerCountdownText(challenge.expires_at);
+    }, 1000);
+    return;
+  }
+
+  // expired / failed
+  box.innerHTML = `
+    <p class="hint">Connecting <b>${escapeHtml(connection.krunker_username)}</b> didn't complete (${escapeHtml(connection.verification_status)}).</p>
+    <button class="btn small" id="btnKrunkerRegenerate">Try Again</button>`;
+  document.getElementById("btnKrunkerRegenerate").addEventListener("click", () => onKrunkerStartConnect(null, connection.krunker_username));
+}
+
+async function onKrunkerStartConnect(_e, prefillUsername) {
+  clearKrunkerMsg();
+  const username = prefillUsername || document.getElementById("krunkerUsernameInput").value.trim();
+  if (!username) { krunkerMsg("Enter your Krunker username first.", false); return; }
+  try {
+    const result = await krunkerCreateVerification(username);
+    await renderKrunkerBox();
+    // Show the one-time code prominently — it is NOT retrievable again
+    // after this, by design (see supabase/functions/_shared/auth.ts).
+    krunkerMsg(`Your code: ${result.token} — copy it now and post it on your Krunker Social Feed, then come back and click Verify Account.`, true);
+  } catch (err) {
+    krunkerMsg(err.message, false);
+  }
+}
+
+async function onKrunkerVerify() {
+  clearKrunkerMsg();
+  const btn = document.getElementById("btnKrunkerVerify");
+  if (btn) { btn.disabled = true; btn.textContent = "Verifying..."; }
+  try {
+    const result = await krunkerVerifyAccount();
+    if (result.status === "verified") {
+      krunkerMsg("Krunker account verified!", true);
+      await renderKrunkerBox();
+      await onKrunkerSync();
+    } else {
+      krunkerMsg(result.message || "Not verified yet.", false);
+    }
+  } catch (err) {
+    krunkerMsg(err.message, false);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "Verify Account"; }
+  }
+}
+
+async function onKrunkerSync() {
+  clearKrunkerMsg();
+  try {
+    await krunkerSyncProfile();
+    krunkerMsg("Synced!", true);
+  } catch (err) {
+    krunkerMsg(err.message, false);
+  } finally {
+    await renderKrunkerBox();
+  }
+}
+
+async function onKrunkerDisconnect() {
+  if (!confirm("Disconnect your Krunker account? You can reconnect later.")) return;
+  clearKrunkerMsg();
+  try {
+    await krunkerDisconnect();
+    krunkerMsg("Disconnected.", true);
+  } catch (err) {
+    krunkerMsg(err.message, false);
+  } finally {
+    await renderKrunkerBox();
+  }
+}
+
+async function onKrunkerToggleVisibility(e) {
+  const { error } = await sb
+    .from("krunker_connections")
+    .update({ show_on_public_profile: e.target.checked })
+    .eq("krh_user_id", me.id)
+    .eq("verification_status", "verified");
+  if (error) krunkerMsg(error.message, false);
+}
 
 boot();
 </script>
