@@ -34,11 +34,13 @@ jobs:
           CALLBACK_SECRET: ${{ secrets.KRUNKER_CALLBACK_SECRET }}
         run: node scripts/verify-krunker-check.mjs
 
-      - name: Upload debug screenshot (only kept if the check errored)
+      - name: Upload debug screenshot + page text (temporary, every run)
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: krunker-debug-${{ github.event.client_payload.challenge_id }}
-          path: debug-screenshot.png
+          path: |
+            debug-screenshot.png
+            debug-page-text.txt
           if-no-files-found: ignore
           retention-days: 3

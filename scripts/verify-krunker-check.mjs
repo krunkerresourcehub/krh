@@ -111,6 +111,17 @@ async function main() {
     const candidates = [...new Set(bodyText.match(CODE_PATTERN) || [])];
     console.log(`Found ${candidates.length} candidate code(s) on the page.`);
 
+    // TEMP DEBUG: always dump what the headless browser actually saw,
+    // not just on error, so we can diagnose "0 candidates" runs.
+    try {
+      const fs = await import("node:fs/promises");
+      await page.screenshot({ path: "debug-screenshot.png", fullPage: true });
+      await fs.writeFile("debug-page-text.txt", bodyText, "utf8");
+      console.log("Saved debug-screenshot.png and debug-page-text.txt");
+    } catch (dumpErr) {
+      console.error("Could not save debug dump:", dumpErr);
+    }
+
     for (const candidate of candidates) {
       const hash = await sha256Hex(candidate);
       if (hash === TOKEN_HASH) {
