@@ -454,7 +454,7 @@ async function renderKrunkerBox() {
         <span style="font-weight:600;">${escapeHtml(connection.krunker_username)}</span>
         <span class="msg ok show" style="margin:0; padding:3px 10px; display:inline-block;">Verified</span>
       </div>
-      <p class="hint">Last synced: ${connection.last_synced_at ? formatDateTime(connection.last_synced_at) : "Never"}${connection.last_sync_status === "partial" ? " (partial — some data unavailable)" : ""}${connection.last_sync_status === "failed" ? " (last sync failed)" : ""}</p>
+      <p class="hint">Last synced: ${connection.last_synced_at ? formatDateTime(connection.last_synced_at) : "Never"}${connection.last_sync_status === "partial" ? " (partial — some data unavailable)" : ""}${connection.last_sync_status === "failed" ? " (last sync failed)" : ""}${connection.last_sync_status === "unsupported" ? " (live stats aren't available from Krunker yet — this is expected, not an error)" : ""}</p>
       <label style="display:flex; align-items:center; gap:8px; font-weight:400; margin-top:10px;">
         <input type="checkbox" id="krunkerShowPublic" ${connection.show_on_public_profile ? "checked" : ""} style="width:auto;">
         Show on my public profile

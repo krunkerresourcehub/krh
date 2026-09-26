@@ -93,8 +93,10 @@ Deno.serve(async (req) => {
     update.mods_status = "temporarily_failed";
   }
 
-  const anyAvailable = [update.stats_status, update.maps_status, update.mods_status].includes("available");
-  const anyFailed = [update.stats_status, update.maps_status, update.mods_status].includes("temporarily_failed");
+  const statuses = [update.stats_status, update.maps_status, update.mods_status];
+  const anyAvailable = statuses.includes("available");
+  const anyFailed = statuses.includes("temporarily_failed");
+  const allUnsupported = statuses.every((s) => s === "unsupported");
 
   const { error: upsertErr } = await supabase.from("krunker_profile_cache").upsert(update, { onConflict: "connection_id" });
   if (upsertErr) {
@@ -102,12 +104,30 @@ Deno.serve(async (req) => {
     return errorResponse(req, 500, "internal_error", "Sync failed. Please try again.");
   }
 
+  // "unsupported" isn't a failure — it means Krunker doesn't currently
+  // expose a way to read this data at all (see krunker-providers.ts),
+  // not that something broke. Only genuinely errored/timed-out
+  // attempts ("temporarily_failed") should ever be called "failed".
+  let syncStatus: string;
+  let syncError: string | null;
+  if (anyAvailable) {
+    syncStatus = anyFailed ? "partial" : "success";
+    syncError = anyFailed ? "One or more Krunker data sources are temporarily unavailable." : null;
+  } else if (allUnsupported) {
+    syncStatus = "unsupported";
+    syncError =
+      "Krunker doesn't expose an official way to read live stats/maps/mods yet, so this isn't shown — that's expected, not an error.";
+  } else {
+    syncStatus = "failed";
+    syncError = "Could not reach Krunker's data source. Please try again later.";
+  }
+
   const { error: connUpdateErr } = await supabase
     .from("krunker_connections")
     .update({
       last_synced_at: new Date().toISOString(),
-      last_sync_status: anyAvailable ? (anyFailed ? "partial" : "success") : "failed",
-      last_sync_error: anyFailed ? "One or more Krunker data sources are temporarily unavailable." : null,
+      last_sync_status: syncStatus,
+      last_sync_error: syncError,
     })
     .eq("id", connection.id);
   if (connUpdateErr) {
