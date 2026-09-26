@@ -51,6 +51,10 @@ async function krunkerSyncProfile() {
 async function krunkerDisconnect() {
   return _callKrunkerFunction("disconnect-krunker-account", {});
 }
+// Admin/developer only — see supabase/functions/admin-review-krunker-verification.
+async function krunkerAdminReview(connectionId, action, note) {
+  return _callKrunkerFunction("admin-review-krunker-verification", { connection_id: connectionId, action, note });
+}
 
 // Fetches the current user's own connection row directly (RLS lets
 // the owner read it) — used for rendering the settings page state
@@ -58,7 +62,7 @@ async function krunkerDisconnect() {
 async function getMyKrunkerConnection(userId) {
   const { data, error } = await sb
     .from("krunker_connections")
-    .select("id, krunker_username, verification_status, verified_at, connected_at, last_synced_at, last_sync_status, last_sync_error, show_on_public_profile")
+    .select("id, krunker_username, verification_status, verification_note, verified_at, connected_at, last_synced_at, last_sync_status, last_sync_error, show_on_public_profile")
     .eq("krh_user_id", userId)
     .in("verification_status", ["pending", "verified", "expired", "failed"])
     .order("created_at", { ascending: false })
@@ -71,7 +75,7 @@ async function getMyKrunkerConnection(userId) {
 async function getMyPendingKrunkerChallenge(userId) {
   const { data, error } = await sb
     .from("krunker_verification_challenges")
-    .select("id, requested_username, status, expires_at, attempt_count")
+    .select("id, requested_username, status, expires_at, attempt_count, review_requested_at, created_at")
     .eq("krh_user_id", userId)
     .eq("status", "pending")
     .order("created_at", { ascending: false })
@@ -79,6 +83,33 @@ async function getMyPendingKrunkerChallenge(userId) {
     .maybeSingle();
   if (error) { console.error(error); return null; }
   return data;
+}
+
+// Admin/developer only — relies on the staff read policies added in
+// sql/add_krunker_connected_accounts.sql (krunker_connections) and
+// sql/add_krunker_manual_review.sql (krunker_verification_challenges).
+// Returns pending connections joined with their most recent pending
+// challenge and the KRH owner's profile info, for community/admin.html.
+async function getPendingKrunkerReviews() {
+  const { data: connections, error: connErr } = await sb
+    .from("krunker_connections")
+    .select("id, krh_user_id, krunker_username, verification_note, created_at, profiles!krunker_connections_krh_user_id_fkey(username,display_name,avatar_url)")
+    .eq("verification_status", "pending")
+    .order("created_at", { ascending: true });
+  if (connErr) { console.error(connErr); return []; }
+  if (!connections.length) return [];
+
+  const { data: challenges, error: chErr } = await sb
+    .from("krunker_verification_challenges")
+    .select("id, connection_id, requested_username, expires_at, review_requested_at, created_at")
+    .in("connection_id", connections.map((c) => c.id))
+    .eq("status", "pending");
+  if (chErr) console.error(chErr);
+
+  return connections.map((c) => ({
+    ...c,
+    challenge: (challenges || []).find((ch) => ch.connection_id === c.id) || null,
+  }));
 }
 
 // Public read — used on profile.html. Works for logged-out visitors
@@ -112,9 +143,14 @@ async function getPublicKrunkerProfileCache(connectionId) {
 function krunkerCountdownText(expiresAtIso) {
   const ms = new Date(expiresAtIso).getTime() - Date.now();
   if (ms <= 0) return "Expired";
-  const m = Math.floor(ms / 60000);
+  const totalMinutes = Math.floor(ms / 60000);
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  const minutes = totalMinutes % 60;
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
   const s = Math.floor((ms % 60000) / 1000);
-  return `${m}:${String(s).padStart(2, "0")}`;
+  return `${minutes}:${String(s).padStart(2, "0")}`;
 }
 
 function krunkerDataStatusLabel(status) {

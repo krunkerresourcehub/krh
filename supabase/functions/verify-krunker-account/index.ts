@@ -5,48 +5,29 @@
 //           could just type whatever it wants)
 // Auth: required
 //
-// Attempts to verify Social Feed ownership. Honest by design: if no
-// provider can actually confirm authorship (see
-// _shared/krunker-providers.ts), this returns a "pending" result and
-// says so, rather than ever marking a connection verified on
-// unverifiable grounds.
-import { requireAuthedUser, sha256Hex, constantTimeEqual, normalizeUsername } from "../_shared/auth.ts";
+// There used to be an automatic check here (a GitHub Actions job
+// running a headless browser against the public profile page). That
+// approach doesn't work: Krunker's Social Feed page serves a
+// "SECURITY CHALLENGE / Protected by ALTCHA" anti-bot wall to any
+// automated browser, so the check could never see real content —
+// and trying to defeat that wall isn't something KRH should be doing
+// to a third-party site. So this endpoint no longer tries to check
+// anything itself. Instead it just flags the challenge as
+// "review requested" so it shows up in the admin panel
+// (community/admin.html) for a human admin/developer to check the
+// user's public Social Feed themselves and approve or reject via
+// supabase/functions/admin-review-krunker-verification.
+import { requireAuthedUser } from "../_shared/auth.ts";
 import { errorResponse, handlePreflight, jsonResponse } from "../_shared/http.ts";
-import { getSocialFeedProvider } from "../_shared/krunker-providers.ts";
 
-// Optional automated check: asks a GitHub Actions workflow (running a
-// real headless browser against the *public* profile page — no
-// private-protocol access, no spoofing, no captcha bypass) to look
-// for the code and report back to krunker-verification-callback.
-// Requires KRUNKER_GH_TOKEN / KRUNKER_GH_REPO / KRUNKER_CALLBACK_SECRET
-// function secrets; if any are missing this safely falls back to the
-// honest "not available" pending message below.
-async function triggerGithubCheck(
-  payload: Record<string, unknown>,
-): Promise<{ ok: true } | { ok: false; reason: string }> {
-  const token = Deno.env.get("KRUNKER_GH_TOKEN");
-  const repo = Deno.env.get("KRUNKER_GH_REPO");
-  if (!token || !repo) return { ok: false, reason: "not_configured" };
-
-  try {
-    const res = await fetch(`https://api.github.com/repos/${repo}/dispatches`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/vnd.github+json",
-        "Content-Type": "application/json",
-        "X-GitHub-Api-Version": "2022-11-28",
-      },
-      body: JSON.stringify({ event_type: "krunker-verify", client_payload: payload }),
-    });
-    if (res.status === 204) return { ok: true };
-    console.error("GitHub dispatch failed", res.status, await res.text());
-    return { ok: false, reason: "dispatch_failed" };
-  } catch (e) {
-    console.error("GitHub dispatch error", e);
-    return { ok: false, reason: "dispatch_error" };
-  }
-}
+// Every time review is (re-)requested, push expires_at out by this
+// much from *now* — so a code realistically never expires while
+// sitting in the admin review queue, no matter how long that takes,
+// as long as the user has asked for review at least once recently.
+// (The code still gets a generous base TTL on creation too — see
+// CHALLENGE_TTL_MINUTES in create-krunker-verification — this just
+// covers the case where review takes longer than that.)
+const REVIEW_EXTENSION_MS = 1000 * 60 * 60 * 24 * 7; // 7 days
 
 Deno.serve(async (req) => {
   const preflight = handlePreflight(req);
@@ -65,9 +46,7 @@ Deno.serve(async (req) => {
 
   const { data: challenge, error: challengeErr } = await supabase
     .from("krunker_verification_challenges")
-    .select(
-      "id, connection_id, requested_username, requested_username_normalized, token_hash, status, expires_at, attempt_count, last_check_requested_at",
-    )
+    .select("id, connection_id, status, expires_at, attempt_count, review_requested_at")
     .eq("krh_user_id", userId)
     .eq("status", "pending")
     .order("created_at", { ascending: false })
@@ -89,107 +68,38 @@ Deno.serve(async (req) => {
     return errorResponse(req, 410, "challenge_expired", "That verification code expired. Generate a new one.");
   }
 
-  await supabase
-    .from("krunker_verification_challenges")
-    .update({ attempt_count: challenge.attempt_count + 1 })
-    .eq("id", challenge.id);
+  // attempt_count here really means "times the user asked for review"
+  // — kept as a loose anti-spam cap, separate from the 15-minute
+  // code-generation rate limit enforced in the database (see
+  // sql/add_krunker_connected_accounts.sql).
   if (challenge.attempt_count >= 20) {
-    return errorResponse(req, 429, "rate_limited", "Too many verification attempts. Please generate a new code.");
+    return errorResponse(req, 429, "rate_limited", "Too many review requests on this code. Please generate a new code.");
   }
 
-  // We only ever compare against OUR record of the token (via its
-  // hash) and the username tied to THIS user's own pending challenge
-  // — never anything the client sends in this request body, which is
-  // why the endpoint intentionally ignores the request body entirely.
-  const provider = getSocialFeedProvider();
-  if (!provider.supportsAutomaticVerification) {
-    // Cooldown: don't fire off a new GitHub Actions run more than once
-    // every 20 seconds for the same challenge (separate from the
-    // attempt_count limit above, which is about total clicks over 15
-    // minutes — this one is specifically about not queuing duplicate
-    // runs while one is still in flight).
-    const lastRequested = challenge.last_check_requested_at
-      ? new Date(challenge.last_check_requested_at).getTime()
-      : 0;
-    if (Date.now() - lastRequested < 20_000) {
-      return jsonResponse(req, {
-        status: "checking",
-        automatic: true,
-        message: "Still checking your Social Feed from the last click — this can take up to a minute. Try again shortly.",
-      });
-    }
+  const alreadyRequested = Boolean(challenge.review_requested_at);
+  const newExpiresAt = new Date(Date.now() + REVIEW_EXTENSION_MS).toISOString();
 
-    const dispatch = await triggerGithubCheck({
-      challenge_id: challenge.id,
-      connection_id: challenge.connection_id,
-      krunker_username: challenge.requested_username_normalized,
-      token_hash: challenge.token_hash,
-    });
-
-    if (dispatch.ok) {
-      await supabase
-        .from("krunker_verification_challenges")
-        .update({ last_check_requested_at: new Date().toISOString() })
-        .eq("id", challenge.id);
-      return jsonResponse(req, {
-        status: "checking",
-        automatic: true,
-        message: "Checking your Krunker Social Feed now — this can take up to a minute. Refresh this page or click Verify Account again shortly.",
-      });
-    }
-
-    // Fallback: automated checking isn't configured (or GitHub's API
-    // call failed) — stay honest about that instead of pretending
-    // nothing happened.
-    return jsonResponse(req, {
-      status: "pending",
-      automatic: false,
-      message:
-        "Automatic Social Feed verification isn't available yet — Krunker doesn't expose a reliable, safe way for KRH to read a specific account's Social Feed posts right now. Your connection stays pending; this will start working automatically once a safe verification method is added, with no extra steps needed from you.",
-    });
+  const { error: updateErr } = await supabase
+    .from("krunker_verification_challenges")
+    .update({
+      attempt_count: challenge.attempt_count + 1,
+      review_requested_at: new Date().toISOString(),
+      // Only ever extend forward, never shorten (this update always
+      // moves expires_at further out since REVIEW_EXTENSION_MS is
+      // large relative to how often someone would realistically click
+      // this, but the update is idempotent-safe either way).
+      expires_at: newExpiresAt,
+    })
+    .eq("id", challenge.id);
+  if (updateErr) {
+    console.error("flag review failed", updateErr);
+    return errorResponse(req, 500, "internal_error", "Could not submit your review request. Please try again.");
   }
 
-  // (Unreachable with the current default provider, kept for when a
-  // real provider is plugged in.) The provider only ever gives us
-  // back RAW candidate text it read off the public feed itself, plus
-  // the confirmed author of that specific post — never anything the
-  // client asserted. We do the token match here, ourselves, by
-  // hashing each candidate and comparing against the stored
-  // token_hash in constant time, so the raw token never has to be
-  // stored anywhere after it was first issued.
-  const scan = await provider.scanForVerificationCandidates(challenge.requested_username_normalized);
-
-  if (scan.outcome === "unsupported") {
-    return jsonResponse(req, { status: "pending", automatic: false, message: scan.reason });
-  }
-
-  let matchedByWrongAuthor = false;
-  for (const candidate of scan.candidates) {
-    const candidateHash = await sha256Hex(candidate.candidateToken);
-    if (!constantTimeEqual(candidateHash, challenge.token_hash)) continue;
-    if (normalizeUsername(candidate.authorUsername) !== challenge.requested_username_normalized) {
-      matchedByWrongAuthor = true;
-      continue;
-    }
-
-    await supabase
-      .from("krunker_connections")
-      .update({
-        verification_status: "verified",
-        verified_at: new Date().toISOString(),
-        connected_at: new Date().toISOString(),
-      })
-      .eq("id", challenge.connection_id);
-    await supabase.from("krunker_verification_challenges").update({ status: "used", used_at: new Date().toISOString() }).eq("id", challenge.id);
-    return jsonResponse(req, { status: "verified", automatic: true });
-  }
-
-  if (matchedByWrongAuthor) {
-    return errorResponse(req, 403, "author_mismatch", "That code was posted by a different Krunker account than the one you're connecting.");
-  }
   return jsonResponse(req, {
-    status: "pending",
-    automatic: true,
-    message: "We couldn't find that code on the account's Social Feed yet. Make sure it's posted and public, then try again.",
+    status: "pending_review",
+    message: alreadyRequested
+      ? "Still flagged for review — a KRH team member will check your Krunker Social Feed as soon as they can. No need to click again."
+      : "Thanks! Your code is now flagged for a KRH team member to review. Make sure it's posted and public on your Krunker Social Feed — this page will show \"Verified\" once it's approved.",
   });
 });

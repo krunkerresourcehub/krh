@@ -45,11 +45,18 @@
   </div>
 
   <div class="card">
+    <h2>Krunker Account Verifications</h2>
+    <p class="subtitle">Open each user's public Krunker Social Feed and confirm a post matching <code>KRH-VERIFY-XXXXXXXXXXXXXXXX</code>, authored by that exact username, posted after the code was generated. The raw code itself is never stored server-side, so this has to be checked by eye — see sql/add_krunker_manual_review.sql for why.</p>
+    <div id="krunkerReviews"><div class="empty">Loading...</div></div>
+  </div>
+
+  <div class="card">
     <button class="btn logout-btn" id="btnLogout">Logout</button>
   </div>
 </div>
 
 <script src="supabase-client.js"></script>
+<script src="krunker-connect.js"></script>
 <script>
 let allData = [];
 
@@ -71,6 +78,7 @@ async function boot() {
   });
 
   loadAll();
+  loadKrunkerReviews();
   document.getElementById("filterStatus").addEventListener("change", render);
   document.getElementById("filterCategory").addEventListener("change", render);
   document.getElementById("filterSearch").addEventListener("input", render);
@@ -169,6 +177,80 @@ async function removePost(id) {
   });
 
   loadAll();
+}
+
+let krunkerReviewData = [];
+
+async function loadKrunkerReviews() {
+  const el = document.getElementById("krunkerReviews");
+  krunkerReviewData = await getPendingKrunkerReviews();
+  if (!krunkerReviewData.length) { el.innerHTML = `<div class="empty">No pending verifications right now.</div>`; return; }
+  renderKrunkerReviews();
+}
+
+function renderKrunkerReviews() {
+  const el = document.getElementById("krunkerReviews");
+  if (!krunkerReviewData.length) { el.innerHTML = `<div class="empty">No pending verifications right now.</div>`; return; }
+
+  el.innerHTML = krunkerReviewData.map((c) => {
+    const p = c.profiles;
+    const requested = c.challenge?.review_requested_at;
+    const feedUrl = `https://krunker.io/social.html?p=profile&q=${encodeURIComponent(c.krunker_username.toLowerCase())}`;
+    return `
+    <div class="post-item">
+      <div class="title">${escapeHtml(c.krunker_username)}</div>
+      <div class="meta">
+        <span class="status-pill ${requested ? "status-published" : "status-draft"}">${requested ? "Review requested" : "Code not submitted yet"}</span>
+        <span style="display:inline-flex; align-items:center; gap:5px;">${avatarHtml(p, 16)} KRH account: ${escapeHtml(p?.display_name || "?")} (@${escapeHtml(p?.username || "-")})</span>
+        <span>Code generated ${formatDate(c.challenge?.created_at || c.created_at)}</span>
+        ${requested ? `<span>Requested ${formatDate(requested)}</span>` : ""}
+      </div>
+      ${c.verification_note ? `<div class="content" style="color:#ff8a8a;">Previous note: ${escapeHtml(c.verification_note)}</div>` : ""}
+      <div class="post-actions">
+        <a class="btn small ghost" href="${feedUrl}" target="_blank" rel="noopener">Open their Krunker Feed</a>
+        <button class="btn small green" onclick="approveKrunkerReview('${c.id}')">Approve</button>
+        <button class="btn small danger" onclick="rejectKrunkerReview('${c.id}')">Reject</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+async function approveKrunkerReview(connectionId) {
+  const c = krunkerReviewData.find((r) => r.id === connectionId);
+  if (!confirm(`Approve "${c ? c.krunker_username : connectionId}"?\n\nOnly do this after you've confirmed the KRH-VERIFY code yourself on their public Krunker Feed.`)) return;
+  try {
+    await krunkerAdminReview(connectionId, "approve");
+  } catch (err) {
+    alert("Failed: " + err.message);
+    return;
+  }
+  logAction("krunker_verification_approve", {
+    targetType: "krunker_connection",
+    targetId: connectionId,
+    targetLabel: c ? c.krunker_username : null,
+    targetUserId: c ? c.krh_user_id : null,
+  });
+  loadKrunkerReviews();
+}
+
+async function rejectKrunkerReview(connectionId) {
+  const c = krunkerReviewData.find((r) => r.id === connectionId);
+  const noteInput = prompt(`Reject "${c ? c.krunker_username : connectionId}". Optional note shown to the user (why it wasn't approved):`, "");
+  if (noteInput === null) return;
+  try {
+    await krunkerAdminReview(connectionId, "reject", noteInput.trim());
+  } catch (err) {
+    alert("Failed: " + err.message);
+    return;
+  }
+  logAction("krunker_verification_reject", {
+    targetType: "krunker_connection",
+    targetId: connectionId,
+    targetLabel: c ? c.krunker_username : null,
+    targetUserId: c ? c.krh_user_id : null,
+    reason: noteInput.trim() || null,
+  });
+  loadKrunkerReviews();
 }
 
 boot();

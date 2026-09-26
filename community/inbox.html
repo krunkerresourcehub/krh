@@ -76,6 +76,8 @@ const TYPE_ICON = {
   comment_reply: '\u21A9\uFE0F', comment_like: '\u{1F44D}', comment_dislike: '\u{1F44E}',
   post_edited: '\u270F\uFE0F', post_deleted: '\u{1F5D1}\uFE0F', warned: '\u26A0\uFE0F',
   banned: '\u26D4', unbanned: '\u2705', new_follower: '\u{1F464}',
+  appeal_rejected: '\u{1F6AB}',
+  krunker_verified: '\u2705', krunker_rejected: '\u274C', krunker_expired: '\u23F0',
 };
 
 let me = null;
@@ -96,6 +98,9 @@ function describe(n) {
     case 'banned': return `<b>${escapeHtml(actor)}</b> (staff) banned your account`;
     case 'unbanned': return `<b>${escapeHtml(actor)}</b> (staff) lifted your ban \u2014 you have full access again`;
     case 'new_follower': return `<b>${escapeHtml(actor)}</b> started following you`;
+    case 'krunker_verified': return `A KRH team member approved your Krunker account verification`;
+    case 'krunker_rejected': return `A KRH team member didn't approve your Krunker verification yet`;
+    case 'krunker_expired': return `Your Krunker verification code expired before it was reviewed`;
     default: return 'New notification';
   }
 }

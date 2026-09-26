@@ -483,12 +483,14 @@ async function renderKrunkerBox() {
     // it holds the raw code) — if the user refreshes mid-flow, ask
     // them to generate a fresh one rather than show a stale/unknown code.
     box.innerHTML = `
-      <p class="hint">A verification code was generated for <b>${escapeHtml(connection.krunker_username)}</b>. If you still have it copied, paste it on your Krunker Social Feed and click Verify. Otherwise generate a new one.</p>
-      <p>Expires in: <span id="krunkerCountdown">${krunkerCountdownText(challenge.expires_at)}</span></p>
+      <p class="hint">A verification code was generated for <b>${escapeHtml(connection.krunker_username)}</b>. If you still have it copied, paste it on your Krunker Social Feed, then click "Request Review" below so a KRH team member can check it. Otherwise generate a new one.</p>
+      ${connection.verification_note ? `<p class="hint" style="color:#ff8a8a;">Note from a KRH team member: ${escapeHtml(connection.verification_note)}</p>` : ""}
+      <p>Code expires in: <span id="krunkerCountdown">${krunkerCountdownText(challenge.expires_at)}</span></p>
       <a class="btn small ghost" href="https://krunker.io/social.html" target="_blank" rel="noopener">Open Krunker Social Feed</a>
-      <button class="btn small" id="btnKrunkerVerify">Verify Account</button>
+      <button class="btn small" id="btnKrunkerVerify">${challenge.review_requested_at ? "Request Review Again" : "Request Review"}</button>
       <button class="btn small ghost" id="btnKrunkerRegenerate">Generate New Code</button>
-      <button class="btn small danger" id="btnKrunkerCancel">Cancel</button>`;
+      <button class="btn small danger" id="btnKrunkerCancel">Cancel</button>
+      ${challenge.review_requested_at ? `<p class="hint">Review requested ${formatDateTime(challenge.review_requested_at)} — a KRH team member will check it soon. This page will show "Verified" once approved; no need to keep clicking.</p>` : ""}`;
     document.getElementById("btnKrunkerVerify").addEventListener("click", onKrunkerVerify);
     document.getElementById("btnKrunkerRegenerate").addEventListener("click", () => onKrunkerStartConnect(null, connection.krunker_username));
     document.getElementById("btnKrunkerCancel").addEventListener("click", onKrunkerDisconnect);
@@ -496,7 +498,7 @@ async function renderKrunkerBox() {
       const el = document.getElementById("krunkerCountdown");
       if (!el) { clearInterval(_krunkerCountdownTimer); return; }
       el.textContent = krunkerCountdownText(challenge.expires_at);
-    }, 1000);
+    }, 30000);
     return;
   }
 
@@ -525,20 +527,22 @@ async function onKrunkerStartConnect(_e, prefillUsername) {
 async function onKrunkerVerify() {
   clearKrunkerMsg();
   const btn = document.getElementById("btnKrunkerVerify");
-  if (btn) { btn.disabled = true; btn.textContent = "Verifying..."; }
+  if (btn) { btn.disabled = true; btn.textContent = "Submitting..."; }
   try {
     const result = await krunkerVerifyAccount();
     if (result.status === "verified") {
+      // Kept for forward-compatibility if an automatic path is ever
+      // reintroduced — the current pending_review path never returns
+      // this directly (a human has to approve it first).
       krunkerMsg("Krunker account verified!", true);
-      await renderKrunkerBox();
       await onKrunkerSync();
     } else {
-      krunkerMsg(result.message || "Not verified yet.", false);
+      krunkerMsg(result.message || "Submitted for review.", true);
     }
+    await renderKrunkerBox();
   } catch (err) {
     krunkerMsg(err.message, false);
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = "Verify Account"; }
+    if (btn) { btn.disabled = false; btn.textContent = "Request Review"; }
   }
 }
 

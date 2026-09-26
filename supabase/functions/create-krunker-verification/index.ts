@@ -17,7 +17,17 @@ import {
 import { errorResponse, handlePreflight, jsonResponse } from "../_shared/http.ts";
 import { getProfileProviders } from "../_shared/krunker-providers.ts";
 
-const CHALLENGE_TTL_MINUTES = 15;
+// Base validity for a freshly generated code. This used to be 15
+// minutes, back when clicking "Verify Account" triggered an
+// automated check that answered within seconds. Verification is now
+// reviewed by a human admin/developer on their own schedule (see
+// supabase/functions/admin-review-krunker-verification and
+// sql/add_krunker_manual_review.sql), which can reasonably take up to
+// a day or two — 15 minutes would almost always expire before anyone
+// gets to look at it. verify-krunker-account additionally pushes this
+// out further every time "Request Review" is clicked, so a code
+// realistically won't expire while it's sitting in the review queue.
+const CHALLENGE_TTL_MINUTES = 60 * 24 * 7; // 7 days
 
 Deno.serve(async (req) => {
   const preflight = handlePreflight(req);

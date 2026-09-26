@@ -113,7 +113,11 @@ async function cheapUsernameLookup(_username: string): Promise<{ found: boolean 
 
 // ---------------------------------------------------------
 
-const CHALLENGE_TTL_MINUTES = 15;
+// 7 days — verification is reviewed by a human on their own schedule
+// now (see supabase/functions/admin-review-krunker-verification), so
+// the old 15-minute TTL (meant for an instant automated check) would
+// almost always expire before anyone reviews it.
+const CHALLENGE_TTL_MINUTES = 60 * 24 * 7;
 
 Deno.serve(async (req) => {
   const preflight = handlePreflight(req);
